@@ -6,7 +6,26 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      "@check-board": path.resolve(__dirname, "./src"),
+      "~": path.resolve(__dirname, "src"),
     },
+  },
+  build: {
+    lib: {
+      entry: path.resolve(__dirname, "src/index.ts"),
+      name: "CheckBoard",
+      fileName: "check-board",
+      formats: ["es", "cjs", "umd"],
+    },
+    rollupOptions: {
+      external: ["react", "react-dom"],
+      output: {
+        globals: {
+          react: "React",
+          "react-dom": "ReactDOM",
+        },
+      },
+    },
+    sourcemap: true,
+    minify: true,
   },
 });
