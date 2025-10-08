@@ -1,7 +1,7 @@
-import { TDrawBoard } from "src/types/draw";
+import { TDrawBoard } from "../types/draw";
 
 const Draw = (args: TDrawBoard) => {
-  const { canvas, size, blackTile, lightTile } = args;
+  const { canvas, size, darkTile, lightTile, internalRef, piecesImage } = args;
 
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
@@ -12,7 +12,7 @@ const Draw = (args: TDrawBoard) => {
   for (let rank = 0; rank < 8; ++rank) {
     for (let file = 0; file < 8; ++file) {
       const isLight = (rank + file) % 2 === 0;
-      ctx.fillStyle = isLight ? lightTile : blackTile;
+      ctx.fillStyle = isLight ? lightTile : darkTile;
       ctx.fillRect(
         rank * squareSize,
         file * squareSize,
@@ -24,6 +24,15 @@ const Draw = (args: TDrawBoard) => {
   ctx.lineWidth = 8;
   ctx.strokeStyle = "rgba(29, 18, 2, 1)";
   ctx.strokeRect(0, 0, size, size);
+
+  for (const [id, piece] of Object.entries(internalRef.current)) {
+    if (piecesImage) {
+      const image = piecesImage[piece.type];
+      if (image && image.complete && image.naturalWidth > 0) {
+        ctx.drawImage(image, piece.x, piece.y, squareSize, squareSize);
+      }
+    }
+  }
 };
 
 export default Draw;
