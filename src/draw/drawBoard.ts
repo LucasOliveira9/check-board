@@ -30,7 +30,7 @@ const Draw = (args: TDrawBoard) => {
       const image = piecesImage[piece.type];
       if (image && image.complete && image.naturalWidth > 0) {
         ctx.drawImage(image, piece.x, piece.y, squareSize, squareSize);
-      }
+      } else throw new Error("Image element is invalid");
     }
   }
 };
