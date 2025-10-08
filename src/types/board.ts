@@ -1,5 +1,9 @@
+import { TPiece, TPieceBoard, TPieceImage } from "./piece";
+
 export type TBoard = {
   config: TConfig;
+  piecesImage?: TPieceImage;
+  pieces: TPieceBoard[];
 };
 
 export type TConfig = {
