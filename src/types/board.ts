@@ -20,6 +20,8 @@ type TSelected = {
   y: number;
   square: TSquare;
   isDragging: boolean;
+  startX: number | null;
+  startY: number | null;
 };
 
 export type { TSelected, TBoard, TConfig };

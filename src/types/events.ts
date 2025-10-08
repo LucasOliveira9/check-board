@@ -9,4 +9,12 @@ type TPointerDown = {
   internalRef: React.RefObject<Record<TPieceId, TPieceInternalRef>>;
 };
 
-export type { TPointerDown };
+type TPointerMove = {
+  e: React.PointerEvent<HTMLCanvasElement>;
+  size: number;
+  isBlackView: boolean;
+  selectedRef: React.RefObject<TSelected | null>;
+  internalRef: React.RefObject<Record<TPieceId, TPieceInternalRef>>;
+};
+
+export type { TPointerDown, TPointerMove };

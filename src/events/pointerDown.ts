@@ -18,6 +18,8 @@ const onPointerDown = (args: TPointerDown) => {
         y: piece.y,
         square: piece.square,
         isDragging: false,
+        startX: offsetX,
+        startY: offsetY,
       };
     }
   }
