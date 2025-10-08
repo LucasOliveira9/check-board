@@ -6,6 +6,8 @@ pnpm-lock.yaml
 
 # Vite build output
 dist/
+*.js
+*.js.map
 build/
 
 # TypeScript
