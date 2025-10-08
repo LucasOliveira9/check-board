@@ -1,3 +1,4 @@
+import { TSelected } from "./board";
 import { TPieceBoard, TPieceId, TPieceImage, TPieceInternalRef } from "./piece";
 
 export type TDrawBoard = {
@@ -7,5 +8,6 @@ export type TDrawBoard = {
   darkTile: string;
   isBlackView: boolean;
   internalRef: React.RefObject<Record<TPieceId, TPieceInternalRef>>;
+  selectedRef: React.RefObject<TSelected | null>;
   piecesImage?: TPieceImage;
 };
