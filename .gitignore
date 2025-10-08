@@ -1,42 +1,40 @@
 # Node
 node_modules/
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
-
-# Vite build output
-dist/
-*.js
-*.js.map
-build/
-
-# TypeScript
-*.tsbuildinfo
-
-# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# IDEs / Editors
-.vscode/
+# Build outputs
+dist/
+build/
+
+# Vite cache
+.vite/
+
+# TypeScript
+*.tsbuildinfo
+
+# Editor/IDE
 .idea/
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
+.vscode/
+*.sublime-workspace
+*.sublime-project
 
 # OS
 .DS_Store
 Thumbs.db
 
-# Demo folder (opcional, se não quiser versionar)
+# Logs
+*.log
+
+# Compiled JS from TS
+**/*.js
+**/*.js.map
+
+# Demo folder (se você não quer versionar a demo)
 demo/
 
-# Environment variables
+# Optional: environment files
 .env
 .env.local
 .env.*.local
-
-# Misc
-*.log
