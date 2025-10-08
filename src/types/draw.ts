@@ -1,7 +1,7 @@
 export type TDrawBoard = {
   canvas: HTMLCanvasElement;
-  size: number;
   lightTile: string;
+  size: number;
   darkTile: string;
   isBlackView: boolean;
 };
