@@ -11,10 +11,7 @@ const onPointerDown = (args: TPointerDown) => {
   if (!square) return;
 
   for (const [id, piece] of Object.entries(internalRef.current)) {
-    if (
-      piece.square.file === square?.file &&
-      piece.square.rank === square.rank
-    ) {
+    if (piece.square.notation === square.notation) {
       selectedRef.current = {
         id: id as TPieceId,
         x: piece.x,

@@ -21,7 +21,7 @@ const coordsToSquare = (
   y: number,
   squareSize: number,
   isBlackView: boolean
-): { file: TFile; rank: TRank } | null => {
+): TSquare | null => {
   let file = Math.floor(x / squareSize);
   let rank = 7 - Math.floor(y / squareSize);
   if (file < 0 || file > 7 || rank < 0 || rank > 8) return null;
@@ -32,7 +32,8 @@ const coordsToSquare = (
   const file_ = files[file] as TFile, //toFile(files[file]),
     rank_ = (rank + 1) as TRank; //toRank(rank + 1);
 
-  if (file_ && rank_) return { file: file_, rank: rank_ };
+  if (file_ && rank_)
+    return { file: file_, rank: rank_, notation: `${file_}${rank_}` };
   return null;
 };
 
