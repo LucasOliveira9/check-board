@@ -4,9 +4,15 @@ import { TBoard, TConfig, TSelected } from "../types/board";
 import { TPieceId, TPieceInternalRef } from "../types/piece";
 import { squareToCoords } from "../utils/coords";
 import onPointerDown from "../events/pointerDown";
-import { TSquare } from "../types/square";
+import { TBoardEventContext } from "../types/events";
 
-const Board: React.FC<TBoard> = ({ config, piecesImage, pieces }) => {
+const Board: React.FC<TBoard<TBoardEventContext>> = ({
+  config,
+  piecesImage,
+  pieces,
+  events,
+  injection,
+}) => {
   const { size, isBlackView, darkTile, lightTile } = config;
   const drawRef = useRef<number>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -50,11 +56,13 @@ const Board: React.FC<TBoard> = ({ config, piecesImage, pieces }) => {
         size: size,
         isBlackView: isBlackView,
         canvas,
-        lightTile: lightTile,
-        darkTile: darkTile,
+        lightTile: lightTile ? lightTile : "#C8A76E",
+        darkTile: darkTile ? darkTile : "#7F532F",
         piecesImage,
         internalRef,
         selectedRef,
+        events,
+        injection,
       });
       drawRef.current = requestAnimationFrame(render);
     };

@@ -1,7 +1,10 @@
 import { squareToCoords } from "../utils/coords";
 import { TDrawBoard } from "../types/draw";
+import defaultOnSelect from "../interactions/onSelect";
+import triggerEvent from "../helpers/triggerEvent";
+import { TBoardEventContext } from "../types/events";
 
-const Draw = (args: TDrawBoard) => {
+const Draw = (args: TDrawBoard<TBoardEventContext>) => {
   const {
     canvas,
     size,
@@ -11,6 +14,8 @@ const Draw = (args: TDrawBoard) => {
     piecesImage,
     selectedRef,
     isBlackView,
+    events,
+    injection,
   } = args;
 
   const ctx = canvas.getContext("2d");
@@ -43,20 +48,14 @@ const Draw = (args: TDrawBoard) => {
 
     if (sqr) {
       const { x, y } = sqr;
-      ctx.beginPath();
-      ctx.arc(
-        x + squareSize / 2,
-        y + squareSize / 2,
-        squareSize * 0.3,
-        0,
-        Math.PI * 2
-      );
-      ctx.strokeStyle = "rgba(224, 249, 4, 1)";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      ctx.fillStyle = "rgba(28, 249, 0, 0.2)";
-      ctx.fill();
+      const contexto: TBoardEventContext = { ctx, squareSize, x, y, size };
+      events?.select
+        ? triggerEvent(
+            events,
+            "select",
+            injection ? injection(contexto) : contexto
+          )
+        : defaultOnSelect(contexto);
     }
   }
 

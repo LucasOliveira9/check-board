@@ -1,9 +1,15 @@
+import { TBoardEventContext, TBoardEvents } from "./events";
 import { TPiece, TPieceBoard, TPieceId, TPieceImage } from "./piece";
 import { TSquare } from "./square";
 
-type TBoard = {
+type TBoardInjection<T extends TBoardEventContext> = (
+  ctx: TBoardEventContext
+) => T;
+type TBoard<T extends TBoardEventContext> = {
   config: TConfig;
   piecesImage?: TPieceImage;
+  events?: TBoardEvents;
+  injection?: TBoardInjection<T>;
   pieces: TPieceBoard[];
 };
 
@@ -24,4 +30,4 @@ type TSelected = {
   startY: number | null;
 };
 
-export type { TSelected, TBoard, TConfig };
+export type { TSelected, TBoard, TConfig, TBoardInjection };
