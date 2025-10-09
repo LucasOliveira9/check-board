@@ -10,8 +10,8 @@ type TBoard = {
 type TConfig = {
   isBlackView: boolean;
   size: number;
-  lightTile: string;
-  darkTile: string;
+  lightTile?: string;
+  darkTile?: string;
 };
 
 type TSelected = {
