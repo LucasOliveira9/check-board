@@ -1,5 +1,6 @@
 import { TSelected } from "./board";
 import { TPieceId, TPieceInternalRef } from "./piece";
+import { TSquare } from "./square";
 
 type TPointerDown = {
   e: React.PointerEvent<HTMLCanvasElement>;
@@ -17,4 +18,28 @@ type TPointerMove = {
   internalRef: React.RefObject<Record<TPieceId, TPieceInternalRef>>;
 };
 
-export type { TPointerDown, TPointerMove };
+type TBoardEventContext = {
+  ctx: CanvasRenderingContext2D;
+  squareSize: number;
+  size: number;
+  x: number;
+  y: number;
+  square?: TSquare;
+};
+
+type TBoardEvent<T = TBoardEventContext> = (arg: T) => void;
+
+type TBoardEvents<T extends TBoardEventContext = TBoardEventContext> = {
+  select?: TBoardEvent<T>;
+  hover?: TBoardEvent<T>;
+  move?: TBoardEvent<T>;
+  drop?: TBoardEvent<T>;
+};
+
+export type {
+  TPointerDown,
+  TPointerMove,
+  TBoardEventContext,
+  TBoardEvents,
+  TBoardEvent,
+};

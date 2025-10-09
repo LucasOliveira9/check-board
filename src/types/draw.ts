@@ -1,7 +1,8 @@
-import { TSelected } from "./board";
+import { TBoard, TBoardInjection, TSelected } from "./board";
+import { TBoardEventContext, TBoardEvents } from "./events";
 import { TPieceBoard, TPieceId, TPieceImage, TPieceInternalRef } from "./piece";
 
-export type TDrawBoard = {
+export type TDrawBoard<T extends TBoardEventContext> = {
   canvas: HTMLCanvasElement;
   lightTile: string;
   size: number;
@@ -10,4 +11,6 @@ export type TDrawBoard = {
   internalRef: React.RefObject<Record<TPieceId, TPieceInternalRef>>;
   selectedRef: React.RefObject<TSelected | null>;
   piecesImage?: TPieceImage;
+  events?: TBoardEvents<T>;
+  injection?: TBoardInjection<T>;
 };
