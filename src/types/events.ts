@@ -1,5 +1,6 @@
+import React from "react";
 import { TSelected } from "./board";
-import { TPieceId, TPieceInternalRef } from "./piece";
+import { TPieceId, TPieceImage, TPieceInternalRef } from "./piece";
 import { TSquare } from "./square";
 
 type TPointerDown = {
@@ -16,6 +17,7 @@ type TPointerMove = {
   isBlackView: boolean;
   selectedRef: React.RefObject<TSelected | null>;
   internalRef: React.RefObject<Record<TPieceId, TPieceInternalRef>>;
+  pieceHoverRef: React.RefObject<TPieceId | null>;
 };
 
 type TBoardEventContext = {
@@ -24,6 +26,8 @@ type TBoardEventContext = {
   size: number;
   x: number;
   y: number;
+  piece?: TPieceInternalRef;
+  piecesImage?: TPieceImage;
   square?: TSquare;
 };
 

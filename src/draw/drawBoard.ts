@@ -3,6 +3,7 @@ import { TDrawBoard } from "../types/draw";
 import defaultOnSelect from "../interactions/onSelect";
 import triggerEvent from "../helpers/triggerEvent";
 import { TBoardEventContext } from "../types/events";
+import defaultOnHover from "../interactions/onHover";
 
 const Draw = (args: TDrawBoard) => {
   const {
@@ -13,6 +14,7 @@ const Draw = (args: TDrawBoard) => {
     internalRef,
     piecesImage,
     selectedRef,
+    pieceHoverRef,
     isBlackView,
     events,
     injection,
@@ -59,9 +61,26 @@ const Draw = (args: TDrawBoard) => {
     }
   }
 
+  // piece hover
+  if (pieceHoverRef.current && !selectedRef.current?.isDragging) {
+    const piece = internalRef.current[pieceHoverRef.current];
+    if (piece) {
+      const contexto = {
+        ctx,
+        squareSize,
+        piece,
+        piecesImage,
+        size,
+        x: piece.x,
+        y: piece.y,
+      };
+      defaultOnHover(contexto);
+    }
+  }
+
   // draw piece
   for (const [id, piece] of Object.entries(internalRef.current)) {
-    if (piecesImage) {
+    if (piecesImage && id !== pieceHoverRef.current) {
       const image = piecesImage[piece.type];
       if (image && image.complete && image.naturalWidth > 0) {
         ctx.drawImage(image, piece.x, piece.y, squareSize, squareSize);

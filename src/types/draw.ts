@@ -10,6 +10,7 @@ export type TDrawBoard<T extends TBoardEventContext = TBoardEventContext> = {
   isBlackView: boolean;
   internalRef: React.RefObject<Record<TPieceId, TPieceInternalRef>>;
   selectedRef: React.RefObject<TSelected | null>;
+  pieceHoverRef: React.RefObject<TPieceId | null>;
   piecesImage?: TPieceImage;
   events?: TBoardEvents<T>;
   injection?: TBoardInjection<T>;

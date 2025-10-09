@@ -5,6 +5,7 @@ import { TPieceId, TPieceInternalRef } from "../types/piece";
 import { squareToCoords } from "../utils/coords";
 import onPointerDown from "../events/pointerDown";
 import { TBoardEventContext } from "../types/events";
+import onPointerMove from "../events/pointerMove";
 
 const Board: React.FC<TBoard> = ({
   config,
@@ -20,6 +21,7 @@ const Board: React.FC<TBoard> = ({
     {} as Record<TPieceId, TPieceInternalRef>
   );
   const selectedRef = useRef<TSelected | null>(null);
+  const pieceHoverRef = useRef<TPieceId | null>(null);
 
   useEffect(() => {
     const squareSize = size / 8;
@@ -62,6 +64,7 @@ const Board: React.FC<TBoard> = ({
         internalRef,
         selectedRef,
         events,
+        pieceHoverRef,
         injection,
       });
       drawRef.current = requestAnimationFrame(render);
@@ -71,17 +74,27 @@ const Board: React.FC<TBoard> = ({
     return () => {
       if (drawRef.current) cancelAnimationFrame(drawRef.current);
     };
-  }, [size, isBlackView]);
+  }, [size, isBlackView, size]);
   return (
     <canvas
       ref={canvasRef}
       onPointerDown={(e: React.PointerEvent<HTMLCanvasElement>) =>
         onPointerDown({
           e,
-          size: size / 8,
+          size,
           isBlackView,
           selectedRef,
           internalRef,
+        })
+      }
+      onPointerMove={(e: React.PointerEvent<HTMLCanvasElement>) =>
+        onPointerMove({
+          e,
+          size,
+          isBlackView,
+          selectedRef,
+          internalRef,
+          pieceHoverRef,
         })
       }
     />
