@@ -2,7 +2,7 @@ import { TBoardEventContext, TBoardEvents } from "src/types/events";
 
 type TEventName = keyof TBoardEvents;
 
-function triggerEvent<T extends TBoardEventContext>(
+function triggerEvent<T extends TBoardEventContext = TBoardEventContext>(
   events: TBoardEvents | undefined,
   event: TEventName,
   args: TBoardEventContext

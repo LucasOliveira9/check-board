@@ -6,7 +6,7 @@ import { squareToCoords } from "../utils/coords";
 import onPointerDown from "../events/pointerDown";
 import { TBoardEventContext } from "../types/events";
 
-const Board: React.FC<TBoard<TBoardEventContext>> = ({
+const Board: React.FC<TBoard> = ({
   config,
   piecesImage,
   pieces,

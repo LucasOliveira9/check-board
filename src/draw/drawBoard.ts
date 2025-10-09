@@ -4,7 +4,7 @@ import defaultOnSelect from "../interactions/onSelect";
 import triggerEvent from "../helpers/triggerEvent";
 import { TBoardEventContext } from "../types/events";
 
-const Draw = (args: TDrawBoard<TBoardEventContext>) => {
+const Draw = (args: TDrawBoard) => {
   const {
     canvas,
     size,

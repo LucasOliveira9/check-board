@@ -5,7 +5,7 @@ import { TSquare } from "./square";
 type TBoardInjection<T extends TBoardEventContext> = (
   ctx: TBoardEventContext
 ) => T;
-type TBoard<T extends TBoardEventContext> = {
+type TBoard<T extends TBoardEventContext = TBoardEventContext> = {
   config: TConfig;
   piecesImage?: TPieceImage;
   events?: TBoardEvents;

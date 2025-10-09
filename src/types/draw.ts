@@ -2,7 +2,7 @@ import { TBoard, TBoardInjection, TSelected } from "./board";
 import { TBoardEventContext, TBoardEvents } from "./events";
 import { TPieceBoard, TPieceId, TPieceImage, TPieceInternalRef } from "./piece";
 
-export type TDrawBoard<T extends TBoardEventContext> = {
+export type TDrawBoard<T extends TBoardEventContext = TBoardEventContext> = {
   canvas: HTMLCanvasElement;
   lightTile: string;
   size: number;
