@@ -1,7 +1,7 @@
 import { TBoardEvent } from "src/types/events";
 
 const defaultOnSelect: TBoardEvent = ({ ctx, squareSize, x, y }) => {
-  /*ctx.beginPath();
+  ctx.beginPath();
   ctx.arc(
     x + squareSize / 2,
     y + squareSize / 2,
@@ -14,7 +14,7 @@ const defaultOnSelect: TBoardEvent = ({ ctx, squareSize, x, y }) => {
   ctx.stroke();
 
   ctx.fillStyle = "rgba(30, 255, 0, 0.61)";
-  ctx.fill();*/
+  ctx.fill();
 };
 
 export default defaultOnSelect;
