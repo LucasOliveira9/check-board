@@ -33,6 +33,8 @@ type TBoardEventContextExtras = {
   piece?: TPieceInternalRef;
   piecesImage?: TPieceImage;
   square?: TSquare;
+  internalRef?: React.RefObject<Record<TPieceId, TPieceInternalRef>>;
+  pieceHoverRef?: React.RefObject<TPieceId | null>;
 };
 
 type TBoardEventContext = TBoardEventContextBase &
@@ -45,6 +47,7 @@ type TBoardEvents<T extends TBoardEventContext = TBoardEventContext> = {
   hover?: TBoardEvent<T>;
   move?: TBoardEvent<T>;
   drop?: TBoardEvent<T>;
+  drawPiece?: TBoardEvent<T>;
 };
 
 export type {

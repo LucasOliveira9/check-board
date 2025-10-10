@@ -1,6 +1,8 @@
 import { TBoardEventContext } from "src/types/events";
 
-const defaultOnHover = (args: TBoardEventContext) => {
+function defaultOnHover<T extends TBoardEventContext = TBoardEventContext>(
+  args: T
+) {
   const { ctx, squareSize, piece, piecesImage } = args;
   if (!piece) return;
   const img = piecesImage?.[piece.type];
@@ -20,6 +22,9 @@ const defaultOnHover = (args: TBoardEventContext) => {
     );
   }
   ctx.restore();
-};
+
+  if ("clearCache" in args && typeof args["clearCache"] === "function")
+    (args as any).clearCache();
+}
 
 export default defaultOnHover;

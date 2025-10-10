@@ -6,6 +6,7 @@ import { TBoardEventContext } from "../types/events";
 import defaultOnHover from "../interactions/onHover";
 import createLazyEventContext from "../helpers/createLazyEventContext";
 import { getPiece } from "../helpers/lazyGetters";
+import defaultOnPieceDraw from "../interactions/onPieceDraw";
 
 const Draw = (args: TDrawBoard) => {
   const {
@@ -58,6 +59,9 @@ const Draw = (args: TDrawBoard) => {
           piece: () =>
             getPiece.at(x, y, squareSize, isBlackView, internalRef)?.piece,
           piecesImage: () => piecesImage,
+          square: () => selectedRef.current?.square,
+          internalRef: () => internalRef,
+          pieceHoverRef: () => pieceHoverRef,
         },
         { cache: true }
       );
@@ -87,6 +91,8 @@ const Draw = (args: TDrawBoard) => {
           piece: () => piece,
           square: () => piece.square,
           piecesImage: () => piecesImage,
+          internalRef: () => internalRef,
+          pieceHoverRef: () => pieceHoverRef,
         },
         {
           cache: true,
@@ -102,16 +108,40 @@ const Draw = (args: TDrawBoard) => {
         : defaultOnHover(context);
     }
   }
-
   // draw piece
-  for (const [id, piece] of Object.entries(internalRef.current)) {
+
+  const context = createLazyEventContext(
+    {
+      ctx,
+      squareSize,
+      size,
+      x: 0,
+      y: 0,
+    },
+    {
+      piecesImage: () => piecesImage,
+      internalRef: () => internalRef,
+      pieceHoverRef: () => pieceHoverRef,
+    },
+    {
+      cache: false,
+    }
+  );
+  events?.drawPiece
+    ? triggerEvent(
+        events,
+        "drawPiece",
+        injection ? injection(context) : context
+      )
+    : defaultOnPieceDraw(context);
+  /*for (const [id, piece] of Object.entries(internalRef.current)) {
     if (piecesImage && id !== pieceHoverRef.current) {
       const image = piecesImage[piece.type];
       if (image && image.complete && image.naturalWidth > 0) {
         ctx.drawImage(image, piece.x, piece.y, squareSize, squareSize);
       }
     }
-  }
+  }*/
 };
 
 export default Draw;
