@@ -6,6 +6,7 @@ import { squareToCoords } from "../utils/coords";
 import onPointerDown from "../events/pointerDown";
 import { TBoardEventContext } from "../types/events";
 import onPointerMove from "../events/pointerMove";
+import onPointerUp from "../events/pointerUp";
 
 const Board: React.FC<TBoard> = ({
   config,
@@ -97,6 +98,17 @@ const Board: React.FC<TBoard> = ({
           pieceHoverRef,
         })
       }
+      onPointerUp={(e: React.PointerEvent<HTMLCanvasElement>) =>
+        onPointerUp({
+          e,
+          size,
+          isBlackView,
+          selectedRef,
+          internalRef,
+          pieceHoverRef,
+        })
+      }
+      onPointerLeave={() => (pieceHoverRef.current = null)}
     />
   );
 };

@@ -1,6 +1,6 @@
 import { getCanvasCoords } from "../utils/coords";
 import { TPointerMove } from "../types/events";
-import { TPieceId } from "../types/piece";
+import { getPiece } from "../helpers/lazyGetters";
 
 const onPointerMove = (args: TPointerMove) => {
   const { e, selectedRef, size, internalRef, pieceHoverRef } = args;
@@ -10,21 +10,21 @@ const onPointerMove = (args: TPointerMove) => {
     (selectedRef.current && !selectedRef.current.isDragging) ||
     !selectedRef.current
   ) {
-    const hover = Object.entries(internalRef.current).find(([id, piece]) => {
-      return (
-        offsetX >= piece.x &&
-        offsetX <= piece.x + squareSize &&
-        offsetY >= piece.y &&
-        offsetY <= piece.y + squareSize
-      );
-    });
+    const searchPiece = getPiece.at(
+      offsetX,
+      offsetY,
+      squareSize,
+      false,
+      internalRef
+    );
+    if (!searchPiece) {
+      pieceHoverRef.current = null;
+      return;
+    }
 
-    if (hover) {
-      const [id, _] = hover;
-      pieceHoverRef.current = id as TPieceId;
-    } else pieceHoverRef.current = null;
+    pieceHoverRef.current = searchPiece.id;
+    return;
   }
-  return;
 };
 
 export default onPointerMove;

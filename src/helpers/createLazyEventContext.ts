@@ -1,36 +1,45 @@
-import { TBoardEventContext } from "../types/events";
+type Resolvers<T> = { [k in keyof T]: () => T[k] };
+export type TBase = Record<string, any>;
+export type TResolved = Record<string, any>;
+export type LazyReturn<TBase, TResolved> = TBase &
+  TResolved & {
+    toPlain: () => TBase & TResolved;
+    clearCache: () => void;
+  };
+function createLazyEventContext<TBase, TResolved>(
+  base: TBase,
+  resolvers: Resolvers<TResolved>,
+  opts?: { cache?: boolean }
+): LazyReturn<TBase, TResolved> {
+  const cache = new Map<string, any>();
+  const result: any = { ...base };
+  const useCache = opts?.cache ?? true;
 
-type LazyResolvers = {
-  piece?: () => any;
-  square?: () => any;
-  piecesImage?: () => any;
-};
-
-export type LazyContextOptions<TExtra extends object = {}> = Omit<
-  TBoardEventContext,
-  keyof TExtra
-> &
-  TExtra & {
-    resolvers?: LazyResolvers;
+  for (const key of Object.keys(resolvers) as Array<keyof TResolved>) {
+    Object.defineProperty(result, key, {
+      enumerable: true,
+      configurable: true,
+      get() {
+        if (useCache && cache.has(key as string))
+          return cache.get(key as string);
+        const value = (resolvers as any)[key]();
+        if (useCache) cache.set(key as string, value);
+        return value;
+      },
+    });
+  }
+  result.toPlain = () => {
+    const plain: any = { ...base };
+    for (const k of Object.keys(resolvers) as Array<keyof TResolved>) {
+      plain[k] = (result as any)[k];
+    }
+    return plain as TBase & TResolved;
   };
 
-function createLazyEventContext<TExtra extends object = {}>(
-  opts: LazyContextOptions<TExtra>
-): TBoardEventContext & TExtra {
-  const cache: Record<string, unknown> = {};
+  result.clearCache = () => {
+    return cache.clear();
+  };
 
-  return new Proxy(opts, {
-    get(target, prop: string) {
-      if (prop in cache) return cache[prop];
-
-      if (prop in (target.resolvers || {})) {
-        const value = (target.resolvers as any)[prop]?.();
-        cache[prop] = value;
-        return value;
-      }
-
-      return (target as any)[prop];
-    },
-  }) as TBoardEventContext & TExtra;
+  return result;
 }
 export default createLazyEventContext;

@@ -5,6 +5,7 @@ import triggerEvent from "../helpers/triggerEvent";
 import { TBoardEventContext } from "../types/events";
 import defaultOnHover from "../interactions/onHover";
 import createLazyEventContext from "../helpers/createLazyEventContext";
+import { getPiece } from "../helpers/lazyGetters";
 
 const Draw = (args: TDrawBoard) => {
   const {
@@ -51,41 +52,55 @@ const Draw = (args: TDrawBoard) => {
 
     if (sqr) {
       const { x, y } = sqr;
-      const contexto: TBoardEventContext = { ctx, squareSize, x, y, size };
+      const context = createLazyEventContext(
+        { ctx, squareSize, x, y, size },
+        {
+          piece: () =>
+            getPiece.at(x, y, squareSize, isBlackView, internalRef)?.piece,
+          piecesImage: () => piecesImage,
+        },
+        { cache: true }
+      );
       events?.select
         ? triggerEvent(
             events,
             "select",
-            injection ? injection(contexto) : contexto
+            injection ? injection(context) : context
           )
-        : defaultOnSelect(contexto);
+        : defaultOnSelect(context);
     }
   }
 
   // piece hover
   if (pieceHoverRef.current && !selectedRef.current?.isDragging) {
     const piece = internalRef.current[pieceHoverRef.current];
+    if (piece) {
+      const context = createLazyEventContext(
+        {
+          ctx,
+          squareSize,
+          size,
+          x: piece.x,
+          y: piece.y,
+        },
+        {
+          piece: () => piece,
+          square: () => piece.square,
+          piecesImage: () => piecesImage,
+        },
+        {
+          cache: true,
+        }
+      );
 
-    const contexto = createLazyEventContext({
-      ctx,
-      squareSize,
-      size,
-      x: piece.x,
-      y: piece.y,
-      resolvers: {
-        piece: () => piece,
-        square: () => piece.square,
-        piecesImage: () => piecesImage,
-      },
-    });
-
-    events?.hover
-      ? triggerEvent(
-          events,
-          "hover",
-          injection ? injection(contexto) : contexto
-        )
-      : defaultOnHover(contexto);
+      events?.hover
+        ? triggerEvent(
+            events,
+            "hover",
+            injection ? injection(context) : context
+          )
+        : defaultOnHover(context);
+    }
   }
 
   // draw piece

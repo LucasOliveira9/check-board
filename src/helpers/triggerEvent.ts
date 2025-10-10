@@ -1,13 +1,18 @@
 import { TBoardEventContext, TBoardEvents } from "src/types/events";
 
-type TEventName = keyof TBoardEvents;
+type TEventName<T extends TBoardEventContext> = keyof TBoardEvents<T>;
 
 function triggerEvent<T extends TBoardEventContext = TBoardEventContext>(
-  events: TBoardEvents | undefined,
-  event: TEventName,
-  args: TBoardEventContext
+  events: TBoardEvents<T> | undefined,
+  event: TEventName<T>,
+  args: T
 ) {
-  events?.[event]?.(args as T);
+  try {
+    events?.[event]?.(args);
+  } finally {
+    if ("clearCache" in args && typeof args["clearCache"] === "function")
+      (args as any).clearCache();
+  }
 }
 
 export default triggerEvent;
