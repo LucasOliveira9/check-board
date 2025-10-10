@@ -4,6 +4,7 @@ import defaultOnSelect from "../interactions/onSelect";
 import triggerEvent from "../helpers/triggerEvent";
 import { TBoardEventContext } from "../types/events";
 import defaultOnHover from "../interactions/onHover";
+import createLazyEventContext from "../helpers/creatLazyEventContext";
 
 const Draw = (args: TDrawBoard) => {
   const {
@@ -64,18 +65,27 @@ const Draw = (args: TDrawBoard) => {
   // piece hover
   if (pieceHoverRef.current && !selectedRef.current?.isDragging) {
     const piece = internalRef.current[pieceHoverRef.current];
-    if (piece) {
-      const contexto = {
-        ctx,
-        squareSize,
-        piece,
-        piecesImage,
-        size,
-        x: piece.x,
-        y: piece.y,
-      };
-      defaultOnHover(contexto);
-    }
+
+    const contexto = createLazyEventContext({
+      ctx,
+      squareSize,
+      size,
+      x: piece.x,
+      y: piece.y,
+      resolvers: {
+        piece: () => piece,
+        square: () => piece.square,
+        piecesImage: () => piecesImage,
+      },
+    });
+
+    events?.hover
+      ? triggerEvent(
+          events,
+          "hover",
+          injection ? injection(contexto) : contexto
+        )
+      : defaultOnHover(contexto);
   }
 
   // draw piece

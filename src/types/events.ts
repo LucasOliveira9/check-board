@@ -20,16 +20,22 @@ type TPointerMove = {
   pieceHoverRef: React.RefObject<TPieceId | null>;
 };
 
-type TBoardEventContext = {
+type TBoardEventContextBase = {
   ctx: CanvasRenderingContext2D;
   squareSize: number;
   size: number;
   x: number;
   y: number;
+};
+
+type TBoardEventContextExtras = {
   piece?: TPieceInternalRef;
   piecesImage?: TPieceImage;
   square?: TSquare;
 };
+
+type TBoardEventContext = TBoardEventContextBase &
+  Partial<TBoardEventContextExtras>;
 
 type TBoardEvent<T = TBoardEventContext> = (arg: T) => void;
 
@@ -46,4 +52,6 @@ export type {
   TBoardEventContext,
   TBoardEvents,
   TBoardEvent,
+  TBoardEventContextBase,
+  TBoardEventContextExtras,
 };
