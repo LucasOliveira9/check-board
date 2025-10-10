@@ -4,7 +4,7 @@ import defaultOnSelect from "../interactions/onSelect";
 import triggerEvent from "../helpers/triggerEvent";
 import { TBoardEventContext } from "../types/events";
 import defaultOnHover from "../interactions/onHover";
-import createLazyEventContext from "../helpers/creatLazyEventContext";
+import createLazyEventContext from "../helpers/createLazyEventContext";
 
 const Draw = (args: TDrawBoard) => {
   const {
