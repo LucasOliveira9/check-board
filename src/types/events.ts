@@ -18,6 +18,7 @@ type TPointerMove = {
   selectedRef: React.RefObject<TSelected | null>;
   internalRef: React.RefObject<Record<TPieceId, TPieceInternalRef>>;
   pieceHoverRef: React.RefObject<TPieceId | null>;
+  canvasRef: React.RefObject<HTMLCanvasElement | null>;
 };
 
 type TBoardEventContextBase = {
