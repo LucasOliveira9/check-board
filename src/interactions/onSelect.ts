@@ -1,19 +1,21 @@
 import { TBoardEvent } from "src/types/events.ts";
 
 const defaultOnSelect: TBoardEvent = ({ ctx, squareSize, x, y }) => {
+  const SELECT_COLOR = "#ffc400ff";
+  const SELECT_GLOW = "rgba(255, 196, 0, 0.75)";
+
   ctx.beginPath();
   ctx.arc(
     x + squareSize / 2,
     y + squareSize / 2,
-    squareSize * 0.3,
+    squareSize * 0.35,
     0,
     Math.PI * 2
   );
-  ctx.strokeStyle = "rgba(229, 255, 0, 1)";
-  ctx.lineWidth = 1.5;
+  ctx.strokeStyle = SELECT_COLOR;
+  ctx.lineWidth = 3;
+  ctx.fillStyle = SELECT_GLOW;
   ctx.stroke();
-
-  ctx.fillStyle = "rgba(30, 255, 0, 0.61)";
   ctx.fill();
 };
 

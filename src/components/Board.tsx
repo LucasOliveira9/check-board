@@ -60,7 +60,7 @@ const Board: React.FC<TBoard> = ({
         size: size,
         isBlackView: isBlackView,
         canvas,
-        lightTile: lightTile ? lightTile : "#CBB994",
+        lightTile: lightTile ? lightTile : "#9a8b6dff",
         darkTile: darkTile ? darkTile : "#3E2723",
         piecesImage: pieceConfig.piecesImage
           ? pieceConfig.piecesImage
@@ -81,6 +81,7 @@ const Board: React.FC<TBoard> = ({
   }, [size, isBlackView, size]);
   return (
     <canvas
+      style={{ display: "block" }}
       ref={canvasRef}
       onPointerDown={(e: React.PointerEvent<HTMLCanvasElement>) =>
         onPointerDown({

@@ -41,9 +41,6 @@ const Draw = (args: TDrawBoard) => {
       );
     }
   }
-  ctx.lineWidth = 8;
-  ctx.strokeStyle = "rgba(29, 18, 2, 1)";
-  ctx.strokeRect(0, 0, size, size);
 
   // selected
   if (selectedRef.current) {
