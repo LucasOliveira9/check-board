@@ -2,6 +2,7 @@ import { TPieceInternalRef } from "../types/piece.ts";
 import { TBoardEventContext } from "../types/events.ts";
 import { squareToCoords } from "../utils/coords.ts";
 
+const scale = 1.1;
 const drawFunctions = {
   HTMLImageElement: (
     image: HTMLImageElement,
@@ -81,20 +82,61 @@ function defaultOnPieceDraw<T extends TBoardEventContext = TBoardEventContext>(
       }
     }
   }
-
+  const pieceToAnimate: TPieceInternalRef[] = [];
   for (const [id, piece] of Object.entries(internalRef.current)) {
+    if (
+      selectedRef?.current &&
+      selectedRef.current.isDragging &&
+      id === selectedRef.current.id
+    ) {
+      pieceToAnimate.push(piece);
+      continue;
+    }
+
     ctx.save();
     if (piecesImage && id !== pieceHoverRef?.current) {
       const image = piecesImage[piece.type];
       if (image instanceof HTMLImageElement)
         drawFunctions.HTMLImageElement(image, ctx, piece, squareSize);
-      else if (image instanceof Path2D)
-        drawFunctions.path2D(image, ctx, piece, squareSize);
       else if (typeof image === "string")
         drawFunctions.string(image, ctx, piece, squareSize);
     }
   }
   ctx.restore();
+
+  for (const piece of pieceToAnimate) {
+    ctx.save();
+    const image = piecesImage && piecesImage[piece.type];
+    if (image instanceof HTMLImageElement) {
+      if (image && image.complete && image.naturalWidth > 0) {
+        ctx.drawImage(
+          image,
+          piece.x - (squareSize * (scale - 1)) / 2,
+          piece.y - (squareSize * (scale - 1)) / 2,
+          squareSize * scale,
+          squareSize * scale
+        );
+      }
+    } else if (typeof image === "string") {
+      const image_ = image.length > 1 ? image[0] : image;
+      ctx.save();
+      ctx.fillStyle = piece.type[0] === "w" ? "#ffffffff" : "#000";
+      ctx.font = `${squareSize * 0.7 * scale}px monospace`;
+      let fontSize = squareSize * 0.7;
+      ctx.font = `${fontSize}px monospace`;
+      const textWidth = ctx.measureText(image_).width;
+      if (textWidth > squareSize * 0.9) {
+        fontSize *= (squareSize * 0.9) / textWidth;
+        ctx.font = `${fontSize}px monospace`;
+      }
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(image_, piece.x + squareSize / 2, piece.y + squareSize / 2);
+      ctx.restore();
+    }
+
+    ctx.restore();
+  }
 }
 
 export default defaultOnPieceDraw;

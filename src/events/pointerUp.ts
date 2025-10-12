@@ -12,7 +12,13 @@ const onPointerUp = (args: TPointerMove) => {
     }
   }
 
-  selectedRef.current = null;
+  selectedRef.current &&
+    (selectedRef.current = {
+      ...selectedRef.current,
+      isDragging: false,
+      startX: null,
+      startY: null,
+    });
   canvasRef.current && (canvasRef.current.style.cursor = "default");
 };
 

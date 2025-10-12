@@ -114,7 +114,17 @@ const Board: React.FC<TBoard> = ({
           canvasRef,
         })
       }
-      onPointerLeave={() => (pieceHoverRef.current = null)}
+      onPointerLeave={(e: React.PointerEvent<HTMLCanvasElement>) =>
+        onPointerUp({
+          e,
+          size,
+          isBlackView,
+          selectedRef,
+          internalRef,
+          pieceHoverRef,
+          canvasRef,
+        })
+      }
     />
   );
 };
