@@ -1,17 +1,36 @@
 import { TBoardEventContext, TBoardEvents } from "./events.ts";
-import { TPiece, TPieceBoard, TPieceId, TPieceImage } from "./piece.ts";
+import {
+  TPiece,
+  TPieceBoard,
+  TPieceDisplay,
+  TPieceId,
+  TPieceImage,
+} from "./piece.ts";
 import { TSquare } from "./square.ts";
 
 type TBoardInjection<T extends TBoardEventContext> = (
   ctx: TBoardEventContext
 ) => T;
-type TBoard<T extends TBoardEventContext = TBoardEventContext> = {
+type TBoard<
+  T extends TBoardEventContext = TBoardEventContext,
+  TDisplay = TPieceDisplay
+> = {
   config: TConfig;
-  piecesImage?: TPieceImage;
+  pieceConfig: TPieceConfig;
   events?: TBoardEvents;
   injection?: TBoardInjection<T>;
   pieces: TPieceBoard[];
 };
+
+type TPieceConfig =
+  | {
+      type: "string";
+      piecesImage?: TPieceImage<string>;
+    }
+  | {
+      type: "image";
+      piecesImage?: TPieceImage<HTMLImageElement>;
+    };
 
 type TConfig = {
   isBlackView: boolean;
@@ -30,4 +49,4 @@ type TSelected = {
   startY: number | null;
 };
 
-export type { TSelected, TBoard, TConfig, TBoardInjection };
+export type { TSelected, TBoard, TConfig, TBoardInjection, TPieceConfig };

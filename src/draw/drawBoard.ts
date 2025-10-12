@@ -109,7 +109,6 @@ const Draw = (args: TDrawBoard) => {
     }
   }
   // draw piece
-
   const context = createLazyEventContext(
     {
       ctx,
@@ -127,6 +126,7 @@ const Draw = (args: TDrawBoard) => {
       cache: false,
     }
   );
+
   events?.drawPiece
     ? triggerEvent(
         events,

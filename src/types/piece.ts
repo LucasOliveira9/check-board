@@ -75,20 +75,23 @@ type TPieceBoard = {
   type: TPiece;
   id: TPieceId;
 };
-type TPieceImage = {
-  wP: HTMLImageElement;
-  wB: HTMLImageElement;
-  wR: HTMLImageElement;
-  wN: HTMLImageElement;
-  wQ: HTMLImageElement;
-  wK: HTMLImageElement;
-  bP: HTMLImageElement;
-  bB: HTMLImageElement;
-  bR: HTMLImageElement;
-  bN: HTMLImageElement;
-  bQ: HTMLImageElement;
-  bK: HTMLImageElement;
-};
+const pieceKey = [
+  "wP",
+  "wB",
+  "wR",
+  "wN",
+  "wQ",
+  "wK",
+  "bP",
+  "bB",
+  "bR",
+  "bN",
+  "bQ",
+  "bK",
+] as const;
+type TPieceKey = (typeof pieceKey)[number];
+type TPieceDisplay = string | HTMLImageElement;
+type TPieceImage<T = unknown> = Record<TPieceKey, T>;
 
 type TPieceInternalRef = {
   square: TSquare;
@@ -97,4 +100,12 @@ type TPieceInternalRef = {
   y: number;
 };
 
-export type { TPiece, TPieceBoard, TPieceImage, TPieceId, TPieceInternalRef };
+export type {
+  TPiece,
+  TPieceBoard,
+  TPieceImage,
+  TPieceId,
+  TPieceInternalRef,
+  TPieceDisplay,
+  TPieceKey,
+};

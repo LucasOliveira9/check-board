@@ -7,10 +7,11 @@ import onPointerDown from "../events/pointerDown.ts";
 import { TBoardEventContext } from "../types/events.ts";
 import onPointerMove from "../events/pointerMove.ts";
 import onPointerUp from "../events/pointerUp.ts";
+import pieceStyle from "../helpers/pieceStyle.ts";
 
 const Board: React.FC<TBoard> = ({
   config,
-  piecesImage,
+  pieceConfig,
   pieces,
   events,
   injection,
@@ -23,7 +24,7 @@ const Board: React.FC<TBoard> = ({
   );
   const selectedRef = useRef<TSelected | null>(null);
   const pieceHoverRef = useRef<TPieceId | null>(null);
-
+  const pieceStyleRef = useRef(pieceStyle[pieceConfig.type]);
   useEffect(() => {
     const squareSize = size / 8;
     for (const piece of pieces) {
@@ -59,9 +60,11 @@ const Board: React.FC<TBoard> = ({
         size: size,
         isBlackView: isBlackView,
         canvas,
-        lightTile: lightTile ? lightTile : "#C8A76E",
-        darkTile: darkTile ? darkTile : "#7F532F",
-        piecesImage,
+        lightTile: lightTile ? lightTile : "#CBB994",
+        darkTile: darkTile ? darkTile : "#3E2723",
+        piecesImage: pieceConfig.piecesImage
+          ? pieceConfig.piecesImage
+          : pieceStyleRef.current,
         internalRef,
         selectedRef,
         events,
