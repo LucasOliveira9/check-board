@@ -35,6 +35,8 @@ type TBoardEventContextExtras = {
   square?: TSquare;
   internalRef?: React.RefObject<Record<TPieceId, TPieceInternalRef>>;
   pieceHoverRef?: React.RefObject<TPieceId | null>;
+  selectedRef?: React.RefObject<TSelected | null>;
+  isBlackView?: boolean;
 };
 
 type TBoardEventContext = TBoardEventContextBase &

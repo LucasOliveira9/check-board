@@ -1,5 +1,6 @@
-import { TPieceInternalRef } from "src/types/piece.ts";
+import { TPieceInternalRef } from "../types/piece.ts";
 import { TBoardEventContext } from "../types/events.ts";
+import { squareToCoords } from "../utils/coords.ts";
 
 const drawFunctions = {
   HTMLImageElement: (
@@ -50,8 +51,36 @@ const drawFunctions = {
 function defaultOnPieceDraw<T extends TBoardEventContext = TBoardEventContext>(
   args: T
 ) {
-  const { ctx, piecesImage, internalRef, pieceHoverRef, squareSize } = args;
+  const {
+    ctx,
+    piecesImage,
+    internalRef,
+    pieceHoverRef,
+    squareSize,
+    selectedRef,
+    isBlackView,
+  } = args;
   if (!internalRef || internalRef?.current === null) return;
+
+  for (const [id, piece] of Object.entries(internalRef.current)) {
+    if (
+      selectedRef?.current &&
+      selectedRef?.current.id === id &&
+      selectedRef.current.isDragging
+    ) {
+      continue;
+    } else {
+      const coords = squareToCoords(
+        piece.square,
+        squareSize,
+        isBlackView || false
+      );
+      if (coords) {
+        piece.x = coords.x;
+        piece.y = coords.y;
+      }
+    }
+  }
 
   for (const [id, piece] of Object.entries(internalRef.current)) {
     ctx.save();

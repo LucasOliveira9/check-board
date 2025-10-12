@@ -83,6 +83,7 @@ const Draw = (args: TDrawBoard) => {
           size,
           x: piece.x,
           y: piece.y,
+          isBlackView,
         },
         {
           piece: () => piece,
@@ -118,12 +119,12 @@ const Draw = (args: TDrawBoard) => {
       piecesImage: () => piecesImage,
       internalRef: () => internalRef,
       pieceHoverRef: () => pieceHoverRef,
+      selectedRef: () => selectedRef,
     },
     {
       cache: false,
     }
   );
-
   events?.drawPiece
     ? triggerEvent(
         events,
