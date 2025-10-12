@@ -1,17 +1,23 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
+    "module": "nodenext",
     "lib": ["DOM", "ESNext"],
     "jsx": "react-jsx",
-    "moduleResolution": "node",
+    "moduleResolution": "nodenext",
+    "allowImportingTsExtensions": true,
+    "allowSyntheticDefaultImports": true,
+    "emitDeclarationOnly": false,
+    "declaration": false,
+    "esModuleInterop": true,
     "baseUrl": ".",
     "paths": {
-      "@check-board": ["src"]
+      "@check-board": ["src/index.ts"]
     },
     "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "noEmit": true,
+    "forceConsistentCasingInFileNames": true
   },
-  "include": ["src", "demo/src"]
+  "include": ["src", "demo"]
 }

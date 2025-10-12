@@ -7,7 +7,6 @@
   "module": "dist/check-board.es.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "dev": "vite",
     "dev:demo": "vite --config demo/vite.config.ts",
     "build": "tsc -b && vite build",
     "preview": "vite preview"

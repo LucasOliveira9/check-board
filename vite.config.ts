@@ -14,7 +14,7 @@ export default defineConfig({
       entry: path.resolve(__dirname, "src/index.ts"),
       name: "CheckBoard",
       fileName: "check-board",
-      formats: ["es", "cjs", "umd"],
+      formats: ["es", "cjs"],
     },
     rollupOptions: {
       external: ["react", "react-dom"],
