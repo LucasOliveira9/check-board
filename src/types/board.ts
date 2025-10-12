@@ -1,6 +1,6 @@
-import { TBoardEventContext, TBoardEvents } from "./events";
-import { TPiece, TPieceBoard, TPieceId, TPieceImage } from "./piece";
-import { TSquare } from "./square";
+import { TBoardEventContext, TBoardEvents } from "./events.ts";
+import { TPiece, TPieceBoard, TPieceId, TPieceImage } from "./piece.ts";
+import { TSquare } from "./square.ts";
 
 type TBoardInjection<T extends TBoardEventContext> = (
   ctx: TBoardEventContext

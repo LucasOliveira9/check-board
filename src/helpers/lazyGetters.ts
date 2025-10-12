@@ -1,6 +1,6 @@
-import { TNotation } from "../types/square";
-import { TPieceId, TPieceInternalRef } from "../types/piece";
-import { coordsToSquare } from "../utils/coords";
+import { TNotation } from "../types/square.ts";
+import { TPieceId, TPieceInternalRef } from "../types/piece.ts";
+import { coordsToSquare } from "../utils/coords.ts";
 
 type TCache = Map<TNotation, { piece: TPieceInternalRef; id: TPieceId }>;
 

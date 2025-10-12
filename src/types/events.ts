@@ -1,7 +1,7 @@
 import React from "react";
-import { TSelected } from "./board";
-import { TPieceId, TPieceImage, TPieceInternalRef } from "./piece";
-import { TSquare } from "./square";
+import { TSelected } from "./board.ts";
+import { TPieceId, TPieceImage, TPieceInternalRef } from "./piece.ts";
+import { TSquare } from "./square.ts";
 
 type TPointerDown = {
   e: React.PointerEvent<HTMLCanvasElement>;

@@ -1,12 +1,12 @@
-import { squareToCoords } from "../utils/coords";
-import { TDrawBoard } from "../types/draw";
-import defaultOnSelect from "../interactions/onSelect";
-import triggerEvent from "../helpers/triggerEvent";
-import { TBoardEventContext } from "../types/events";
-import defaultOnHover from "../interactions/onHover";
-import createLazyEventContext from "../helpers/createLazyEventContext";
-import { getPiece } from "../helpers/lazyGetters";
-import defaultOnPieceDraw from "../interactions/onPieceDraw";
+import { squareToCoords } from "../utils/coords.ts";
+import { TDrawBoard } from "../types/draw.ts";
+import defaultOnSelect from "../interactions/onSelect.ts";
+import triggerEvent from "../helpers/triggerEvent.ts";
+import { TBoardEventContext } from "../types/events.ts";
+import defaultOnHover from "../interactions/onHover.ts";
+import createLazyEventContext from "../helpers/createLazyEventContext.ts";
+import { getPiece } from "../helpers/lazyGetters.ts";
+import defaultOnPieceDraw from "../interactions/onPieceDraw.ts";
 
 const Draw = (args: TDrawBoard) => {
   const {

@@ -1,4 +1,4 @@
-import { TBoardEvent } from "src/types/events";
+import { TBoardEvent } from "src/types/events.ts";
 
 const defaultOnSelect: TBoardEvent = ({ ctx, squareSize, x, y }) => {
   ctx.beginPath();

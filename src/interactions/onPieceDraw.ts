@@ -1,4 +1,4 @@
-import { TBoardEventContext } from "../types/events";
+import { TBoardEventContext } from "../types/events.ts";
 
 function defaultOnPieceDraw<T extends TBoardEventContext = TBoardEventContext>(
   args: T

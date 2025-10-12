@@ -1,4 +1,4 @@
-import { TFile, TRank, TSquare } from "../types/square";
+import { TFile, TRank, TSquare } from "../types/square.ts";
 
 const files = "abcdefgh";
 const squareToCoords = (

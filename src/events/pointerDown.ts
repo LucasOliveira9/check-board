@@ -1,7 +1,7 @@
-import { coordsToSquare, getCanvasCoords } from "../utils/coords";
-import { TPointerDown } from "../types/events";
-import { TPieceId } from "../types/piece";
-import { getPiece } from "../helpers/lazyGetters";
+import { coordsToSquare, getCanvasCoords } from "../utils/coords.ts";
+import { TPointerDown } from "../types/events.ts";
+import { TPieceId } from "../types/piece.ts";
+import { getPiece } from "../helpers/lazyGetters.ts";
 
 const onPointerDown = (args: TPointerDown) => {
   const { e, isBlackView, size, selectedRef, internalRef } = args;

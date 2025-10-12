@@ -1,4 +1,4 @@
-import { TBoardEventContext, TBoardEvents } from "src/types/events";
+import { TBoardEventContext, TBoardEvents } from "src/types/events.ts";
 
 type TEventName<T extends TBoardEventContext> = keyof TBoardEvents<T>;
 

@@ -1,6 +1,11 @@
-import { TBoard, TBoardInjection, TSelected } from "./board";
-import { TBoardEventContext, TBoardEvents } from "./events";
-import { TPieceBoard, TPieceId, TPieceImage, TPieceInternalRef } from "./piece";
+import { TBoard, TBoardInjection, TSelected } from "./board.ts";
+import { TBoardEventContext, TBoardEvents } from "./events.ts";
+import {
+  TPieceBoard,
+  TPieceId,
+  TPieceImage,
+  TPieceInternalRef,
+} from "./piece.ts";
 
 export type TDrawBoard<T extends TBoardEventContext = TBoardEventContext> = {
   canvas: HTMLCanvasElement;

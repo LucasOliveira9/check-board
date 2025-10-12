@@ -1,12 +1,12 @@
 import { useEffect, useRef } from "react";
-import Draw from "../draw/drawBoard";
-import { TBoard, TConfig, TSelected } from "../types/board";
-import { TPieceId, TPieceInternalRef } from "../types/piece";
-import { squareToCoords } from "../utils/coords";
-import onPointerDown from "../events/pointerDown";
-import { TBoardEventContext } from "../types/events";
-import onPointerMove from "../events/pointerMove";
-import onPointerUp from "../events/pointerUp";
+import Draw from "../draw/drawBoard.ts";
+import { TBoard, TConfig, TSelected } from "../types/board.ts";
+import { TPieceId, TPieceInternalRef } from "../types/piece.ts";
+import { squareToCoords } from "../utils/coords.ts";
+import onPointerDown from "../events/pointerDown.ts";
+import { TBoardEventContext } from "../types/events.ts";
+import onPointerMove from "../events/pointerMove.ts";
+import onPointerUp from "../events/pointerUp.ts";
 
 const Board: React.FC<TBoard> = ({
   config,
@@ -27,12 +27,12 @@ const Board: React.FC<TBoard> = ({
   useEffect(() => {
     const squareSize = size / 8;
     for (const piece of pieces) {
-      const existing = internalRef.current[piece.id];
+      const existing = internalRef.current[piece.id as TPieceId];
       const square =
         piece.square && squareToCoords(piece.square, squareSize, isBlackView);
       if (square && !piece.square.captured) {
         if (!existing) {
-          internalRef.current[piece.id] = {
+          internalRef.current[piece.id as TPieceId] = {
             square: piece.square,
             type: piece.type,
             x: square.x,

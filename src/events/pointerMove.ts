@@ -1,6 +1,6 @@
-import { getCanvasCoords } from "../utils/coords";
-import { TPointerMove } from "../types/events";
-import { getPiece } from "../helpers/lazyGetters";
+import { getCanvasCoords } from "../utils/coords.ts";
+import { TPointerMove } from "../types/events.ts";
+import { getPiece } from "../helpers/lazyGetters.ts";
 
 const onPointerMove = (args: TPointerMove) => {
   const { e, selectedRef, size, internalRef, pieceHoverRef, canvasRef } = args;

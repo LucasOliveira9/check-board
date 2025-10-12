@@ -1,4 +1,4 @@
-import { TSquare } from "./square";
+import { TSquare } from "./square.ts";
 
 type TColor = "w" | "b";
 type TPieceUp = "P" | "R" | "N" | "B" | "Q" | "K";

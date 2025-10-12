@@ -1,4 +1,4 @@
-import { TBoardEventContext } from "src/types/events";
+import { TBoardEventContext } from "../types/events.ts";
 
 function defaultOnHover<T extends TBoardEventContext = TBoardEventContext>(
   args: T
