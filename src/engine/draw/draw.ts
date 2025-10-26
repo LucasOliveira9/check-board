@@ -23,6 +23,7 @@ class Draw {
   board() {
     let ctx = this.boardRuntime.getCanvasLayers().getContext("board");
     if (!ctx) return;
+
     const size = this.boardRuntime.getSize(),
       isBlackView = this.boardRuntime.getIsBlackView(),
       lightTile = this.boardRuntime.getLightTile(),
@@ -33,6 +34,7 @@ class Draw {
     const squareSize = size / 8;
     const firstColor = !isBlackView ? lightTile : darkTile,
       secondColor = !isBlackView ? darkTile : lightTile;
+
     // draw board
     for (let rank = 0; rank < 8; ++rank) {
       for (let file = 0; file < 8; ++file) {

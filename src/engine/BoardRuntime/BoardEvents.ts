@@ -69,7 +69,7 @@ class BoardEvents {
         offsetX,
         offsetY,
         squareSize,
-        false,
+        this.boardRuntime.getIsBlackView(),
         this.boardRuntime.getInternalRefObj()
       );
       if (!searchPiece) {

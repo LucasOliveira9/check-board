@@ -24,6 +24,10 @@ class Client {
   public setBoard(board: TPieceBoard[]) {
     this.getRuntime()?.setBoard(board);
   }
+
+  public setBlackView(b: boolean) {
+    this.getRuntime()?.setBlackView(b);
+  }
 }
 
 export default Client;

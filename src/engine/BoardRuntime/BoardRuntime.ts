@@ -154,6 +154,10 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
   setBoard(board: TPieceBoard[] | undefined) {
     board && (this.args.board = structuredClone(board));
+    this.refreshCanvas();
+  }
+
+  refreshCanvas() {
     this.helpers.pieceHelper.clearCache();
     this.initInternalRef();
     this.renderPieces();
@@ -185,6 +189,14 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.pieceHover = piece;
   }
 
+  setBlackView(b: boolean) {
+    this.args.isBlackView = b;
+    this.setInternalRefObj({} as Record<TPieceId, TPieceInternalRef>);
+    this.clearAnimation();
+    this.renderBoard();
+    this.refreshCanvas();
+  }
+
   deleteIntervalRefVal(key: TPieceId) {
     delete this.internalRef[key];
   }
@@ -192,11 +204,9 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   renderBoard() {
     if (!this.args.canvasLayers) return;
     const canvas = this.args.canvasLayers.getCanvas("board").current;
-    let ctx = canvas?.getContext("2d");
-    if (!canvas || !ctx) return;
+    if (!canvas) return;
     this.args.canvasLayers?.keepQuality("board", this.args.size);
     this.draw.board();
-    ctx = null;
   }
 
   async renderPieces() {

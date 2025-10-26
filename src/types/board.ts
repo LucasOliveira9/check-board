@@ -24,6 +24,7 @@ type TBoard = {
   boardRef: React.RefObject<HTMLCanvasElement | null>;
   piecesRef: React.RefObject<HTMLCanvasElement | null>;
   overlayRef: React.RefObject<HTMLCanvasElement | null>;
+  size: number;
 };
 
 interface TBoardRuntime<T extends TBoardEventContext = TBoardEventContext> {

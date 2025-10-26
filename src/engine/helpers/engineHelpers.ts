@@ -137,7 +137,7 @@ class EngineHelpers {
         this.boardRuntime.setSelected(null);
         this.boardRuntime.setBoard(board);
         return true;
-      } else {
+      } else if (board === false) {
         const selected = this.boardRuntime.getSelected();
         selected && ((piece_.x = selected.x), (piece_.y = selected.y));
         this.boardRuntime.setSelected(null);

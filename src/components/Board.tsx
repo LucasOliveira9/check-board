@@ -6,9 +6,8 @@ const Board: React.FC<TBoard> = ({
   boardRef,
   piecesRef,
   overlayRef,
+  size,
 }) => {
-  const size = boardRuntime.current?.getSize() || 0;
-
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       boardRuntime.current?.boardEvents.OnPointerDown(e);

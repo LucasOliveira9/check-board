@@ -9,7 +9,7 @@ import { BoardHandled } from "../engine/client/interface";
 
 const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
   ({ config }, ref) => {
-    const { isBlackView, pieceConfig, board } = config;
+    const { isBlackView, pieceConfig, board, size } = config;
     const boardCanvasRef = useRef<HTMLCanvasElement>(null);
     const pieceCanvasRef = useRef<HTMLCanvasElement>(null);
     const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -17,6 +17,11 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
     const boardRuntime = useRef<BoardRuntime>(null);
     const clientRef = useRef<Client>(null);
 
+    useEffect(() => {
+      if (!boardRuntime.current) return;
+      boardRuntime.current.setSelected(null);
+      boardRuntime.current.setBoard(board);
+    }, [board]);
     useEffect(() => {
       if (boardRuntime.current) {
         boardRuntime.current.destroy();
@@ -60,7 +65,11 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
     useImperativeHandle(ref, () => ({
       setBoard: (b) => {
         if (!clientRef.current) return;
-        clientRef.current?.setBoard(b);
+        clientRef.current.setBoard(b);
+      },
+      setBlackView: (b) => {
+        if (!clientRef.current) return;
+        clientRef.current.setBlackView(b);
       },
     }));
 
@@ -70,6 +79,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
         boardRef={boardCanvasRef}
         piecesRef={pieceCanvasRef}
         overlayRef={overlayCanvasRef}
+        size={size}
       />
     );
   }
