@@ -28,4 +28,8 @@ export default defineConfig({
     sourcemap: true,
     minify: true,
   },
+  server: {
+    watch: { usePolling: true },
+    hmr: { overlay: false },
+  },
 });

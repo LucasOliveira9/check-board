@@ -1,26 +1,45 @@
-import { TBoardEventContext, TBoardEvents } from "./events.ts";
+import CanvasLayers from "../engine/BoardRuntime/canvasLayers";
+import BoardRuntime from "../engine/BoardRuntime/BoardRuntime";
+import { TBoardEventContext, TBoardEvents, TMove } from "./events";
 import {
   TPiece,
   TPieceBoard,
   TPieceDisplay,
   TPieceId,
   TPieceImage,
-} from "./piece.ts";
-import { TSquare } from "./square.ts";
+  TPieceInternalRef,
+} from "./piece";
+import { TSquare } from "./square";
 
 type TBoardInjection<T extends TBoardEventContext> = (
   ctx: TBoardEventContext
 ) => T;
-type TBoard<
-  T extends TBoardEventContext = TBoardEventContext,
-  TDisplay = TPieceDisplay
-> = {
+
+type TBoardEngine = {
   config: TConfig;
+};
+
+type TBoard = {
+  boardRuntime: React.RefObject<BoardRuntime | null>;
+  boardRef: React.RefObject<HTMLCanvasElement | null>;
+  piecesRef: React.RefObject<HTMLCanvasElement | null>;
+  overlayRef: React.RefObject<HTMLCanvasElement | null>;
+};
+
+interface TBoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
+  size: number;
+  isBlackView: boolean;
+  darkTile?: string;
+  lightTile?: string;
   pieceConfig: TPieceConfig;
+  board: TPieceBoard[];
   events?: TBoardEvents;
   injection?: TBoardInjection<T>;
-  pieces: TPieceBoard[];
-};
+  pieceStyle?: TPieceImage<TPieceDisplay>;
+  move?: (arg: TMove) => TPieceBoard[] | void | false;
+  defaultAnimation?: boolean;
+  canvasLayers: CanvasLayers;
+}
 
 type TPieceConfig =
   | {
@@ -32,11 +51,17 @@ type TPieceConfig =
       piecesImage?: TPieceImage<HTMLImageElement>;
     };
 
-type TConfig = {
+type TConfig<T extends TBoardEventContext = TBoardEventContext> = {
   isBlackView: boolean;
   size: number;
+  board: TPieceBoard[];
+  pieceConfig: TPieceConfig;
   lightTile?: string;
   darkTile?: string;
+  events?: TBoardEvents<T>;
+  injection?: TBoardInjection<T>;
+  move?: (arg: TMove) => TPieceBoard[] | void | false;
+  defaultAnimation?: boolean;
 };
 
 type TSelected = {
@@ -49,4 +74,12 @@ type TSelected = {
   startY: number | null;
 };
 
-export type { TSelected, TBoard, TConfig, TBoardInjection, TPieceConfig };
+export type {
+  TSelected,
+  TBoard,
+  TConfig,
+  TBoardInjection,
+  TPieceConfig,
+  TBoardEngine,
+  TBoardRuntime,
+};

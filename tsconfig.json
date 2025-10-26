@@ -1,23 +1,18 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "nodenext",
+    "module": "ESNext",
     "lib": ["DOM", "ESNext"],
     "jsx": "react-jsx",
-    "moduleResolution": "nodenext",
-    "allowImportingTsExtensions": true,
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "emitDeclarationOnly": false,
-    "declaration": false,
+    "strict": true,
+    "skipLibCheck": true,
     "esModuleInterop": true,
     "baseUrl": ".",
     "paths": {
       "@check-board": ["src/index.ts"]
-    },
-    "strict": true,
-    "skipLibCheck": true,
-    "noEmit": true,
-    "forceConsistentCasingInFileNames": true
+    }
   },
-  "include": ["src", "demo"]
+  "include": ["src", "demo", "vite-env.d.ts"]
 }

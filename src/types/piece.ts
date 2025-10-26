@@ -1,4 +1,4 @@
-import { TSquare } from "./square.ts";
+import { TSquare } from "./square";
 
 type TColor = "w" | "b";
 type TPieceUp = "P" | "R" | "N" | "B" | "Q" | "K";
@@ -98,6 +98,7 @@ type TPieceInternalRef = {
   type: TPiece;
   x: number;
   y: number;
+  anim?: boolean;
 };
 
 export type {

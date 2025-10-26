@@ -1,22 +1,24 @@
-import { TBoard, TBoardInjection, TSelected } from "./board.ts";
-import { TBoardEventContext, TBoardEvents } from "./events.ts";
-import {
-  TPieceBoard,
-  TPieceId,
-  TPieceImage,
-  TPieceInternalRef,
-} from "./piece.ts";
+import { TBoard, TBoardInjection, TSelected } from "./board";
+import { TBoardEventContext, TBoardEvents } from "./events";
+import { TPieceBoard, TPieceId, TPieceImage, TPieceInternalRef } from "./piece";
 
-export type TDrawBoard<T extends TBoardEventContext = TBoardEventContext> = {
+type TDrawBoard = {
   canvas: HTMLCanvasElement;
   lightTile: string;
   size: number;
   darkTile: string;
   isBlackView: boolean;
-  internalRef: React.RefObject<Record<TPieceId, TPieceInternalRef>>;
-  selectedRef: React.RefObject<TSelected | null>;
-  pieceHoverRef: React.RefObject<TPieceId | null>;
+};
+
+type TDrawPieces<T extends TBoardEventContext = TBoardEventContext> = {
+  canvas: HTMLCanvasElement;
+  size: number;
+  isBlackView: boolean;
+  internalRef: Record<TPieceId, TPieceInternalRef>;
+  selectedRef: TSelected | null;
+  pieceHoverRef: TPieceId | null;
   piecesImage?: TPieceImage;
   events?: TBoardEvents<T>;
   injection?: TBoardInjection<T>;
 };
+export type { TDrawBoard, TDrawPieces };

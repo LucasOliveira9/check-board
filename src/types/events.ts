@@ -1,7 +1,6 @@
-import React from "react";
-import { TSelected } from "./board.ts";
-import { TPieceId, TPieceImage, TPieceInternalRef } from "./piece.ts";
-import { TSquare } from "./square.ts";
+import { TSelected } from "./board";
+import { TPieceBoard, TPieceId, TPieceImage, TPieceInternalRef } from "./piece";
+import { TNotation, TSquare } from "./square";
 
 type TPointerDown = {
   e: React.PointerEvent<HTMLCanvasElement>;
@@ -33,10 +32,25 @@ type TBoardEventContextExtras = {
   piece?: TPieceInternalRef;
   piecesImage?: TPieceImage;
   square?: TSquare;
-  internalRef?: React.RefObject<Record<TPieceId, TPieceInternalRef>>;
-  pieceHoverRef?: React.RefObject<TPieceId | null>;
-  selectedRef?: React.RefObject<TSelected | null>;
+  internalRef?: Record<TPieceId, TPieceInternalRef>;
+  pieceHoverRef?: TPieceId | null;
+  selectedRef?: TSelected | null;
   isBlackView?: boolean;
+  lightTile?: string;
+  darkTile?: string;
+  canvas?: HTMLCanvasElement;
+  animation?: {
+    from: { x: number; y: number };
+    to: { x: number; y: number };
+    piece: TPieceInternalRef;
+    start: number;
+  }[];
+};
+
+type TMove = {
+  from: TNotation;
+  to: TNotation;
+  piece: TPieceBoard;
 };
 
 type TBoardEventContext = TBoardEventContextBase &
@@ -60,4 +74,5 @@ export type {
   TBoardEvent,
   TBoardEventContextBase,
   TBoardEventContextExtras,
+  TMove,
 };
