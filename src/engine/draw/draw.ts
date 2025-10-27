@@ -1,3 +1,4 @@
+import { TPieceInternalRef } from "src/types/piece";
 import { squareToCoords } from "../../utils/coords";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 import Iterators from "../iterators/iterators";
@@ -172,25 +173,17 @@ class Draw {
     ctx.clearRect(0, 0, size, size);
 
     //draw pieces
-    const context = this.boardRuntime.helpers.createLazyEventContext(
-      {
-        ctx,
-        squareSize,
-        size,
-        x: 0,
-        y: 0,
-      },
-      {
-        piecesImage: () => piecesImage,
-        internalRef: () => internalRef,
-        pieceHoverRef: () => pieceHoverRef,
-        selectedRef: () => selectedRef,
-        animation: () => this.boardRuntime.getAnimation(),
-      },
-      {
-        cache: false,
-      }
-    );
+    const context = this.boardRuntime.getContext(true, {
+      ctx,
+      squareSize,
+      x: 0,
+      y: 0,
+      size,
+      getSquare: selectedRef?.square,
+      getCanvas:
+        this.boardRuntime.getCanvasLayers().getCanvas("pieces").current ||
+        undefined,
+    });
 
     events?.drawPiece
       ? this.boardRuntime.helpers.triggerEvent(
@@ -203,27 +196,21 @@ class Draw {
     // draw hover piece
     if (pieceHoverRef && !selectedRef?.isDragging) {
       const piece = internalRef[pieceHoverRef];
+      const canvas = this.boardRuntime.getCanvasLayers().getCanvas("overlay")
+        .current
+        ? this.boardRuntime.getCanvasLayers().getCanvas("overlay").current
+        : undefined;
       if (piece && !piece.anim) {
-        const context = this.boardRuntime.helpers.createLazyEventContext(
-          {
-            ctx,
-            squareSize,
-            size,
-            x: piece.x,
-            y: piece.y,
-            isBlackView,
-          },
-          {
-            piece: () => piece,
-            square: () => piece.square,
-            piecesImage: () => piecesImage,
-            internalRef: () => internalRef,
-            pieceHoverRef: () => pieceHoverRef,
-          },
-          {
-            cache: true,
-          }
-        );
+        const context = this.boardRuntime.getContext(true, {
+          ctx,
+          squareSize,
+          x: piece.x,
+          y: piece.y,
+          size,
+          getPiece: piece,
+          getSquare: piece.square,
+          getCanvas: canvas ? canvas : undefined,
+        });
 
         events?.hover
           ? this.boardRuntime.helpers.triggerEvent(
@@ -231,7 +218,17 @@ class Draw {
               "hover",
               injection ? injection(context) : context
             )
-          : this.iterator.defaultOnHover(context);
+          : this.iterator.defaultOnHover({
+              ctx,
+              size,
+              squareSize,
+              x: piece.x,
+              y: piece.y,
+              getCanvas: canvas ? canvas : undefined,
+              getPiece: piece,
+              getSquare: piece.square,
+              getPiecesImage: piecesImage,
+            });
       }
     }
     ctx = null;
@@ -258,34 +255,43 @@ class Draw {
 
       if (sqr) {
         const { x, y } = sqr;
-        const context = this.boardRuntime.helpers.createLazyEventContext(
-          { ctx, squareSize, x, y, size },
-          {
-            piece: () =>
-              this.boardRuntime.helpers.pieceHelper.getPieceAt(
-                x,
-                y,
-                squareSize,
-                isBlackView,
-                internalRef
-              )?.piece,
-            piecesImage: () => piecesImage,
-            square: () => selectedRef?.square,
-            internalRef: () => internalRef,
-            pieceHoverRef: () => pieceHoverRef,
-            canvas: () =>
-              this.boardRuntime.getCanvasLayers().getCanvas("overlay")
-                .current || undefined,
-          },
-          { cache: true }
-        );
+        const piece_ = this.boardRuntime.helpers.pieceHelper.getPieceAt(
+          x,
+          y,
+          squareSize,
+          isBlackView,
+          internalRef
+        )?.piece;
+
+        const context = this.boardRuntime.getContext(true, {
+          ctx,
+          squareSize,
+          x,
+          y,
+          size,
+          getPiece: piece_,
+          getSquare: selectedRef.square,
+          getCanvas:
+            this.boardRuntime.getCanvasLayers().getCanvas("overlay").current ||
+            undefined,
+        });
+
         events?.select
           ? this.boardRuntime.helpers.triggerEvent(
               events,
               "select",
               injection ? injection(context) : context
             )
-          : this.iterator.defaultOnSelect(context);
+          : this.iterator.defaultOnSelect({
+              ctx,
+              x,
+              y,
+              size,
+              squareSize,
+              getPiece: piece_,
+              getPiecesImage: piecesImage,
+              getSquare: selectedRef.square,
+            });
       }
     }
   }

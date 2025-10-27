@@ -1,6 +1,7 @@
 import { TSelected } from "./board";
 import { TPieceBoard, TPieceId, TPieceImage, TPieceInternalRef } from "./piece";
 import { TNotation, TSquare } from "./square";
+import { TDeepReadonly } from "./utils";
 
 type TPointerDown = {
   e: React.PointerEvent<HTMLCanvasElement>;
@@ -29,23 +30,25 @@ type TBoardEventContextBase = {
 };
 
 type TBoardEventContextExtras = {
-  piece?: TPieceInternalRef;
-  piecesImage?: TPieceImage;
-  square?: TSquare;
-  internalRef?: Record<TPieceId, TPieceInternalRef>;
-  pieceHoverRef?: TPieceId | null;
-  selectedRef?: TSelected | null;
-  isBlackView?: boolean;
-  lightTile?: string;
-  darkTile?: string;
-  canvas?: HTMLCanvasElement;
-  animation?: {
-    from: { x: number; y: number };
-    to: { x: number; y: number };
-    piece: TPieceInternalRef;
-    start: number;
-  }[];
+  getPiece?: TPieceInternalRef | null;
+  getPiecesImage?: TPieceImage | null;
+  getSquare?: TSquare | null;
+  getPieces?: Record<TPieceId, TPieceInternalRef>;
+  getPieceHover?: TPieceId | null;
+  getSelected?: TSelected | null;
+  getIsBlackView?: boolean;
+  getLightTile?: string;
+  getDarkTile?: string;
+  getCanvas?: HTMLCanvasElement;
+  getAnimation?: TDeepReadonly<TAnimation>;
 };
+
+type TAnimation = {
+  from: { x: number; y: number };
+  to: { x: number; y: number };
+  piece: TPieceInternalRef;
+  start: number;
+}[];
 
 type TMove = {
   from: TNotation;
@@ -75,4 +78,5 @@ export type {
   TBoardEventContextBase,
   TBoardEventContextExtras,
   TMove,
+  TAnimation,
 };

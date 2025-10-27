@@ -126,7 +126,7 @@ class PieceHelpers {
     })(),
   };
 
-  async preloadImages(images: TPieceImage<TPieceDisplay>): Promise<void> {
+  async preloadImages(images: TPieceImage): Promise<void> {
     const ImagePromises = Object.values(images).map((img) => {
       return new Promise<void>((resolve) => {
         if (!(img instanceof HTMLImageElement)) resolve();

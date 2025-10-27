@@ -36,13 +36,13 @@ interface TBoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   board: TPieceBoard[];
   events?: TBoardEvents;
   injection?: TBoardInjection<T>;
-  pieceStyle?: TPieceImage<TPieceDisplay>;
+  pieceStyle?: TPieceImage;
   move?: (arg: TMove) => TPieceBoard[] | void | false;
   defaultAnimation?: boolean;
   canvasLayers: CanvasLayers;
 }
 
-type TPieceConfig =
+type TPieceConfig<T = unknown> =
   | {
       type: "string";
       piecesImage?: TPieceImage<string>;
@@ -50,6 +50,10 @@ type TPieceConfig =
   | {
       type: "image";
       piecesImage?: TPieceImage<HTMLImageElement>;
+    }
+  | {
+      type: "custom";
+      piecesImage: TPieceImage<T>;
     };
 
 type TConfig<T extends TBoardEventContext = TBoardEventContext> = {

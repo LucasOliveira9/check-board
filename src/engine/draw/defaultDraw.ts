@@ -23,6 +23,13 @@ class DefaultDraw {
       isBlackView = this.boardRuntime.getIsBlackView(),
       animation = this.boardRuntime.getAnimation();
 
+    if (!piecesImage) return;
+    if (
+      typeof piecesImage !== "string" &&
+      !(piecesImage.bB instanceof HTMLImageElement)
+    )
+      return;
+
     if (!internalRef || internalRef === null || !ctx) return;
     const finishedAnim: number[] = [];
 

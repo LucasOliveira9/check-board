@@ -22,6 +22,12 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
       boardRuntime.current.setSelected(null);
       boardRuntime.current.setBoard(board);
     }, [board]);
+
+    useEffect(() => {
+      if (!boardRuntime.current) return;
+      boardRuntime.current.setBlackView(isBlackView);
+    }, [isBlackView]);
+
     useEffect(() => {
       if (boardRuntime.current) {
         boardRuntime.current.destroy();

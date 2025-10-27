@@ -1,10 +1,18 @@
 import Draw from "../draw/draw";
 import { TBoardRuntime, TSelected } from "../../types/board";
-import { TBoardEventContext } from "../../types/events";
-import { TPieceBoard, TPieceId, TPieceInternalRef } from "../../types/piece";
+import { TAnimation, TBoardEventContext } from "../../types/events";
+import {
+  TPieceBoard,
+  TPieceId,
+  TPieceImage,
+  TPieceInternalRef,
+  TPieceKey,
+} from "../../types/piece";
 import BoardEvents from "./BoardEvents";
 import { squareToCoords } from "../../utils/coords";
 import EngineHelpers from "../helpers/engineHelpers";
+import deepFreeze from "../../utils/deepFreeze";
+import { TSquare } from "src/types/square";
 
 class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected drawRef = 0;
@@ -14,12 +22,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   >;
   protected selected: TSelected | null = null;
   protected pieceHover: TPieceId | null = null;
-  protected animation: {
-    from: { x: number; y: number };
-    to: { x: number; y: number };
-    piece: TPieceInternalRef;
-    start: number;
-  }[] = [];
+  protected animation: TAnimation = [];
   private isImagesLoaded: boolean = false;
   private destroyed = false;
   private animationRef: number | null = null;
@@ -141,6 +144,52 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
   getAnimationDuration() {
     return this.animationDuration;
+  }
+
+  getReadonlyInternalRef() {
+    return deepFreeze(this.internalRef);
+  }
+
+  getReadonlySelectedRef() {
+    return this.selected ? deepFreeze(this.selected) : null;
+  }
+
+  getReadonlyPiece(piece?: TPieceInternalRef) {
+    return piece ? deepFreeze(piece) : null;
+  }
+
+  getReadonlySquare(square?: TSquare) {
+    return square ? deepFreeze(square) : null;
+  }
+
+  getReadonlyAnimation() {
+    return deepFreeze(this.animation);
+  }
+
+  getContext(cache: boolean, args: TBoardEventContext) {
+    const { ctx, squareSize, size, x, y, getPiece, getSquare, getCanvas } =
+      args;
+
+    const context = this.helpers.createLazyEventContext(
+      { ctx, squareSize, size, x, y },
+      {
+        getPiece: () => this.getReadonlyPiece(getPiece ? getPiece : undefined),
+        getPiecesImage: () => this.getPieceStyle(),
+        getSquare: () =>
+          this.getReadonlySquare(getSquare ? getSquare : undefined),
+        getPieces: () => this.getReadonlyInternalRef(),
+        getPieceHover: () => this.getPieceHover(),
+        getSelected: () => this.getReadonlySelectedRef(),
+        getIsBlackView: () => this.getIsBlackView(),
+        getLightTile: () => this.getLightTile(),
+        getDarkTile: () => this.getDarkTile(),
+        getCanvas: () => getCanvas,
+        getAnimation: () => this.getReadonlyAnimation(),
+      },
+      { cache }
+    );
+
+    return context;
   }
 
   setAnimationDuration(time: number) {

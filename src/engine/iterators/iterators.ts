@@ -13,8 +13,9 @@ class Iterators {
   }
 
   defaultOnSelect<T extends TBoardEventContext = TBoardEventContext>(args: T) {
-    const { ctx, squareSize, x, y, canvas } = args;
+    const { ctx, squareSize, x, y, getCanvas } = args;
     //canvas && (canvas.style.zIndex = "3");
+    //const canvas = getCanvas;
     const SELECT_COLOR = "#ffc400ff";
     const SELECT_GLOW = "rgba(255, 196, 0, 0.75)";
 
@@ -34,7 +35,10 @@ class Iterators {
   }
 
   defaultOnHover<T extends TBoardEventContext = TBoardEventContext>(args: T) {
-    let { ctx, squareSize, piece, piecesImage } = args;
+    let { ctx, squareSize, getPiece, getPiecesImage } = args;
+    const piece = getPiece,
+      piecesImage = getPiecesImage;
+
     if (!piece) return;
     const image = piecesImage?.[piece.type];
 

@@ -1,4 +1,4 @@
-import { TPieceBoard } from "src/types/piece";
+import { TPieceBoard, TPieceId, TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 
 const runtimeMap = new WeakMap<Client, BoardRuntime>();
@@ -19,6 +19,10 @@ class Client {
     const runtime = runtimeMap.get(this);
     if (!runtime) throw new Error("Runtime not found");
     return runtime;
+  }
+
+  public getPieces(): Record<string, TPieceInternalRef> {
+    return this.getRuntime()?.getReadonlyInternalRef();
   }
 
   public setBoard(board: TPieceBoard[]) {
