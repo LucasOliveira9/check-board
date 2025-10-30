@@ -6,6 +6,8 @@ const Board: React.FC<TBoard> = ({
   boardRef,
   piecesRef,
   overlayRef,
+  overlayUpRef,
+  dynamicPiecesRef,
   size,
 }) => {
   const handlePointerDown = useCallback(
@@ -105,6 +107,35 @@ const Board: React.FC<TBoard> = ({
         }}
         width={size}
         height={size}
+      />
+      <canvas
+        ref={overlayUpRef}
+        width={size}
+        height={size}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          background: "transparent",
+          zIndex: 3,
+          pointerEvents: "none",
+        }}
+      />
+      <canvas
+        ref={dynamicPiecesRef}
+        width={size}
+        height={size}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          background: "transparent",
+          zIndex: 4,
+        }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerLeave}
       />
     </div>
   );

@@ -24,6 +24,8 @@ type TBoard = {
   boardRef: React.RefObject<HTMLCanvasElement | null>;
   piecesRef: React.RefObject<HTMLCanvasElement | null>;
   overlayRef: React.RefObject<HTMLCanvasElement | null>;
+  overlayUpRef: React.RefObject<HTMLCanvasElement | null>;
+  dynamicPiecesRef: React.RefObject<HTMLCanvasElement | null>;
   size: number;
 };
 
@@ -40,6 +42,7 @@ interface TBoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   move?: (arg: TMove) => TPieceBoard[] | void | false;
   defaultAnimation?: boolean;
   canvasLayers: CanvasLayers;
+  mode: "2d" | "3d";
 }
 
 type TPieceConfig<T = unknown> =

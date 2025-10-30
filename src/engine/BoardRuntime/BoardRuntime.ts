@@ -12,7 +12,10 @@ import BoardEvents from "./BoardEvents";
 import { coordsToSquare, squareToCoords } from "../../utils/coords";
 import EngineHelpers from "../helpers/engineHelpers";
 import deepFreeze from "../../utils/deepFreeze";
-import { TSquare } from "src/types/square";
+import { TSquare } from "../../types/square";
+import { IRenderer } from "../render/interface";
+import Renderer2D from "../render/renderer2D";
+import Renderer3D from "../render/renderer3D";
 
 class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected drawRef = 0;
@@ -32,9 +35,11 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   public boardEvents: BoardEvents = new BoardEvents(this);
   public draw: Draw = new Draw(this);
   public helpers: EngineHelpers = new EngineHelpers(this);
+  protected renderer!: IRenderer;
 
   constructor(protected args: TBoardRuntime<T>) {
     Object.assign(this, args);
+    this.args.mode === "2d" ? new Renderer2D(this) : new Renderer3D(this);
     this.init();
   }
 

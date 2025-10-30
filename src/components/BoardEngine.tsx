@@ -13,6 +13,8 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
     const boardCanvasRef = useRef<HTMLCanvasElement>(null);
     const pieceCanvasRef = useRef<HTMLCanvasElement>(null);
     const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
+    const overlayUpCanvasRef = useRef<HTMLCanvasElement>(null);
+    const dynamicPiecesRef = useRef<HTMLCanvasElement>(null);
     //
     const boardRuntime = useRef<BoardRuntime>(null);
     const clientRef = useRef<Client>(null);
@@ -38,9 +40,13 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
         canvasLayers: new CanvasLayers(
           boardCanvasRef,
           pieceCanvasRef,
-          overlayCanvasRef
+          overlayCanvasRef,
+          overlayUpCanvasRef,
+          dynamicPiecesRef,
+          size
         ),
         pieceStyle: pieceConfig.piecesImage,
+        mode: "2d",
       };
       const boardRuntime_ = new BoardRuntime(args);
       boardRuntime.current = boardRuntime_;
@@ -85,6 +91,8 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
         boardRef={boardCanvasRef}
         piecesRef={pieceCanvasRef}
         overlayRef={overlayCanvasRef}
+        overlayUpRef={overlayUpCanvasRef}
+        dynamicPiecesRef={dynamicPiecesRef}
         size={size}
       />
     );
