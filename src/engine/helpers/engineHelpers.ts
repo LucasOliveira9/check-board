@@ -1,7 +1,12 @@
 import { TEventName, TLazyReturn, TResolvers } from "../../types/helpers";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 import PieceHelpers from "./pieceHelpers";
-import { TBoardEventContext, TBoardEvents } from "../../types/events";
+import {
+  TBoardEventContext,
+  TBoardEventContextExtras,
+  TBoardEventExtras,
+  TBoardEvents,
+} from "../../types/events";
 import {
   getCanvasCoords,
   coordsToSquare,
@@ -31,34 +36,31 @@ class EngineHelpers {
     const useCache = opts?.cache ?? true;
 
     for (const key of Object.keys(resolvers) as Array<keyof TResolved>) {
-      Object.defineProperty(result, key, {
-        enumerable: true,
-        configurable: true,
-        get() {
-          if (useCache && cache.has(key as string))
-            return cache.get(key as string);
-          const value = (resolvers as any)[key]();
-          if (useCache) cache.set(key as string, value);
-          return value;
-        },
-      });
+      result[key] = (...args: any[]) => {
+        if (useCache && cache.has(key as string))
+          return cache.get(key as string);
+
+        const value = (resolvers as any)[key](...args);
+        if (useCache) cache.set(key as string, value);
+        return value;
+      };
     }
+
     result.toPlain = () => {
       const plain: any = { ...base };
       for (const k of Object.keys(resolvers) as Array<keyof TResolved>) {
-        plain[k] = (result as any)[k];
+        plain[k] = (resolvers as any)[k]();
       }
       return plain as TBase & TResolved;
     };
 
-    result.clearCache = () => {
-      return cache.clear();
-    };
+    result.clearCache = () => cache.clear();
 
     result.destroy = () => {
-      (resolvers as any) = null;
-      (base as any) = null;
-      return cache.clear();
+      cache.clear();
+      for (const key of Object.keys(result)) {
+        delete (result as any)[key];
+      }
     };
 
     return result;
@@ -68,9 +70,28 @@ class EngineHelpers {
     events: TBoardEvents<T> | undefined,
     event: TEventName<T>,
     args: T
+  ): void;
+  triggerEvent<T extends TBoardEventContext = TBoardEventContext, K = unknown>(
+    events: TBoardEvents<T> | undefined,
+    event: TEventName<T>,
+    args: T,
+    extra: K
+  ): void;
+  triggerEvent<T extends TBoardEventContext = TBoardEventContext, K = unknown>(
+    events: TBoardEvents<T> | undefined,
+    event: TEventName<T>,
+    args: T,
+    extra?: K
   ) {
     try {
-      events?.[event]?.(args);
+      const fn = events?.[event];
+      if (!fn) return;
+
+      if (extra !== undefined) {
+        (fn as (arg: T, extra: K) => void)(args, extra);
+      } else {
+        (fn as (arg: T) => void)(args);
+      }
     } finally {
       if ("destroy" in args && typeof args["destroy"] === "function")
         (args as any).destroy();

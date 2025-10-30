@@ -30,17 +30,17 @@ type TBoardEventContextBase = {
 };
 
 type TBoardEventContextExtras = {
-  getPiece?: TPieceInternalRef | null;
-  getPiecesImage?: TPieceImage | null;
-  getSquare?: TSquare | null;
-  getPieces?: Record<TPieceId, TPieceInternalRef>;
-  getPieceHover?: TPieceId | null;
-  getSelected?: TSelected | null;
-  getIsBlackView?: boolean;
-  getLightTile?: string;
-  getDarkTile?: string;
-  getCanvas?: HTMLCanvasElement;
-  getAnimation?: TDeepReadonly<TAnimation>;
+  piece?: TPieceInternalRef | null;
+  piecesImage?: TPieceImage | null;
+  square?: TSquare | null;
+  pieces?: Record<TPieceId, TPieceInternalRef>;
+  pieceHover?: TPieceId | null;
+  selected?: TSelected | null;
+  isBlackView?: boolean;
+  lightTile?: string;
+  darkTile?: string;
+  canvas?: HTMLCanvasElement;
+  animation?: TDeepReadonly<TAnimation>;
 };
 
 type TAnimation = {
@@ -48,6 +48,7 @@ type TAnimation = {
   to: { x: number; y: number };
   piece: TPieceInternalRef;
   start: number;
+  id: TPieceId;
 }[];
 
 type TMove = {
@@ -59,15 +60,30 @@ type TMove = {
 type TBoardEventContext = TBoardEventContextBase &
   Partial<TBoardEventContextExtras>;
 
-type TBoardEvent<T = TBoardEventContext> = (arg: T) => void;
+type TBoardEvent<T = TBoardEventContext, E = void> = E extends void
+  ? (arg: T) => void
+  : (arg: T, extra: E) => void;
 
-type TBoardEvents<T extends TBoardEventContext = TBoardEventContext> = {
-  select?: TBoardEvent<T>;
-  hover?: TBoardEvent<T>;
-  move?: TBoardEvent<T>;
-  drop?: TBoardEvent<T>;
-  drawPiece?: TBoardEvent<T>;
+type TBoardEventExtras = {
+  select: void;
+  hover: void;
+  drop: void;
+  drawPiece: number;
 };
+
+type TBoardEvents<
+  T extends TGetterBoardEventContext = TGetterBoardEventContext,
+  E extends Record<string, any> = TBoardEventExtras
+> = {
+  [K in keyof E]?: TBoardEvent<T, E[K]>;
+};
+
+type TGetterProp<T> = {
+  [K in keyof T as `get${Capitalize<string & K>}`]: () => T[K];
+};
+
+type TGetterBoardEventContext = TGetterProp<TBoardEventContextExtras> &
+  TBoardEventContextBase;
 
 export type {
   TPointerDown,
@@ -75,8 +91,10 @@ export type {
   TBoardEventContext,
   TBoardEvents,
   TBoardEvent,
+  TBoardEventExtras,
   TBoardEventContextBase,
   TBoardEventContextExtras,
   TMove,
   TAnimation,
+  TGetterBoardEventContext,
 };

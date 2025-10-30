@@ -179,8 +179,8 @@ class Draw {
       x: 0,
       y: 0,
       size,
-      getSquare: selectedRef?.square,
-      getCanvas:
+      square: selectedRef?.square,
+      canvas:
         this.boardRuntime.getCanvasLayers().getCanvas("pieces").current ||
         undefined,
     });
@@ -189,7 +189,8 @@ class Draw {
       ? this.boardRuntime.helpers.triggerEvent(
           events,
           "drawPiece",
-          injection ? injection(context) : context
+          injection ? injection(context) : context,
+          time
         )
       : this.defaultDraw.drawPiece(time || 0);
 
@@ -207,9 +208,9 @@ class Draw {
           x: piece.x,
           y: piece.y,
           size,
-          getPiece: piece,
-          getSquare: piece.square,
-          getCanvas: canvas ? canvas : undefined,
+          piece: piece,
+          square: piece.square,
+          canvas: canvas ? canvas : undefined,
         });
 
         events?.hover
@@ -232,6 +233,7 @@ class Draw {
       }
     }
     ctx = null;
+    this.boardRuntime.updateAnimation();
     this.boardRuntime.setIsPieceRendering(false);
   }
 
@@ -269,9 +271,9 @@ class Draw {
           x,
           y,
           size,
-          getPiece: piece_,
-          getSquare: selectedRef.square,
-          getCanvas:
+          piece: piece_,
+          square: selectedRef.square,
+          canvas:
             this.boardRuntime.getCanvasLayers().getCanvas("overlay").current ||
             undefined,
         });

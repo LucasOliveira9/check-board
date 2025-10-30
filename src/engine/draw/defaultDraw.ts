@@ -31,8 +31,6 @@ class DefaultDraw {
       return;
 
     if (!internalRef || internalRef === null || !ctx) return;
-    const finishedAnim: number[] = [];
-
     for (let i = 0; i < animation.length; i++) {
       const anim = animation[i];
       const distance = Math.hypot(
@@ -54,13 +52,8 @@ class DefaultDraw {
       piece_.x = anim.from.x + (anim.to.x - anim.from.x) * eased;
       piece_.y = anim.from.y + (anim.to.y - anim.from.y) * eased;
 
-      if (eased >= 1) {
-        piece_.anim = false;
-        finishedAnim.push(i);
-      }
+      if (eased >= 1) piece_.anim = false;
     }
-    finishedAnim.length > 0 &&
-      finishedAnim.reverse().forEach((x) => animation.splice(x, 1));
 
     const pieceToAnimate: TPieceInternalRef[] = [];
     const sameSquarePiece: { piece: TPieceInternalRef; id: TPieceId }[] = [];

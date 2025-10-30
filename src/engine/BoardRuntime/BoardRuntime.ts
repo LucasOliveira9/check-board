@@ -9,7 +9,7 @@ import {
   TPieceKey,
 } from "../../types/piece";
 import BoardEvents from "./BoardEvents";
-import { squareToCoords } from "../../utils/coords";
+import { coordsToSquare, squareToCoords } from "../../utils/coords";
 import EngineHelpers from "../helpers/engineHelpers";
 import deepFreeze from "../../utils/deepFreeze";
 import { TSquare } from "src/types/square";
@@ -23,12 +23,12 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected selected: TSelected | null = null;
   protected pieceHover: TPieceId | null = null;
   protected animation: TAnimation = [];
-  private isImagesLoaded: boolean = false;
-  private destroyed = false;
-  private animationRef: number | null = null;
-  private isPieceRendering = false;
-  private animationDuration: number = 400;
-  private piecesToRender: { piece: TPieceInternalRef; id: TPieceId }[] = [];
+  protected isImagesLoaded: boolean = false;
+  protected destroyed = false;
+  protected animationRef: number | null = null;
+  protected isPieceRendering = false;
+  protected animationDuration: number = 400;
+  protected piecesToRender: { piece: TPieceInternalRef; id: TPieceId }[] = [];
   public boardEvents: BoardEvents = new BoardEvents(this);
   public draw: Draw = new Draw(this);
   public helpers: EngineHelpers = new EngineHelpers(this);
@@ -167,23 +167,21 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   getContext(cache: boolean, args: TBoardEventContext) {
-    const { ctx, squareSize, size, x, y, getPiece, getSquare, getCanvas } =
-      args;
+    const { ctx, squareSize, size, x, y, piece, square, canvas } = args;
 
     const context = this.helpers.createLazyEventContext(
       { ctx, squareSize, size, x, y },
       {
-        getPiece: () => this.getReadonlyPiece(getPiece ? getPiece : undefined),
+        getPiece: () => this.getReadonlyPiece(piece ? piece : undefined),
         getPiecesImage: () => this.getPieceStyle(),
-        getSquare: () =>
-          this.getReadonlySquare(getSquare ? getSquare : undefined),
+        getSquare: () => this.getReadonlySquare(square ? square : undefined),
         getPieces: () => this.getReadonlyInternalRef(),
         getPieceHover: () => this.getPieceHover(),
         getSelected: () => this.getReadonlySelectedRef(),
         getIsBlackView: () => this.getIsBlackView(),
         getLightTile: () => this.getLightTile(),
         getDarkTile: () => this.getDarkTile(),
-        getCanvas: () => getCanvas,
+        getCanvas: () => canvas,
         getAnimation: () => this.getReadonlyAnimation(),
       },
       { cache }
@@ -208,6 +206,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
   refreshCanvas() {
     this.helpers.pieceHelper.clearCache();
+    //this.clearAnimation();
     this.initInternalRef();
     this.renderPieces();
     this.renderOverlay();
@@ -295,6 +294,11 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.animationRef = null;
   }
 
+  updateAnimation() {
+    this.animation = this.animation.filter((anim) => anim.piece.anim);
+    console.log(this.animation);
+  }
+
   init() {
     this.initPieceImages();
     this.initInternalRef();
@@ -344,12 +348,13 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         currInternal &&
         piece.square.notation !== currInternal.square.notation
       ) {
-        ref.anim = true;
+        if (!this.getEvents()?.drawPiece) ref.anim = true;
         this.animation.push({
           from: { x: startX, y: startY },
           to: { x: square.x, y: square.y },
           piece: ref,
           start: performance.now(),
+          id: piece.id,
         });
       }
     }
