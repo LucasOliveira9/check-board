@@ -45,6 +45,8 @@ const Board: React.FC<TBoard> = ({
       boardRef.current = null;
       piecesRef.current = null;
       overlayRef.current = null;
+      overlayUpRef.current = null;
+      dynamicPiecesRef.current = null;
     };
   }, [boardRuntime]);
 
@@ -55,6 +57,8 @@ const Board: React.FC<TBoard> = ({
       boardRef.current = null;
       piecesRef.current = null;
       overlayRef.current = null;
+      overlayUpRef.current = null;
+      dynamicPiecesRef.current = null;
     });
   }
 
@@ -131,11 +135,8 @@ const Board: React.FC<TBoard> = ({
           left: 0,
           background: "transparent",
           zIndex: 4,
+          pointerEvents: "none",
         }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerLeave={handlePointerLeave}
       />
     </div>
   );

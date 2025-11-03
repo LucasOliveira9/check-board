@@ -21,4 +21,14 @@ type TDrawPieces<T extends TBoardEventContext = TBoardEventContext> = {
   events?: TBoardEvents<T>;
   injection?: TBoardInjection<T>;
 };
-export type { TDrawBoard, TDrawPieces };
+
+type TRender = {
+  id: TPieceId;
+  piece: TPieceInternalRef;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export type { TDrawBoard, TDrawPieces, TRender };

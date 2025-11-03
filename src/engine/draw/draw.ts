@@ -3,6 +3,8 @@ import { squareToCoords } from "../../utils/coords";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 import Iterators from "../iterators/iterators";
 import DefaultDraw from "./defaultDraw";
+import { TRender } from "../../types/draw";
+import isRenderer2D from "../../utils/isRenderer2D";
 
 class Draw {
   defaultDraw;
@@ -153,11 +155,11 @@ class Draw {
     ctx = null;
   }
 
-  pieces(time?: number) {
-    if (this.boardRuntime.getIsPieceRendering()) return;
-    this.boardRuntime.setIsPieceRendering(true);
-
+  pieces(type: "static" | "dynamic", time?: number) {
     let ctx = this.boardRuntime.getCanvasLayers().getContext("pieces");
+    let ctxDynamicPieces = this.boardRuntime
+      .getCanvasLayers()
+      .getContext("dynamicPieces");
     if (!ctx) return;
 
     const isBlackView = this.boardRuntime.getIsBlackView(),
@@ -170,40 +172,57 @@ class Draw {
       injection = this.boardRuntime.getInjection();
 
     const squareSize = size / 8;
-    ctx.clearRect(0, 0, size, size);
+    const toRenderStatic =
+      "getStaticToRender" in this.boardRuntime.renderer
+        ? ((this.boardRuntime.renderer.getStaticToRender as any)() as TRender[])
+        : null;
 
-    //draw pieces
-    const context = this.boardRuntime.getContext(true, {
-      ctx,
-      squareSize,
-      x: 0,
-      y: 0,
-      size,
-      square: selectedRef?.square,
-      canvas:
-        this.boardRuntime.getCanvasLayers().getCanvas("pieces").current ||
-        undefined,
-    });
+    //draw static pieces
+    if (type === "static" && toRenderStatic && toRenderStatic.length > 0) {
+      for (const r of toRenderStatic) {
+        if (isRenderer2D(this.boardRuntime.renderer, "clearStaticPiecesRect"))
+          this.boardRuntime.renderer.clearStaticPiecesRect(
+            r.piece.x,
+            r.piece.y
+          );
+      }
+      const context = this.boardRuntime.getContext(true, {
+        ctx,
+        squareSize,
+        x: 0,
+        y: 0,
+        size,
+        square: selectedRef?.square,
+        canvas:
+          this.boardRuntime.getCanvasLayers().getCanvas("pieces").current ||
+          undefined,
+      });
 
-    events?.drawPiece
-      ? this.boardRuntime.helpers.triggerEvent(
-          events,
-          "drawPiece",
-          injection ? injection(context) : context,
-          time
-        )
-      : this.defaultDraw.drawPiece(time || 0);
+      events?.drawPiece
+        ? this.boardRuntime.helpers.triggerEvent(
+            events,
+            "drawPiece",
+            injection ? injection(context) : context,
+            time
+          )
+        : this.defaultDraw.drawStaticPiece();
+    } else {
+      // draw dynamic pieces
+      ctxDynamicPieces?.clearRect(0, 0, size, size);
+      this.defaultDraw.drawDynamicPieces(time || 0);
+    }
 
     // draw hover piece
-    if (pieceHoverRef && !selectedRef?.isDragging) {
+    if (pieceHoverRef && !selectedRef?.isDragging && ctxDynamicPieces) {
       const piece = internalRef[pieceHoverRef];
-      const canvas = this.boardRuntime.getCanvasLayers().getCanvas("overlay")
-        .current
-        ? this.boardRuntime.getCanvasLayers().getCanvas("overlay").current
+      const canvas = this.boardRuntime
+        .getCanvasLayers()
+        .getCanvas("dynamicPieces").current
+        ? this.boardRuntime.getCanvasLayers().getCanvas("dynamicPieces").current
         : undefined;
       if (piece && !piece.anim) {
         const context = this.boardRuntime.getContext(true, {
-          ctx,
+          ctx: ctxDynamicPieces,
           squareSize,
           x: piece.x,
           y: piece.y,
@@ -220,21 +239,20 @@ class Draw {
               injection ? injection(context) : context
             )
           : this.iterator.defaultOnHover({
-              ctx,
+              ctx: ctxDynamicPieces,
               size,
               squareSize,
               x: piece.x,
               y: piece.y,
-              getCanvas: canvas ? canvas : undefined,
-              getPiece: piece,
-              getSquare: piece.square,
-              getPiecesImage: piecesImage,
+              canvas: canvas ? canvas : undefined,
+              piece: piece,
+              square: piece.square,
+              piecesImage: piecesImage,
             });
       }
     }
     ctx = null;
     this.boardRuntime.updateAnimation();
-    this.boardRuntime.setIsPieceRendering(false);
   }
 
   overlay() {

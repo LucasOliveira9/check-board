@@ -20,6 +20,7 @@ class CanvasLayers {
   private dynamicPiecesOffscreenCtx: OffscreenCanvasRenderingContext2D | null =
     null;
   private size: number;
+  private dpr: number = 1;
 
   constructor(
     board: React.RefObject<HTMLCanvasElement | null>,
@@ -68,8 +69,16 @@ class CanvasLayers {
     if (!curr) return;
 
     const dpr = window.devicePixelRatio || 1;
-    curr.width = size * dpr;
-    curr.height = size * dpr;
+    this.dpr = dpr;
+
+    const targetW = size * dpr;
+    const targetH = size * dpr;
+
+    if (curr.width !== targetW || curr.height !== targetH) {
+      curr.width = targetW;
+      curr.height = targetH;
+    }
+
     curr.style.width = size + "px";
     curr.style.height = size + "px";
 
@@ -78,6 +87,10 @@ class CanvasLayers {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
     }
+  }
+
+  getDpr() {
+    return this.dpr;
   }
 
   setCanvasStyle(
@@ -113,7 +126,7 @@ class CanvasLayers {
     this.piecesCtx = this.piecesCanvas.current?.getContext("2d") ?? null;
     this.boardCtx = this.boardCanvas.current?.getContext("2d") ?? null;
     this.overlayCtx = this.overlayCanvas.current?.getContext("2d") ?? null;
-    this.overlayUpCtx = this.overlayCanvas.current?.getContext("2d") ?? null;
+    this.overlayUpCtx = this.overlayUpCanvas.current?.getContext("2d") ?? null;
     this.dynamicPiecesCtx =
       this.dynamicPiecesCanvas.current?.getContext("2d") ?? null;
   }
@@ -143,6 +156,16 @@ class CanvasLayers {
         c.height = size;
       }
     });
+  }
+
+  clearAllRect() {
+    [
+      this.piecesCtx,
+      this.boardCtx,
+      this.overlayCtx,
+      this.overlayUpCtx,
+      this.dynamicPiecesCtx,
+    ].forEach((ctx) => ctx?.clearRect(0, 0, this.size, this.size));
   }
 
   clearCanvas() {

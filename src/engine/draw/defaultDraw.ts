@@ -2,6 +2,8 @@ import { TBoardEventContext } from "src/types/events";
 import { TPiece, TPieceId, TPieceInternalRef } from "../../types/piece";
 import { squareToCoords } from "../../utils/coords";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
+import Renderer2D from "../render/renderer2D";
+import { TRender } from "../../types/draw";
 
 class DefaultDraw {
   private scale: number = 1.1;
@@ -13,25 +15,39 @@ class DefaultDraw {
     }
   }
 
-  drawPiece(time: number) {
+  drawStaticPiece() {
+    const toRender =
+      "getStaticToRender" in this.boardRuntime.renderer
+        ? ((this.boardRuntime.renderer.getStaticToRender as any)() as TRender[])
+        : null;
     const ctx = this.boardRuntime.getCanvasLayers().getContext("pieces"),
       piecesImage = this.boardRuntime.getPieceStyle(),
-      internalRef = this.boardRuntime.getInternalRefObj(),
+      internalRefObj = this.boardRuntime.renderer.getStaticPieceObj(),
       pieceHoverRef = this.boardRuntime.getPieceHover(),
       squareSize = this.boardRuntime.getSize() / 8,
       selectedRef = this.boardRuntime.getSelected(),
       isBlackView = this.boardRuntime.getIsBlackView(),
       animation = this.boardRuntime.getAnimation();
 
-    if (!piecesImage) return;
+    if (!piecesImage || !toRender) return;
     if (
       typeof piecesImage !== "string" &&
       !(piecesImage.bB instanceof HTMLImageElement)
     )
       return;
 
+    const internalRef: Record<TPieceId, TPieceInternalRef> = {} as Record<
+      TPieceId,
+      TPieceInternalRef
+    >;
+
+    for (const [id, piece] of Object.entries(internalRefObj)) {
+      const toRender_ = toRender.filter((obj) => obj.id === id);
+      if (toRender_.length) internalRef[id as TPieceId] = piece;
+    }
+
     if (!internalRef || internalRef === null || !ctx) return;
-    for (let i = 0; i < animation.length; i++) {
+    /*for (let i = 0; i < animation.length; i++) {
       const anim = animation[i];
       const distance = Math.hypot(
         anim.to.x - anim.from.x,
@@ -55,19 +71,19 @@ class DefaultDraw {
       if (eased >= 1) piece_.anim = false;
     }
 
-    const pieceToAnimate: TPieceInternalRef[] = [];
+    const pieceToAnimate: TPieceInternalRef[] = [];*/
     const sameSquarePiece: { piece: TPieceInternalRef; id: TPieceId }[] = [];
 
     for (const [id, piece] of Object.entries(internalRef)) {
-      if (selectedRef && selectedRef.isDragging && id === selectedRef.id) {
+      /*if (selectedRef && selectedRef.isDragging && id === selectedRef.id) {
         pieceToAnimate.push(piece);
         continue;
       }
       if (piece.anim) {
         pieceToAnimate.push(piece);
         continue;
-      }
-
+      }*/
+      if (!piece) continue;
       if (
         !this.boardRuntime.getMove() &&
         this.boardRuntime.helpers.pieceHelper.getPieceAt(
@@ -81,7 +97,6 @@ class DefaultDraw {
         sameSquarePiece.push({ piece, id });
         continue;
       }
-
       ctx.save();
       if (piecesImage && id !== pieceHoverRef) {
         let image = piecesImage[piece.type];
@@ -106,7 +121,95 @@ class DefaultDraw {
       ctx.restore();
     }
 
-    for (const piece of pieceToAnimate) {
+    /*for (const piece of pieceToAnimate) {
+      ctx.save();
+      const image = piecesImage && piecesImage[piece.type];
+      if (image instanceof HTMLImageElement) {
+        if (image && image.complete && image.naturalWidth > 0) {
+          ctx.drawImage(
+            image,
+            piece.x - (squareSize * (this.scale - 1)) / 2,
+            piece.y - (squareSize * (this.scale - 1)) / 2,
+            squareSize * this.scale,
+            squareSize * this.scale
+          );
+        }
+      } else if (typeof image === "string") {
+        const image_ = image.length > 1 ? image[0] : image;
+        ctx.save();
+        ctx.fillStyle = piece.type[0] === "w" ? "#ffffffff" : "#000";
+        ctx.font = `${squareSize * 0.8 * this.scale}px monospace`;
+        let fontSize = squareSize * 0.8;
+        ctx.font = `${fontSize}px monospace`;
+        const textWidth = ctx.measureText(image_).width;
+        if (textWidth > squareSize * 0.9) {
+          fontSize *= (squareSize * 0.9) / textWidth;
+          ctx.font = `${fontSize}px monospace`;
+        }
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(
+          image_,
+          piece.x + squareSize / 2,
+          piece.y + squareSize / 2
+        );
+        ctx.restore();
+      }
+
+      ctx.restore();
+    }*/
+    if ("clearStaticToRender" in this.boardRuntime.renderer)
+      (this.boardRuntime.renderer.clearStaticToRender as any)();
+  }
+
+  drawDynamicPieces(time: number) {
+    const ctx = this.boardRuntime.getCanvasLayers().getContext("dynamicPieces"),
+      piecesImage = this.boardRuntime.getPieceStyle(),
+      internalRef = this.boardRuntime.renderer.getDynamicPieceObj(),
+      pieceHoverRef = this.boardRuntime.getPieceHover(),
+      squareSize = this.boardRuntime.getSize() / 8,
+      selectedRef = this.boardRuntime.getSelected(),
+      isBlackView = this.boardRuntime.getIsBlackView(),
+      animation = this.boardRuntime.getAnimation();
+
+    if (!piecesImage) return;
+    if (
+      typeof piecesImage !== "string" &&
+      !(piecesImage.bB instanceof HTMLImageElement)
+    )
+      return;
+    const moveCanvas: TPieceId[] = [];
+    if (!internalRef || internalRef === null || !ctx) return;
+
+    animation.length > 0 && this.boardRuntime.setIsMoving(true);
+    for (let i = 0; i < animation.length; i++) {
+      const anim = animation[i];
+      const distance = Math.hypot(
+        anim.to.x - anim.from.x,
+        anim.to.y - anim.from.y
+      );
+      const duration = Math.min(
+        400,
+        Math.max(
+          150,
+          this.boardRuntime.getAnimationDuration() + distance * 0.08
+        )
+      );
+      const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+      const progress = Math.max(0, Math.min((time - anim.start) / duration, 1));
+      const piece_ = anim.piece;
+      const eased = easeOutCubic(progress);
+
+      piece_.x = anim.from.x + (anim.to.x - anim.from.x) * eased;
+      piece_.y = anim.from.y + (anim.to.y - anim.from.y) * eased;
+
+      if (eased >= 1) {
+        piece_.anim = false;
+        moveCanvas.push(anim.id);
+      }
+    }
+    for (const [id, piece] of Object.entries(internalRef)) {
+      if (id === pieceHoverRef && !piece.anim) continue;
       ctx.save();
       const image = piecesImage && piecesImage[piece.type];
       if (image instanceof HTMLImageElement) {
@@ -143,6 +246,15 @@ class DefaultDraw {
 
       ctx.restore();
     }
+
+    for (const pieceId of moveCanvas) {
+      this.boardRuntime.renderer.addStaticPiece(
+        pieceId,
+        structuredClone(internalRef[pieceId])
+      );
+      this.boardRuntime.renderer.deleteDynamicPiece(pieceId);
+    }
+    if (moveCanvas.length > 0) this.boardRuntime.renderPieces();
   }
 
   private DrawHTMLPiece(

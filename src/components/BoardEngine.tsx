@@ -61,6 +61,8 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
         boardCanvasRef.current = null;
         pieceCanvasRef.current = null;
         overlayCanvasRef.current = null;
+        overlayUpCanvasRef.current = null;
+        dynamicPiecesRef.current = null;
       };
     }, []);
 
@@ -71,6 +73,8 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
         boardCanvasRef.current = null;
         pieceCanvasRef.current = null;
         overlayCanvasRef.current = null;
+        overlayUpCanvasRef.current = null;
+        dynamicPiecesRef.current = null;
       });
     }
 

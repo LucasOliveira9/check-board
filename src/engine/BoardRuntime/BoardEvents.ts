@@ -26,6 +26,7 @@ class BoardEvents {
       this.boardRuntime.getIsBlackView()
     );
     if (!square) return;
+
     const selected = this.boardRuntime.getSelected();
     const piece_ = this.boardRuntime.helpers.pieceHelper.getPieceAt(
       offsetX,
@@ -64,7 +65,10 @@ class BoardEvents {
     const { offsetX, offsetY } = getCanvasCoords(e);
     const squareSize = this.boardRuntime.getSize() / 8;
     const selected = this.boardRuntime.getSelected();
-    if ((selected && !selected?.isDragging) || !selected) {
+    if (
+      (selected && !selected?.isDragging) ||
+      (!selected && !this.boardRuntime.getIsMoving())
+    ) {
       const searchPiece = this.boardRuntime.helpers.pieceHelper.getPieceAt(
         offsetX,
         offsetY,
@@ -74,6 +78,13 @@ class BoardEvents {
       );
       if (!searchPiece) {
         const toRender = this.boardRuntime.getPieceHover();
+
+        if (toRender) {
+          this.boardRuntime.renderer.addStaticPiece(
+            toRender,
+            this.boardRuntime.getInternalRefVal(toRender)
+          );
+        }
         this.boardRuntime.setPieceHover(null);
         toRender && this.boardRuntime.renderPieces();
         this.boardRuntime.getCanvasLayers().setCanvasStyle("pieces", {
@@ -82,11 +93,24 @@ class BoardEvents {
         return;
       }
       const currHover = this.boardRuntime.getPieceHover();
-      this.boardRuntime.setPieceHover(searchPiece.id);
-      if (currHover !== searchPiece.id) this.boardRuntime.renderPieces();
-      this.boardRuntime.getCanvasLayers().setCanvasStyle("pieces", {
-        cursor: "grab",
-      });
+      if (searchPiece) {
+        this.boardRuntime.setPieceHover(searchPiece.id);
+
+        if (currHover) {
+          this.boardRuntime.renderer.addStaticPiece(
+            currHover,
+            this.boardRuntime.getInternalRefVal(currHover)
+          );
+        }
+
+        if (currHover !== searchPiece.id) {
+          this.boardRuntime.renderer.deleteStaticPiece(searchPiece.id);
+          this.boardRuntime.renderPieces();
+        }
+        this.boardRuntime.getCanvasLayers().setCanvasStyle("pieces", {
+          cursor: "grab",
+        });
+      }
     } else this.boardRuntime.setPieceHover(null);
 
     if (
@@ -109,6 +133,8 @@ class BoardEvents {
             });
 
             selected.isDragging = true;
+            this.boardRuntime.renderer.deleteStaticPiece(selected.id);
+            this.boardRuntime.renderer.addDynamicPiece(selected.id, piece);
             piece.x = offsetX - half;
             piece.y = offsetY - half;
             this.boardRuntime.renderPieces();
@@ -144,10 +170,22 @@ class BoardEvents {
     });
 
     if (!move) {
-      this.boardRuntime.renderPieces();
+      let selected = this.boardRuntime.getSelected();
+      const id =
+        selected?.isDragging && selected?.id
+          ? selected.id
+          : this.boardRuntime.getPieceHover();
+      if (id) {
+        this.boardRuntime.renderer.deleteDynamicPiece(id);
+        this.boardRuntime.renderer.addStaticPiece(
+          id,
+          this.boardRuntime.getInternalRefVal(id)
+        );
+        this.boardRuntime.renderPieces();
+      }
+
       this.boardRuntime.renderOverlay();
 
-      let selected = this.boardRuntime.getSelected();
       if (selected) {
         this.boardRuntime.setSelected({
           ...selected,
@@ -177,6 +215,18 @@ class BoardEvents {
       selected && this.boardRuntime.getInternalRefVal(selected.id as TPieceId);
     piece && ((piece.x = selected.x), (piece.y = selected.y));
 
+    const id = selected?.isDragging
+      ? selected.id
+      : this.boardRuntime.getPieceHover();
+    if (toRender) {
+      if (id) {
+        this.boardRuntime.renderer.deleteDynamicPiece(id);
+        this.boardRuntime.renderer.addStaticPiece(
+          id,
+          this.boardRuntime.getInternalRefVal(id)
+        );
+      }
+    }
     this.boardRuntime.setPieceHover(null);
     toRender && this.boardRuntime.renderPieces();
   }
