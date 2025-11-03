@@ -19,21 +19,58 @@ class Renderer2D implements IRenderer2D {
   protected dynamicToRender: TRender[] = [];
 
   constructor(protected boardRuntime: BoardRuntime) {}
+  renderDynamicPieces(): void {
+    const boardRuntime = this.boardRuntime,
+      canvasLayers = boardRuntime.getCanvasLayers(),
+      animation = boardRuntime.getAnimation(),
+      animationRef = boardRuntime.getAnimationRef();
+    const canvas = canvasLayers.getCanvas("dynamicPieces").current;
+    if (canvas === null) return;
+    canvasLayers.keepQuality("dynamicPieces", boardRuntime.getSize());
+
+    if (animation.length <= 0) {
+      boardRuntime.clearAnimation();
+      boardRuntime.draw.pieces("dynamic");
+      return;
+    }
+    const render = (time: number) => {
+      if (animation.length > 0)
+        boardRuntime.setAnimationRef(requestAnimationFrame(render));
+      else boardRuntime.clearAnimation();
+
+      boardRuntime.draw.pieces("dynamic", time);
+    };
+    if (!animationRef && animation.length)
+      boardRuntime.setAnimationRef(requestAnimationFrame(render));
+  }
+  renderUpOverlay(): void {
+    throw new Error("Method not implemented.");
+  }
   destroy(): void {
     for (const key of Object.getOwnPropertyNames(this)) {
       (this as any)[key] = null;
     }
   }
   renderStaticPieces(): void {
-    throw new Error("Method not implemented.");
+    const boardRuntime = this.boardRuntime,
+      canvasLayers = boardRuntime.getCanvasLayers();
+    const canvas = canvasLayers.getCanvas("pieces").current;
+    if (canvas === null) return;
+    canvasLayers.keepQuality("pieces", boardRuntime.getSize());
+
+    boardRuntime.draw.pieces("static");
   }
   renderDownOverlay(): void {
-    throw new Error("Method not implemented.");
+    const boardRuntime = this.boardRuntime,
+      canvasLayers = boardRuntime.getCanvasLayers();
+    const canvas = canvasLayers.getCanvas("overlay").current;
+    if (!canvas === null) return;
+    canvasLayers.keepQuality("overlay", boardRuntime.getSize());
+    canvasLayers.keepQuality("overlayUp", boardRuntime.getSize());
+
+    boardRuntime.draw.overlay();
   }
   renderBoard(): void {
-    throw new Error("Method not implemented.");
-  }
-  renderUpOverlayAndDynamicPieces(): void {
     throw new Error("Method not implemented.");
   }
 

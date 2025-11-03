@@ -205,6 +205,10 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     return this.isMoving;
   }
 
+  setAnimationRef(ref: number) {
+    this.animationRef = ref;
+  }
+
   setIsMoving(b: boolean) {
     this.isMoving = b;
   }
@@ -226,7 +230,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       this.renderer.resetStaticPieces();
     this.initInternalRef();
     this.renderPieces();
-    this.renderOverlay();
+    this.renderer.renderDownOverlay();
   }
 
   updateBoard(piece: TPieceBoard, enemie?: TPieceId) {
@@ -284,49 +288,8 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       this.isImagesLoaded = true;
     }
 
-    this.renderStaticPieces();
-    this.renderDynamicPieces();
-  }
-
-  renderStaticPieces() {
-    if (this.destroyed) return;
-    const canvas = this.args.canvasLayers.getCanvas("pieces").current;
-    if (canvas === null) return;
-    this.args.canvasLayers?.keepQuality("pieces", this.args.size);
-
-    this.draw.pieces("static");
-  }
-
-  renderDynamicPieces() {
-    if (this.destroyed) return;
-    const canvas = this.args.canvasLayers.getCanvas("dynamicPieces").current;
-    if (canvas === null) return;
-    this.args.canvasLayers.keepQuality("dynamicPieces", this.args.size);
-
-    if (this.animation.length <= 0) {
-      this.clearAnimation();
-      this.draw.pieces("dynamic");
-      return;
-    }
-    const render = (time: number) => {
-      if (this.animation.length > 0)
-        this.animationRef = requestAnimationFrame(render);
-      else this.clearAnimation();
-
-      this.draw.pieces("dynamic", time);
-    };
-    if (!this.animationRef && this.animation.length)
-      this.animationRef = requestAnimationFrame(render);
-  }
-
-  renderOverlay() {
-    if (this.destroyed) return;
-    const canvas = this.args.canvasLayers.getCanvas("overlay").current;
-    if (!canvas === null) return;
-    this.args.canvasLayers.keepQuality("overlay", this.args.size);
-    this.args.canvasLayers.keepQuality("overlayUp", this.args.size);
-
-    this.draw.overlay();
+    this.renderer.renderStaticPieces();
+    this.renderer.renderDynamicPieces();
   }
 
   clearAnimation() {

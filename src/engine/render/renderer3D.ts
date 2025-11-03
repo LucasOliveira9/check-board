@@ -4,6 +4,12 @@ import { IRenderer } from "./interface";
 
 class Renderer3D implements IRenderer {
   constructor(protected boardRuntime: BoardRuntime) {}
+  renderDynamicPieces(): void {
+    throw new Error("Method not implemented.");
+  }
+  renderUpOverlay(): void {
+    throw new Error("Method not implemented.");
+  }
   getDynamicPieceObj(): Record<TPieceId, TPieceInternalRef> {
     throw new Error("Method not implemented.");
   }
@@ -40,9 +46,7 @@ class Renderer3D implements IRenderer {
   renderBoard(): void {
     throw new Error("Method not implemented.");
   }
-  renderUpOverlayAndDynamicPieces(): void {
-    throw new Error("Method not implemented.");
-  }
+
   clear(): void {
     throw new Error("Method not implemented.");
   }
