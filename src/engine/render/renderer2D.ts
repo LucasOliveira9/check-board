@@ -1,4 +1,3 @@
-import { squareToCoords } from "../../utils/coords";
 import { TRender } from "../../types/draw";
 import { TPieceBoard, TPieceId, TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";

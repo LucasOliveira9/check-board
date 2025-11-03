@@ -7,13 +7,9 @@ import {
   TBoardEventExtras,
   TBoardEvents,
 } from "../../types/events";
-import {
-  getCanvasCoords,
-  coordsToSquare,
-  squareToCoords,
-} from "../../utils/coords";
 import { TFile, TNotation, TRank, TSquare } from "../../types/square";
 import { TPieceBoard, TPieceInternalRef } from "../../types/piece";
+import Utils from "../../utils/utils";
 
 class EngineHelpers {
   public pieceHelper: PieceHelpers = new PieceHelpers();
@@ -99,14 +95,14 @@ class EngineHelpers {
   }
 
   detectMove(e: React.PointerEvent<HTMLCanvasElement>) {
-    const { offsetX, offsetY } = getCanvasCoords(e);
+    const { offsetX, offsetY } = Utils.getCanvasCoords(e);
     const selected = this.boardRuntime.getSelected();
     const squareSize = this.boardRuntime.getSize() / 8,
       isBlackView = this.boardRuntime.getIsBlackView();
     const piece = selected && this.boardRuntime.getInternalRefVal(selected.id);
 
-    const sqr = coordsToSquare(offsetX, offsetY, squareSize, isBlackView);
-    const coords = squareToCoords(sqr, squareSize, isBlackView);
+    const sqr = Utils.coordsToSquare(offsetX, offsetY, squareSize, isBlackView);
+    const coords = Utils.squareToCoords(sqr, squareSize, isBlackView);
     if (selected && selected.isDragging) {
       if (piece && sqr && coords) {
         const { x, y } = coords;
@@ -116,7 +112,12 @@ class EngineHelpers {
       }
     }
 
-    const square = coordsToSquare(offsetX, offsetY, squareSize, isBlackView);
+    const square = Utils.coordsToSquare(
+      offsetX,
+      offsetY,
+      squareSize,
+      isBlackView
+    );
 
     if (selected && square?.notation === selected.square.notation) {
       selected &&

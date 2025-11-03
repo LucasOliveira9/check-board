@@ -9,14 +9,12 @@ import {
   TPieceKey,
 } from "../../types/piece";
 import BoardEvents from "./BoardEvents";
-import { coordsToSquare, squareToCoords } from "../../utils/coords";
 import EngineHelpers from "../helpers/engineHelpers";
-import deepFreeze from "../../utils/deepFreeze";
 import { TSquare } from "../../types/square";
 import { IRenderer } from "../render/interface";
 import Renderer2D from "../render/renderer2D";
 import Renderer3D from "../render/renderer3D";
-import isRenderer2D from "../../utils/isRenderer2D";
+import Utils from "../../utils/utils";
 
 class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected drawRef = 0;
@@ -158,23 +156,23 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   getReadonlyInternalRef() {
-    return deepFreeze(this.internalRef);
+    return Utils.deepFreeze(this.internalRef);
   }
 
   getReadonlySelectedRef() {
-    return this.selected ? deepFreeze(this.selected) : null;
+    return this.selected ? Utils.deepFreeze(this.selected) : null;
   }
 
   getReadonlyPiece(piece?: TPieceInternalRef) {
-    return piece ? deepFreeze(piece) : null;
+    return piece ? Utils.deepFreeze(piece) : null;
   }
 
   getReadonlySquare(square?: TSquare) {
-    return square ? deepFreeze(square) : null;
+    return square ? Utils.deepFreeze(square) : null;
   }
 
   getReadonlyAnimation() {
-    return deepFreeze(this.animation);
+    return Utils.deepFreeze(this.animation);
   }
 
   getContext(cache: boolean, args: TBoardEventContext) {
@@ -226,7 +224,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   refreshCanvas() {
     this.helpers.pieceHelper.clearCache();
     this.clearAnimation();
-    if (isRenderer2D(this.renderer, "resetStaticPieces"))
+    if (Utils.isRenderer2D(this.renderer, "resetStaticPieces"))
       this.renderer.resetStaticPieces();
     this.initInternalRef();
     this.renderPieces();
@@ -322,7 +320,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       this.setInternalRefObj({} as Record<TPieceId, TPieceInternalRef>);
     const squareSize = this.args.size / 8;
 
-    if (isRenderer2D(this.renderer, "clearStaticPieces"))
+    if (Utils.isRenderer2D(this.renderer, "clearStaticPieces"))
       this.renderer.clearStaticPieces(this.args.board);
 
     for (const piece of this.args.board) {
@@ -336,7 +334,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       const currInternal = existing ? existing : lastExisting;
       const square =
         piece.square &&
-        squareToCoords(piece.square, squareSize, this.args.isBlackView);
+        Utils.squareToCoords(piece.square, squareSize, this.args.isBlackView);
 
       if (!square) continue;
       const startX = currInternal?.x ?? square.x;
@@ -363,7 +361,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
           id: piece.id,
         });
 
-        if (isRenderer2D(this.renderer, "clearStaticPiecesRect"))
+        if (Utils.isRenderer2D(this.renderer, "clearStaticPiecesRect"))
           this.renderer.clearStaticPiecesRect(startX, startY);
 
         this.renderer.addDynamicPiece(piece.id, ref);

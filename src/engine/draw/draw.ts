@@ -1,10 +1,9 @@
 import { TPieceInternalRef } from "src/types/piece";
-import { squareToCoords } from "../../utils/coords";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 import Iterators from "../iterators/iterators";
 import DefaultDraw from "./defaultDraw";
 import { TRender } from "../../types/draw";
-import isRenderer2D from "../../utils/isRenderer2D";
+import Utils from "../../utils/utils";
 
 class Draw {
   defaultDraw;
@@ -180,7 +179,12 @@ class Draw {
     //draw static pieces
     if (type === "static" && toRenderStatic && toRenderStatic.length > 0) {
       for (const r of toRenderStatic) {
-        if (isRenderer2D(this.boardRuntime.renderer, "clearStaticPiecesRect"))
+        if (
+          Utils.isRenderer2D(
+            this.boardRuntime.renderer,
+            "clearStaticPiecesRect"
+          )
+        )
           this.boardRuntime.renderer.clearStaticPiecesRect(
             r.piece.x,
             r.piece.y
@@ -270,7 +274,7 @@ class Draw {
     ctx?.clearRect(0, 0, size, size);
     if (selectedRef?.id && ctx) {
       const sqr = internalRef[selectedRef.id]
-        ? squareToCoords(selectedRef.square, squareSize, isBlackView)
+        ? Utils.squareToCoords(selectedRef.square, squareSize, isBlackView)
         : null;
 
       if (sqr) {

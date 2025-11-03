@@ -1,8 +1,5 @@
-import { TBoardEventContext } from "src/types/events";
-import { TPiece, TPieceId, TPieceInternalRef } from "../../types/piece";
-import { squareToCoords } from "../../utils/coords";
+import { TPieceId, TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
-import Renderer2D from "../render/renderer2D";
 import { TRender } from "../../types/draw";
 
 class DefaultDraw {

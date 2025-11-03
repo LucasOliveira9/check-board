@@ -6,7 +6,7 @@ import {
   TPieceKey,
 } from "../../types/piece";
 import { TNotation } from "../../types/square";
-import { coordsToSquare } from "../../utils/coords";
+import Utils from "../../utils/utils";
 import { TCache } from "../../types/helpers";
 
 class PieceHelpers {
@@ -56,7 +56,7 @@ class PieceHelpers {
   ) {
     const refObj = internalRef;
     if (!refObj) return;
-    const square = coordsToSquare(x, y, squareSize, isBlackView);
+    const square = Utils.coordsToSquare(x, y, squareSize, isBlackView);
     if (!square) return;
     const cached = this.cache.get(square.notation);
     if (cached) return { piece: { ...cached.piece }, id: cached.id };

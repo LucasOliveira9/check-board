@@ -1,5 +1,5 @@
 import { TSquare } from "src/types/square";
-import { getCanvasCoords, coordsToSquare } from "../../utils/coords";
+import Utils from "../../utils/utils";
 import BoardRuntime from "./BoardRuntime";
 import { TPieceId } from "src/types/piece";
 
@@ -15,11 +15,11 @@ class BoardEvents {
   }
 
   OnPointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
-    const { offsetX, offsetY } = getCanvasCoords(e);
+    const { offsetX, offsetY } = Utils.getCanvasCoords(e);
     const squareSize = this.boardRuntime.getSize() / 8;
 
     if (offsetX === null || offsetY === null) return;
-    const square = coordsToSquare(
+    const square = Utils.coordsToSquare(
       offsetX,
       offsetY,
       squareSize,
@@ -62,7 +62,7 @@ class BoardEvents {
   }
 
   onPointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
-    const { offsetX, offsetY } = getCanvasCoords(e);
+    const { offsetX, offsetY } = Utils.getCanvasCoords(e);
     const squareSize = this.boardRuntime.getSize() / 8;
     const selected = this.boardRuntime.getSelected();
     if (
