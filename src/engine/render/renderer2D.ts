@@ -1,5 +1,13 @@
+import Utils from "../../utils/utils";
 import { TRender } from "../../types/draw";
-import { TPieceBoard, TPieceId, TPieceInternalRef } from "../../types/piece";
+import {
+  TPiece,
+  TPieceBoard,
+  TPieceCoords,
+  TPieceId,
+  TPieceInternalRef,
+  TPieceType,
+} from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 import { IRenderer, IRenderer2D } from "./interface";
 
@@ -14,8 +22,12 @@ class Renderer2D implements IRenderer2D {
     TPieceInternalRef
   >;
 
-  protected staticToRender: TRender[] = [];
-  protected dynamicToRender: TRender[] = [];
+  protected staticToRender: Map<TPieceId, TRender> = new Map();
+  protected dynamicToRender: Map<TPieceId, TRender> = new Map();
+  protected staticCoordsMap: Map<TPieceId, TPieceCoords> = new Map();
+  protected dynamicCoordsMap: Map<TPieceId, TPieceCoords> = new Map();
+  protected dynamicToClear: Set<TPieceId> = new Set();
+  protected staticToClear: Set<TPieceId> = new Set();
 
   constructor(protected boardRuntime: BoardRuntime) {}
   renderDynamicPieces(): void {
@@ -69,56 +81,148 @@ class Renderer2D implements IRenderer2D {
 
     boardRuntime.draw.overlay();
   }
+
   renderBoard(): void {
-    throw new Error("Method not implemented.");
+    const boardRuntime = this.boardRuntime,
+      canvasLayers = boardRuntime.getCanvasLayers();
+    if (!canvasLayers) return;
+    const canvas = canvasLayers.getCanvas("board").current;
+    if (!canvas) return;
+    canvasLayers?.keepQuality("board", boardRuntime.getSize());
+    boardRuntime.draw.board();
   }
 
-  addStaticPiece(id: TPieceId, piece: TPieceInternalRef, opt?: string) {
-    if (!piece || this.staticPieces[id]) return false;
-    const squareSize = this.boardRuntime.getSize() / 8;
-    this.staticToRender.push({
-      id,
+  addStaticPiece(id: TPieceId, piece: TPieceInternalRef) {
+    piece && this.addStaticPosition(id, { x: piece.x, y: piece.y });
+    if (!piece || this.staticPieces[id]) return;
+    this.staticToRender.set(id, {
       piece,
       x: piece.x,
       y: piece.y,
-      width: squareSize,
-      height: squareSize,
     });
     this.staticPieces[id] = piece;
-    return true;
   }
 
   addDynamicPiece(id: TPieceId, piece: TPieceInternalRef) {
+    piece && this.addDynamicPosition(id, { x: piece.x, y: piece.y });
+    if (!piece || this.dynamicPieces[id]) return;
+    this.dynamicToRender.set(id, {
+      piece,
+      x: piece.x,
+      y: piece.y,
+    });
     this.dynamicPieces[id] = piece;
   }
 
-  deleteStaticPiece(id: TPieceId) {
-    const piece = this.staticToRender.find((obj) => obj.id === id);
-    piece && this.clearStaticPiecesRect(piece.piece.x, piece.piece.y);
+  addStaticPosition(id: TPieceId, coords: TPieceCoords) {
+    this.staticCoordsMap.set(id, coords);
+  }
 
+  addDynamicPosition(id: TPieceId, coords: TPieceCoords) {
+    this.dynamicCoordsMap.set(id, coords);
+  }
+
+  addStaticToClear(id: TPieceId) {
+    !this.staticToClear.has(id) && this.staticToClear.add(id);
+  }
+
+  addDynamicToClear(id: TPieceId) {
+    !this.dynamicToClear.has(id) && this.dynamicToClear.add(id);
+  }
+
+  deleteStaticToClear(id: TPieceId) {
+    this.staticToClear.delete(id);
+  }
+
+  deleteDynamicToClear(id: TPieceId) {
+    this.dynamicToClear.delete(id);
+  }
+
+  deleteStaticPosition(id: TPieceId) {
+    this.staticCoordsMap.delete(id);
+  }
+
+  deleteDynamicPosition(id: TPieceId) {
+    this.dynamicCoordsMap.delete(id);
+  }
+
+  getStaticPosition(id: TPieceId) {
+    return Utils.deepFreeze(this.staticCoordsMap.get(id));
+  }
+
+  getDynamicPosition(id: TPieceId) {
+    return Utils.deepFreeze(this.dynamicCoordsMap.get(id));
+  }
+
+  getAllDynamicCoords() {
+    return Utils.deepFreeze(this.dynamicCoordsMap.entries());
+  }
+
+  getAllStaticCoords() {
+    return Utils.deepFreeze(this.staticCoordsMap.entries());
+  }
+
+  getStaticToClear() {
+    return this.staticToClear;
+  }
+
+  getDynamicToClear() {
+    return this.dynamicToClear;
+  }
+
+  deleteStaticPiece(id: TPieceId) {
+    //const piece = this.staticToRender.find((obj) => obj.id === id);
+    //piece && this.clearStaticPiecesRect(piece.piece.x, piece.piece.y);
+    this.addStaticToClear(id);
     delete this.staticPieces[id];
   }
 
   clearStaticPieces(board: TPieceBoard[]) {
     const newStaticPieces = {} as Record<TPieceId, TPieceInternalRef>;
-    const clear: TPieceInternalRef[] = [];
+    const clear: { id: TPieceId; piece: TPieceInternalRef }[] = [];
     for (const piece of board) {
       const hasId = this.staticPieces[piece.id];
       hasId && hasId.square.notation !== piece.square.notation
-        ? clear.push(structuredClone(hasId))
+        ? clear.push(structuredClone({ id: piece.id, piece: hasId }))
         : null;
       if (hasId) newStaticPieces[piece.id] = hasId;
       delete this.staticPieces[piece.id];
     }
 
-    for (const piece of clear) this.clearStaticPiecesRect(piece.x, piece.y);
+    for (const [id, _] of Object.entries(this.staticPieces))
+      this.addStaticToClear(id as TPieceId);
+
+    for (const obj of clear) this.addStaticToClear(obj.id);
 
     this.staticPieces = structuredClone(newStaticPieces);
   }
 
-  clearStaticPiecesRect(x: number, y: number) {
+  clearPiecesRect(x: number, y: number, id: TPieceId, type: TPieceType) {
     const canvasLayers = this.boardRuntime.getCanvasLayers();
-    const ctx = canvasLayers.getContext("pieces");
+    const ctx =
+      type === "static"
+        ? canvasLayers.getContext("pieces")
+        : canvasLayers.getContext("dynamicPieces");
+    const dpr = canvasLayers.getDpr();
+    const squareSize = this.boardRuntime.getSize() / 8;
+
+    ctx?.save();
+    ctx?.setTransform(1, 0, 0, 1, 0, 0);
+    ctx?.clearRect(x * dpr, y * dpr, squareSize * dpr, squareSize * dpr);
+    ctx?.restore();
+
+    if (type === "static") {
+      !this.staticPieces[id] && this.deleteStaticPosition(id);
+      this.deleteStaticToClear(id);
+    } else {
+      !this.dynamicPieces[id] && this.deleteDynamicPosition(id);
+      this.deleteDynamicToClear(id);
+    }
+  }
+
+  clearDynamicPiecesRect(x: number, y: number, id: TPieceId) {
+    const canvasLayers = this.boardRuntime.getCanvasLayers();
+    const ctx = canvasLayers.getContext("dynamicPieces");
     const dpr = canvasLayers.getDpr();
     const squareSize = this.boardRuntime.getSize() / 8;
     ctx?.save();
@@ -126,19 +230,26 @@ class Renderer2D implements IRenderer2D {
 
     ctx?.clearRect(x * dpr, y * dpr, squareSize * dpr, squareSize * dpr);
     ctx?.restore();
+
+    !this.dynamicPieces[id] && this.deleteDynamicPosition(id);
+    this.deleteDynamicToClear(id);
   }
 
   resetStaticPieces() {
     this.staticPieces = {} as Record<TPieceId, TPieceInternalRef>;
-    this.staticToRender = [];
+    this.staticToRender.clear();
+    this.staticCoordsMap.clear();
+    this.dynamicCoordsMap.clear();
   }
 
   deleteDynamicPiece(id: TPieceId) {
+    if (!this.dynamicPieces[id]) return;
+    this.addDynamicToClear(id);
     delete this.dynamicPieces[id];
   }
 
   clearStaticToRender() {
-    this.staticToRender = [];
+    this.staticToRender.clear();
   }
 
   getDynamicPieceObj() {
@@ -151,6 +262,10 @@ class Renderer2D implements IRenderer2D {
 
   getStaticToRender() {
     return this.staticToRender;
+  }
+
+  getDynamicToRender() {
+    return this.dynamicToRender;
   }
 
   clear(): void {

@@ -18,7 +18,8 @@ class BoardEvents {
     const { offsetX, offsetY } = Utils.getCanvasCoords(e);
     const squareSize = this.boardRuntime.getSize() / 8;
 
-    if (offsetX === null || offsetY === null) return;
+    if (offsetX === null || offsetY === null || this.boardRuntime.getIsMoving())
+      return;
     const square = Utils.coordsToSquare(
       offsetX,
       offsetY,
@@ -65,6 +66,7 @@ class BoardEvents {
     const { offsetX, offsetY } = Utils.getCanvasCoords(e);
     const squareSize = this.boardRuntime.getSize() / 8;
     const selected = this.boardRuntime.getSelected();
+    if (this.boardRuntime.getIsMoving()) return;
     if (
       (selected && !selected?.isDragging) ||
       (!selected && !this.boardRuntime.getIsMoving())
@@ -80,6 +82,7 @@ class BoardEvents {
         const toRender = this.boardRuntime.getPieceHover();
 
         if (toRender) {
+          this.boardRuntime.renderer.deleteDynamicPiece(toRender);
           this.boardRuntime.renderer.addStaticPiece(
             toRender,
             this.boardRuntime.getInternalRefVal(toRender)
@@ -97,6 +100,7 @@ class BoardEvents {
         this.boardRuntime.setPieceHover(searchPiece.id);
 
         if (currHover) {
+          this.boardRuntime.renderer.deleteDynamicPiece(currHover);
           this.boardRuntime.renderer.addStaticPiece(
             currHover,
             this.boardRuntime.getInternalRefVal(currHover)
@@ -105,6 +109,10 @@ class BoardEvents {
 
         if (currHover !== searchPiece.id) {
           this.boardRuntime.renderer.deleteStaticPiece(searchPiece.id);
+          this.boardRuntime.renderer.addDynamicPiece(
+            searchPiece.id,
+            this.boardRuntime.getInternalRefVal(searchPiece.id)
+          );
           this.boardRuntime.renderPieces();
         }
         this.boardRuntime.getCanvasLayers().setCanvasStyle("pieces", {
@@ -141,6 +149,13 @@ class BoardEvents {
             return;
           }
 
+          if (Utils.isRenderer2D(this.boardRuntime.renderer)) {
+            this.boardRuntime.renderer.addDynamicToClear(selected.id);
+            this.boardRuntime.renderer.addDynamicPosition(selected.id, {
+              x: piece.x,
+              y: piece.y,
+            });
+          }
           const clampX = offsetX - half;
           const clampY = offsetY - half;
 
@@ -162,6 +177,9 @@ class BoardEvents {
   onPointerUp(e: React.PointerEvent<HTMLCanvasElement>) {
     const { from, to, piece } = this.boardRuntime.helpers.detectMove(e);
     let move = false;
+    let selected = this.boardRuntime.getSelected();
+    const squareSize = this.boardRuntime.getSize() / 8;
+
     if (from !== null) {
       move = this.boardRuntime.helpers.move(from.notation, to.notation, piece);
     }
@@ -170,7 +188,6 @@ class BoardEvents {
     });
 
     if (!move) {
-      let selected = this.boardRuntime.getSelected();
       const id =
         selected?.isDragging && selected?.id
           ? selected.id
@@ -213,6 +230,19 @@ class BoardEvents {
 
     const piece =
       selected && this.boardRuntime.getInternalRefVal(selected.id as TPieceId);
+    if (
+      selected &&
+      selected.isDragging &&
+      piece &&
+      Utils.isRenderer2D(this.boardRuntime.renderer)
+    ) {
+      this.boardRuntime.renderer.clearPiecesRect(
+        piece.x,
+        piece.y,
+        selected.id,
+        "dynamic"
+      );
+    }
     piece && ((piece.x = selected.x), (piece.y = selected.y));
 
     const id = selected?.isDragging

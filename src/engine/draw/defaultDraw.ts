@@ -1,6 +1,7 @@
 import { TPieceId, TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 import { TRender } from "../../types/draw";
+import Utils from "../../utils/utils";
 
 class DefaultDraw {
   private scale: number = 1.1;
@@ -14,9 +15,8 @@ class DefaultDraw {
 
   drawStaticPiece() {
     const toRender =
-      "getStaticToRender" in this.boardRuntime.renderer
-        ? ((this.boardRuntime.renderer.getStaticToRender as any)() as TRender[])
-        : null;
+      Utils.isRenderer2D(this.boardRuntime.renderer) &&
+      this.boardRuntime.renderer.getStaticToRender();
     const ctx = this.boardRuntime.getCanvasLayers().getContext("pieces"),
       piecesImage = this.boardRuntime.getPieceStyle(),
       internalRefObj = this.boardRuntime.renderer.getStaticPieceObj(),
@@ -39,8 +39,8 @@ class DefaultDraw {
     >;
 
     for (const [id, piece] of Object.entries(internalRefObj)) {
-      const toRender_ = toRender.filter((obj) => obj.id === id);
-      if (toRender_.length) internalRef[id as TPieceId] = piece;
+      const toRender_ = toRender.get(id as TPieceId);
+      if (toRender_) internalRef[id as TPieceId] = piece;
     }
 
     if (!internalRef || internalRef === null || !ctx) return;
@@ -162,19 +162,30 @@ class DefaultDraw {
   drawDynamicPieces(time: number) {
     const ctx = this.boardRuntime.getCanvasLayers().getContext("dynamicPieces"),
       piecesImage = this.boardRuntime.getPieceStyle(),
-      internalRef = this.boardRuntime.renderer.getDynamicPieceObj(),
+      internalRefObj = this.boardRuntime.renderer.getDynamicPieceObj(),
+      toRender =
+        Utils.isRenderer2D(this.boardRuntime.renderer) &&
+        this.boardRuntime.renderer.getDynamicToRender(),
       pieceHoverRef = this.boardRuntime.getPieceHover(),
       squareSize = this.boardRuntime.getSize() / 8,
       selectedRef = this.boardRuntime.getSelected(),
       isBlackView = this.boardRuntime.getIsBlackView(),
       animation = this.boardRuntime.getAnimation();
 
-    if (!piecesImage) return;
+    if (!piecesImage || !toRender || !toRender.size) return;
     if (
       typeof piecesImage !== "string" &&
       !(piecesImage.bB instanceof HTMLImageElement)
     )
       return;
+
+    const internalRef = {} as Record<TPieceId, TPieceInternalRef>;
+
+    for (const [id, piece] of Object.entries(internalRefObj)) {
+      const toRender_ = toRender.get(id as TPieceId);
+      if (toRender_) internalRef[id as TPieceId] = piece;
+    }
+
     const moveCanvas: TPieceId[] = [];
     if (!internalRef || internalRef === null || !ctx) return;
 
@@ -199,6 +210,14 @@ class DefaultDraw {
 
       piece_.x = anim.from.x + (anim.to.x - anim.from.x) * eased;
       piece_.y = anim.from.y + (anim.to.y - anim.from.y) * eased;
+
+      if (Utils.isRenderer2D(this.boardRuntime.renderer) && eased < 1) {
+        this.boardRuntime.renderer.addDynamicToClear(anim.id);
+        this.boardRuntime.renderer.addDynamicPosition(anim.id, {
+          x: piece_.x,
+          y: piece_.y,
+        });
+      }
 
       if (eased >= 1) {
         piece_.anim = false;
@@ -240,7 +259,6 @@ class DefaultDraw {
         );
         ctx.restore();
       }
-
       ctx.restore();
     }
 

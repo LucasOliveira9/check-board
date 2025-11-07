@@ -1,4 +1,4 @@
-import { TPieceInternalRef } from "src/types/piece";
+import { TPieceInternalRef, TPieceType } from "src/types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 import Iterators from "../iterators/iterators";
 import DefaultDraw from "./defaultDraw";
@@ -154,7 +154,8 @@ class Draw {
     ctx = null;
   }
 
-  pieces(type: "static" | "dynamic", time?: number) {
+  pieces(type: TPieceType, time?: number) {
+    console.log("draw -> ", type);
     let ctx = this.boardRuntime.getCanvasLayers().getContext("pieces");
     let ctxDynamicPieces = this.boardRuntime
       .getCanvasLayers()
@@ -170,26 +171,42 @@ class Draw {
       events = this.boardRuntime.getEvents(),
       injection = this.boardRuntime.getInjection();
 
+    const renderer = this.boardRuntime.renderer;
     const squareSize = size / 8;
     const toRenderStatic =
-      "getStaticToRender" in this.boardRuntime.renderer
-        ? ((this.boardRuntime.renderer.getStaticToRender as any)() as TRender[])
-        : null;
+      Utils.isRenderer2D(renderer) && renderer.getStaticToRender();
+    const staticToClear =
+      Utils.isRenderer2D(renderer) && renderer.getStaticToClear();
+    const toRenderDynamic =
+      Utils.isRenderer2D(renderer) && renderer.getDynamicToRender();
+    const dynamicToClear =
+      Utils.isRenderer2D(renderer) && renderer.getDynamicToClear();
+
+    // clear static pieces
+    if (staticToClear && staticToClear.size && type === "static") {
+      for (const id of staticToClear) {
+        const coords = renderer.getStaticPosition(id);
+        if (!coords) continue;
+        const { x, y } = coords;
+        renderer.clearPiecesRect(x, y, id, "static");
+      }
+    }
+    // clear dynamic pieces
+    if (dynamicToClear && dynamicToClear.size && type === "dynamic") {
+      for (const id of dynamicToClear) {
+        const coords = renderer.getDynamicPosition(id);
+        if (!coords) continue;
+        const { x, y } = coords;
+        renderer.clearPiecesRect(x, y, id, "dynamic");
+      }
+    }
 
     //draw static pieces
-    if (type === "static" && toRenderStatic && toRenderStatic.length > 0) {
-      for (const r of toRenderStatic) {
-        if (
-          Utils.isRenderer2D(
-            this.boardRuntime.renderer,
-            "clearStaticPiecesRect"
-          )
-        )
-          this.boardRuntime.renderer.clearStaticPiecesRect(
-            r.piece.x,
-            r.piece.y
-          );
-      }
+    if (type === "static" && toRenderStatic && toRenderStatic.size > 0) {
+      /*for (const r of toRenderStatic) {
+        if (Utils.isRenderer2D(renderer))
+          renderer.clearStaticPiecesRect(r.piece.x, r.piece.y);
+      }*/
       const context = this.boardRuntime.getContext(true, {
         ctx,
         squareSize,
@@ -212,7 +229,7 @@ class Draw {
         : this.defaultDraw.drawStaticPiece();
     } else {
       // draw dynamic pieces
-      ctxDynamicPieces?.clearRect(0, 0, size, size);
+      //ctxDynamicPieces?.clearRect(0, 0, size, size);
       this.defaultDraw.drawDynamicPieces(time || 0);
     }
 

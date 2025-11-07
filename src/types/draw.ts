@@ -23,12 +23,9 @@ type TDrawPieces<T extends TBoardEventContext = TBoardEventContext> = {
 };
 
 type TRender = {
-  id: TPieceId;
   piece: TPieceInternalRef;
   x: number;
   y: number;
-  width: number;
-  height: number;
 };
 
 export type { TDrawBoard, TDrawPieces, TRender };

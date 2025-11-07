@@ -224,8 +224,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   refreshCanvas() {
     this.helpers.pieceHelper.clearCache();
     this.clearAnimation();
-    if (Utils.isRenderer2D(this.renderer, "resetStaticPieces"))
-      this.renderer.resetStaticPieces();
+    //if (Utils.isRenderer2D(this.renderer)) this.renderer.resetStaticPieces();
     this.initInternalRef();
     this.renderPieces();
     this.renderer.renderDownOverlay();
@@ -262,20 +261,13 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.setInternalRefObj({} as Record<TPieceId, TPieceInternalRef>);
     this.clearAnimation();
     this.getCanvasLayers().clearAllRect();
-    this.renderBoard();
+    if (Utils.isRenderer2D(this.renderer)) this.renderer.resetStaticPieces();
+    this.renderer.renderBoard();
     this.refreshCanvas();
   }
 
   deleteIntervalRefVal(key: TPieceId) {
     delete this.internalRef[key];
-  }
-
-  renderBoard() {
-    if (!this.args.canvasLayers) return;
-    const canvas = this.args.canvasLayers.getCanvas("board").current;
-    if (!canvas) return;
-    this.args.canvasLayers?.keepQuality("board", this.args.size);
-    this.draw.board();
   }
 
   async renderPieces() {
@@ -303,7 +295,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   init() {
     this.initPieceImages();
     this.initInternalRef();
-    this.renderBoard();
+    this.renderer.renderBoard();
     this.renderPieces();
   }
 
@@ -320,7 +312,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       this.setInternalRefObj({} as Record<TPieceId, TPieceInternalRef>);
     const squareSize = this.args.size / 8;
 
-    if (Utils.isRenderer2D(this.renderer, "clearStaticPieces"))
+    if (Utils.isRenderer2D(this.renderer))
       this.renderer.clearStaticPieces(this.args.board);
 
     for (const piece of this.args.board) {
@@ -361,14 +353,14 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
           id: piece.id,
         });
 
-        if (Utils.isRenderer2D(this.renderer, "clearStaticPiecesRect"))
-          this.renderer.clearStaticPiecesRect(startX, startY);
+        if (Utils.isRenderer2D(this.renderer))
+          this.renderer.addStaticToClear(piece.id);
 
-        this.renderer.addDynamicPiece(piece.id, ref);
         this.renderer.deleteStaticPiece(piece.id);
+        this.renderer.addDynamicPiece(piece.id, ref);
       } else {
-        this.renderer.addStaticPiece(piece.id, ref);
         this.renderer.deleteDynamicPiece(piece.id);
+        this.renderer.addStaticPiece(piece.id, ref);
       }
     }
   }

@@ -75,6 +75,7 @@ type TPieceBoard = {
   type: TPiece;
   id: TPieceId;
 };
+type TPieceCoords = { x: number; y: number };
 const pieceKey = [
   "wP",
   "wB",
@@ -101,6 +102,8 @@ type TPieceInternalRef = {
   anim?: boolean;
 };
 
+type TPieceType = "static" | "dynamic";
+
 export type {
   TPiece,
   TPieceBoard,
@@ -109,4 +112,6 @@ export type {
   TPieceInternalRef,
   TPieceDisplay,
   TPieceKey,
+  TPieceCoords,
+  TPieceType,
 };

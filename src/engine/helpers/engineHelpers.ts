@@ -104,6 +104,14 @@ class EngineHelpers {
     const sqr = Utils.coordsToSquare(offsetX, offsetY, squareSize, isBlackView);
     const coords = Utils.squareToCoords(sqr, squareSize, isBlackView);
     if (selected && selected.isDragging) {
+      if (Utils.isRenderer2D(this.boardRuntime.renderer) && piece) {
+        this.boardRuntime.renderer.clearPiecesRect(
+          piece.x,
+          piece.y,
+          selected.id,
+          "dynamic"
+        );
+      }
       if (piece && sqr && coords) {
         const { x, y } = coords;
         piece.square = sqr;

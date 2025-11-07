@@ -1,5 +1,11 @@
 import { TRender } from "../../types/draw";
-import { TPieceBoard, TPieceId, TPieceInternalRef } from "../../types/piece";
+import {
+  TPieceBoard,
+  TPieceCoords,
+  TPieceId,
+  TPieceInternalRef,
+  TPieceType,
+} from "../../types/piece";
 
 interface IRenderer {
   renderStaticPieces(): void;
@@ -18,10 +24,25 @@ interface IRenderer {
 }
 
 interface IRenderer2D extends IRenderer {
-  clearStaticPiecesRect(x: number, y: number): void;
+  clearPiecesRect(x: number, y: number, id: TPieceId, type: TPieceType): void;
   resetStaticPieces(): void;
-  getStaticToRender(): TRender[];
+  getStaticToRender(): Map<TPieceId, TRender>;
+  getDynamicToRender(): Map<TPieceId, TRender>;
+  getStaticToClear(): Set<TPieceId>;
+  getDynamicToClear(): Set<TPieceId>;
+  getDynamicPosition(
+    id: TPieceId
+  ): { readonly x: number; readonly y: number } | undefined;
+  getStaticPosition(
+    id: TPieceId
+  ): { readonly x: number; readonly y: number } | undefined;
   clearStaticPieces(board: TPieceBoard[]): void;
+  addStaticToClear(id: TPieceId): void;
+  addDynamicToClear(id: TPieceId): void;
+  addDynamicPosition(id: TPieceId, coords: TPieceCoords): void;
+  addStaticPosition(id: TPieceId, coords: TPieceCoords): void;
+  deleteStaticToClear(id: TPieceId): void;
+  deleteDynamicToClear(id: TPieceId): void;
 }
 
 export { IRenderer, IRenderer2D };

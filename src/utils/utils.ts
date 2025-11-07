@@ -75,8 +75,8 @@ class Utils {
     return Object.freeze(obj_) as TDeepReadonly<T>;
   }
 
-  static isRenderer2D(r: IRenderer, method: string): r is IRenderer2D {
-    return method in r;
+  static isRenderer2D(r: IRenderer): r is IRenderer2D {
+    return "getStaticToClear" in r;
   }
 }
 
