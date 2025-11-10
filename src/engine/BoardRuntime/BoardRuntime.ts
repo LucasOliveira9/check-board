@@ -10,7 +10,7 @@ import {
 } from "../../types/piece";
 import BoardEvents from "./BoardEvents";
 import EngineHelpers from "../helpers/engineHelpers";
-import { TSquare } from "../../types/square";
+import { TFile, TNotation, TRank, TSquare } from "../../types/square";
 import { IRenderer } from "../render/interface";
 import Renderer2D from "../render/renderer2D";
 import Renderer3D from "../render/renderer3D";
@@ -136,7 +136,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   getMove() {
-    return this.args.move;
+    return this.args.onMove;
   }
 
   getCanvasLayers() {
@@ -303,6 +303,30 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     if (!this.args.pieceStyle) {
       this.args.pieceStyle =
         this.helpers.pieceHelper.getPieceImages[this.args.pieceConfig?.type];
+    }
+  }
+
+  updateBoardState(from: TNotation, to: TNotation, piece: TPieceBoard) {
+    const newBoard: TPieceBoard[] = [];
+
+    for (const piece of this.getBoard()) {
+      if (piece.square.notation === to) continue;
+      else if (piece.square.notation !== from) {
+        newBoard.push({ ...piece });
+        continue;
+      }
+      newBoard.push({
+        ...piece,
+        square: {
+          file: to.charAt(0) as TFile,
+          rank: parseInt(to.charAt(1)) as TRank,
+          notation: to,
+        },
+      });
+    }
+    this.setBoard(newBoard);
+    if (this.args.onUpdate) {
+      this.args.onUpdate();
     }
   }
 

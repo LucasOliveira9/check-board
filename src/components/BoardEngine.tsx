@@ -9,7 +9,7 @@ import { BoardHandled } from "../engine/client/interface";
 
 const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
   ({ config }, ref) => {
-    const { isBlackView, pieceConfig, board, size } = config;
+    const { pieceConfig, size } = config;
     const boardCanvasRef = useRef<HTMLCanvasElement>(null);
     const pieceCanvasRef = useRef<HTMLCanvasElement>(null);
     const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -19,7 +19,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
     const boardRuntime = useRef<BoardRuntime>(null);
     const clientRef = useRef<Client>(null);
 
-    useEffect(() => {
+    /*useEffect(() => {
       if (!boardRuntime.current) return;
       boardRuntime.current.setSelected(null);
       boardRuntime.current.setBoard(board);
@@ -28,7 +28,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
     useEffect(() => {
       if (!boardRuntime.current) return;
       boardRuntime.current.setBlackView(isBlackView);
-    }, [isBlackView]);
+    }, [isBlackView]);*/
 
     useEffect(() => {
       if (boardRuntime.current) {
@@ -37,6 +37,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
       }
       const args: TBoardRuntime = {
         ...config,
+        board: structuredClone(config.board),
         canvasLayers: new CanvasLayers(
           boardCanvasRef,
           pieceCanvasRef,
@@ -86,6 +87,10 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
       setBlackView: (b) => {
         if (!clientRef.current) return;
         clientRef.current.setBlackView(b);
+      },
+      getBoard: () => {
+        if (!clientRef.current) return null;
+        return clientRef.current.getBoard();
       },
     }));
 

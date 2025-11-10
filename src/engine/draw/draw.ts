@@ -155,7 +155,6 @@ class Draw {
   }
 
   pieces(type: TPieceType, time?: number) {
-    console.log("draw -> ", type);
     let ctx = this.boardRuntime.getCanvasLayers().getContext("pieces");
     let ctxDynamicPieces = this.boardRuntime
       .getCanvasLayers()

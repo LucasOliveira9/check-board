@@ -162,12 +162,12 @@ class EngineHelpers {
     // IMPLEMENTAR LÓGICA DO CLIENT MOVE
     const moveCallback = this.boardRuntime.getMove();
     if (moveCallback) {
-      const board = moveCallback({ from, to, piece });
-      if (board) {
+      const move = moveCallback({ from, to, piece });
+      if (move) {
         this.boardRuntime.setSelected(null);
-        this.boardRuntime.setBoard(board);
+        this.boardRuntime.updateBoardState(from, to, piece);
         return true;
-      } else if (board === false) {
+      } else {
         const selected = this.boardRuntime.getSelected();
         selected && ((piece_.x = selected.x), (piece_.y = selected.y));
         this.boardRuntime.setSelected(null);

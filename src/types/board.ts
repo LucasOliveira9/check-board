@@ -39,7 +39,8 @@ interface TBoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   events?: TBoardEvents;
   injection?: TBoardInjection<T>;
   pieceStyle?: TPieceImage;
-  move?: (arg: TMove) => TPieceBoard[] | void | false;
+  onMove?: (arg: TMove) => boolean;
+  onUpdate?: () => void;
   defaultAnimation?: boolean;
   canvasLayers: CanvasLayers;
   mode: "2d" | "3d";
@@ -68,7 +69,8 @@ type TConfig<T extends TBoardEventContext = TBoardEventContext> = {
   darkTile?: string;
   events?: TBoardEvents<T>;
   injection?: TBoardInjection<T>;
-  move?: (arg: TMove) => TPieceBoard[] | void | false;
+  onMove?: (arg: TMove) => boolean;
+  onUpdate?: () => void;
   defaultAnimation?: boolean;
 };
 
