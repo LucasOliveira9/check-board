@@ -175,6 +175,10 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     return Utils.deepFreeze(this.animation);
   }
 
+  getReadonlyBoard() {
+    return Utils.deepFreeze(this.getBoard());
+  }
+
   getContext(cache: boolean, args: TBoardEventContext) {
     const { ctx, squareSize, size, x, y, piece, square, canvas } = args;
 

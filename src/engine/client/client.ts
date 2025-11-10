@@ -29,8 +29,8 @@ class Client {
     this.getRuntime()?.setBoard(board);
   }
 
-  public getBoard(): TPieceBoard[] {
-    return this.getRuntime()?.getBoard();
+  public getBoard(): readonly TPieceBoard[] {
+    return this.getRuntime().getReadonlyBoard();
   }
 
   public flip() {
