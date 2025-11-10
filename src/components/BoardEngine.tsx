@@ -84,9 +84,9 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
         if (!clientRef.current) return;
         clientRef.current.setBoard(b);
       },
-      setBlackView: (b) => {
+      flip: () => {
         if (!clientRef.current) return;
-        clientRef.current.setBlackView(b);
+        clientRef.current.flip();
       },
       getBoard: () => {
         if (!clientRef.current) return null;

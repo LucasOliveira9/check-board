@@ -33,8 +33,8 @@ class Client {
     return this.getRuntime()?.getBoard();
   }
 
-  public setBlackView(b: boolean) {
-    this.getRuntime()?.setBlackView(b);
+  public flip() {
+    this.getRuntime()?.setBlackView(!this.getRuntime().getIsBlackView());
   }
 }
 
