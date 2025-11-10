@@ -65,10 +65,10 @@ type TBoardEvent<T = TBoardEventContext, E = void> = E extends void
   : (arg: T, extra: E) => void;
 
 type TBoardEventExtras = {
-  select: void;
-  hover: void;
-  drop: void;
-  drawPiece: number;
+  onSelect: void;
+  onHover: void;
+  onDrop: void;
+  onDrawPiece: number;
 };
 
 type TBoardEvents<

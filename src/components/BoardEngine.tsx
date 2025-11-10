@@ -80,7 +80,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
     }
 
     useImperativeHandle(ref, () => ({
-      setBoard: (b) => {
+      loadPosition: (b) => {
         if (!clientRef.current) return;
         clientRef.current.setBoard(b);
       },

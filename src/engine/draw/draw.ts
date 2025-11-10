@@ -218,10 +218,10 @@ class Draw {
           undefined,
       });
 
-      events?.drawPiece
+      events?.onDrawPiece
         ? this.boardRuntime.helpers.triggerEvent(
             events,
-            "drawPiece",
+            "onDrawPiece",
             injection ? injection(context) : context,
             time
           )
@@ -250,10 +250,10 @@ class Draw {
           canvas: canvas ? canvas : undefined,
         });
 
-        events?.hover
+        events?.onHover
           ? this.boardRuntime.helpers.triggerEvent(
               events,
-              "hover",
+              "onHover",
               injection ? injection(context) : context
             )
           : this.iterator.defaultOnHover({
@@ -314,10 +314,10 @@ class Draw {
             undefined,
         });
 
-        events?.select
+        events?.onSelect
           ? this.boardRuntime.helpers.triggerEvent(
               events,
-              "select",
+              "onSelect",
               injection ? injection(context) : context
             )
           : this.iterator.defaultOnSelect({

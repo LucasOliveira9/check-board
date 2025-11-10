@@ -372,7 +372,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         currInternal &&
         piece.square.notation !== currInternal.square.notation
       ) {
-        if (!this.getEvents()?.drawPiece) ref.anim = true;
+        if (!this.getEvents()?.onDrawPiece) ref.anim = true;
         this.animation.push({
           from: { x: startX, y: startY },
           to: { x: square.x, y: square.y },
