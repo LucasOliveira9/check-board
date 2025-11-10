@@ -155,8 +155,8 @@ class DefaultDraw {
 
       ctx.restore();
     }*/
-    if ("clearStaticToRender" in this.boardRuntime.renderer)
-      (this.boardRuntime.renderer.clearStaticToRender as any)();
+    if (Utils.isRenderer2D(this.boardRuntime.renderer))
+      this.boardRuntime.renderer.clearStaticToRender();
   }
 
   drawDynamicPieces(time: number) {
@@ -190,6 +190,7 @@ class DefaultDraw {
     if (!internalRef || internalRef === null || !ctx) return;
 
     animation.length > 0 && this.boardRuntime.setIsMoving(true);
+
     for (let i = 0; i < animation.length; i++) {
       const anim = animation[i];
       const distance = Math.hypot(
@@ -204,6 +205,7 @@ class DefaultDraw {
         )
       );
       const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
+
       const progress = Math.max(0, Math.min((time - anim.start) / duration, 1));
       const piece_ = anim.piece;
       const eased = easeOutCubic(progress);

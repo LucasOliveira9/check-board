@@ -226,9 +226,7 @@ class Draw {
             time
           )
         : this.defaultDraw.drawStaticPiece();
-    } else {
-      // draw dynamic pieces
-      //ctxDynamicPieces?.clearRect(0, 0, size, size);
+    } else if (type === "dynamic") {
       this.defaultDraw.drawDynamicPieces(time || 0);
     }
 
