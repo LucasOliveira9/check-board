@@ -300,9 +300,11 @@ class Draw {
           isBlackView,
           internalRef
         )?.piece;
-
+        const canvas = this.boardRuntime.getEventCanvasLayers("onSelect");
+        const currCtx = this.boardRuntime.getCanvasLayers().getContext(canvas);
+        currCtx?.clearRect(0, 0, size, size);
         const context = this.boardRuntime.getContext(true, {
-          ctx,
+          ctx: currCtx ? currCtx : ctx,
           squareSize,
           x,
           y,
@@ -310,7 +312,7 @@ class Draw {
           piece: piece_,
           square: selectedRef.square,
           canvas:
-            this.boardRuntime.getCanvasLayers().getCanvas("overlay").current ||
+            this.boardRuntime.getCanvasLayers().getCanvas(canvas).current ||
             undefined,
         });
 

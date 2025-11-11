@@ -207,6 +207,18 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     return this.isMoving;
   }
 
+  getEventCanvasLayers(event: string) {
+    if (!this.args.eventsCanvasLayer) return "overlay";
+    if (event in this.args.eventsCanvasLayer) {
+      const canvas =
+        (this.args.eventsCanvasLayer as any)[event] === "up"
+          ? "overlayUp"
+          : "overlay";
+      return canvas;
+    }
+    return "overlay";
+  }
+
   setAnimationRef(ref: number) {
     this.animationRef = ref;
   }

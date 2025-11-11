@@ -1,6 +1,6 @@
 import CanvasLayers from "../engine/BoardRuntime/canvasLayers";
 import BoardRuntime from "../engine/BoardRuntime/BoardRuntime";
-import { TBoardEventContext, TBoardEvents, TMove } from "./events";
+import { TBoardEvent, TBoardEventContext, TBoardEvents, TMove } from "./events";
 import {
   TPiece,
   TPieceBoard,
@@ -37,6 +37,7 @@ interface TBoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   pieceConfig: TPieceConfig;
   board: TPieceBoard[];
   events?: TBoardEvents;
+  eventsCanvasLayer?: TCanvasEvent;
   injection?: TBoardInjection<T>;
   pieceStyle?: TPieceImage;
   onMove?: (arg: TMove) => boolean;
@@ -65,6 +66,7 @@ type TConfig<T extends TBoardEventContext = TBoardEventContext> = {
   size: number;
   board: TPieceBoard[];
   pieceConfig: TPieceConfig;
+  eventsCanvasLayer?: TCanvasEvent;
   lightTile?: string;
   darkTile?: string;
   events?: TBoardEvents<T>;
@@ -73,6 +75,12 @@ type TConfig<T extends TBoardEventContext = TBoardEventContext> = {
   onUpdate?: () => void;
   defaultAnimation?: boolean;
 };
+
+type TCanvasEvent = {
+  onSelect?: TCanvas;
+};
+
+type TCanvas = "up" | "down";
 
 type TSelected = {
   id: TPieceId;
@@ -92,4 +100,5 @@ export type {
   TPieceConfig,
   TBoardEngine,
   TBoardRuntime,
+  TCanvas,
 };
