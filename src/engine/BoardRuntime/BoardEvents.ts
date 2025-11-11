@@ -143,6 +143,14 @@ class BoardEvents {
             selected.isDragging = true;
             this.boardRuntime.renderer.deleteStaticPiece(selected.id);
             this.boardRuntime.renderer.addDynamicPiece(selected.id, piece);
+            if (Utils.isRenderer2D(this.boardRuntime.renderer) && piece) {
+              this.boardRuntime.renderer.clearPiecesRect(
+                piece.x,
+                piece.y,
+                selected.id,
+                "dynamic"
+              );
+            }
             piece.x = offsetX - half;
             piece.y = offsetY - half;
             this.boardRuntime.renderPieces();
