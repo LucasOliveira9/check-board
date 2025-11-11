@@ -23,7 +23,7 @@ class Draw {
   }
 
   board() {
-    let ctx = this.boardRuntime.getCanvasLayers().getContext("board");
+    const ctx = this.boardRuntime.getCanvasLayers().getContext("board");
     if (!ctx) return;
 
     const size = this.boardRuntime.getSize(),
@@ -52,106 +52,6 @@ class Draw {
         );
       }
     }
-    /*
-  // selected
-  if (selectedRef.current) {
-    const sqr = internalRef.current[selectedRef.current.id]
-      ? squareToCoords(selectedRef.current.square, squareSize, isBlackView)
-      : null;
-
-    if (sqr) {
-      const { x, y } = sqr;
-      const context = createLazyEventContext(
-        { ctx, squareSize, x, y, size },
-        {
-          piece: () =>
-            getPiece.at(x, y, squareSize, isBlackView, internalRef)?.piece,
-          piecesImage: () => piecesImage,
-          square: () => selectedRef.current?.square,
-          internalRef: () => internalRef,
-          pieceHoverRef: () => pieceHoverRef,
-        },
-        { cache: true }
-      );
-      events?.select
-        ? triggerEvent(
-            events,
-            "select",
-            injection ? injection(context) : context
-          )
-        : defaultOnSelect(context);
-    }
-  }
-
-  // piece hover
-  if (pieceHoverRef.current && !selectedRef.current?.isDragging) {
-    const piece = internalRef.current[pieceHoverRef.current];
-    if (piece) {
-      const context = createLazyEventContext(
-        {
-          ctx,
-          squareSize,
-          size,
-          x: piece.x,
-          y: piece.y,
-          isBlackView,
-        },
-        {
-          piece: () => piece,
-          square: () => piece.square,
-          piecesImage: () => piecesImage,
-          internalRef: () => internalRef,
-          pieceHoverRef: () => pieceHoverRef,
-        },
-        {
-          cache: true,
-        }
-      );
-
-      events?.hover
-        ? triggerEvent(
-            events,
-            "hover",
-            injection ? injection(context) : context
-          )
-        : defaultOnHover(context);
-    }
-  }
-  // draw piece
-  const context = createLazyEventContext(
-    {
-      ctx,
-      squareSize,
-      size,
-      x: 0,
-      y: 0,
-    },
-    {
-      piecesImage: () => piecesImage,
-      internalRef: () => internalRef,
-      pieceHoverRef: () => pieceHoverRef,
-      selectedRef: () => selectedRef,
-    },
-    {
-      cache: false,
-    }
-  );
-  events?.drawPiece
-    ? triggerEvent(
-        events,
-        "drawPiece",
-        injection ? injection(context) : context
-      )
-    : defaultOnPieceDraw(context);
-  /*for (const [id, piece] of Object.entries(internalRef.current)) {
-    if (piecesImage && id !== pieceHoverRef.current) {
-      const image = piecesImage[piece.type];
-      if (image && image.complete && image.naturalWidth > 0) {
-        ctx.drawImage(image, piece.x, piece.y, squareSize, squareSize);
-      }
-    }
-  }*/
-    ctx = null;
   }
 
   pieces(type: TPieceType, time?: number) {
@@ -202,10 +102,6 @@ class Draw {
 
     //draw static pieces
     if (type === "static" && toRenderStatic && toRenderStatic.size > 0) {
-      /*for (const r of toRenderStatic) {
-        if (Utils.isRenderer2D(renderer))
-          renderer.clearStaticPiecesRect(r.piece.x, r.piece.y);
-      }*/
       const context = this.boardRuntime.getContext(true, {
         ctx,
         squareSize,

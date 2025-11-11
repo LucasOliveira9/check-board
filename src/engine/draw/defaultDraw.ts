@@ -44,42 +44,9 @@ class DefaultDraw {
     }
 
     if (!internalRef || internalRef === null || !ctx) return;
-    /*for (let i = 0; i < animation.length; i++) {
-      const anim = animation[i];
-      const distance = Math.hypot(
-        anim.to.x - anim.from.x,
-        anim.to.y - anim.from.y
-      );
-      const duration = Math.min(
-        400,
-        Math.max(
-          150,
-          this.boardRuntime.getAnimationDuration() + distance * 0.08
-        )
-      );
-      const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3);
-      const progress = Math.max(0, Math.min((time - anim.start) / duration, 1));
-      const piece_ = anim.piece;
-      const eased = easeOutCubic(progress);
-
-      piece_.x = anim.from.x + (anim.to.x - anim.from.x) * eased;
-      piece_.y = anim.from.y + (anim.to.y - anim.from.y) * eased;
-
-      if (eased >= 1) piece_.anim = false;
-    }
-
-    const pieceToAnimate: TPieceInternalRef[] = [];*/
     const sameSquarePiece: { piece: TPieceInternalRef; id: TPieceId }[] = [];
 
     for (const [id, piece] of Object.entries(internalRef)) {
-      /*if (selectedRef && selectedRef.isDragging && id === selectedRef.id) {
-        pieceToAnimate.push(piece);
-        continue;
-      }
-      if (piece.anim) {
-        pieceToAnimate.push(piece);
-        continue;
-      }*/
       if (!piece) continue;
       if (
         !this.boardRuntime.getMove() &&
@@ -118,43 +85,6 @@ class DefaultDraw {
       ctx.restore();
     }
 
-    /*for (const piece of pieceToAnimate) {
-      ctx.save();
-      const image = piecesImage && piecesImage[piece.type];
-      if (image instanceof HTMLImageElement) {
-        if (image && image.complete && image.naturalWidth > 0) {
-          ctx.drawImage(
-            image,
-            piece.x - (squareSize * (this.scale - 1)) / 2,
-            piece.y - (squareSize * (this.scale - 1)) / 2,
-            squareSize * this.scale,
-            squareSize * this.scale
-          );
-        }
-      } else if (typeof image === "string") {
-        const image_ = image.length > 1 ? image[0] : image;
-        ctx.save();
-        ctx.fillStyle = piece.type[0] === "w" ? "#ffffffff" : "#000";
-        ctx.font = `${squareSize * 0.8 * this.scale}px monospace`;
-        let fontSize = squareSize * 0.8;
-        ctx.font = `${fontSize}px monospace`;
-        const textWidth = ctx.measureText(image_).width;
-        if (textWidth > squareSize * 0.9) {
-          fontSize *= (squareSize * 0.9) / textWidth;
-          ctx.font = `${fontSize}px monospace`;
-        }
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(
-          image_,
-          piece.x + squareSize / 2,
-          piece.y + squareSize / 2
-        );
-        ctx.restore();
-      }
-
-      ctx.restore();
-    }*/
     if (Utils.isRenderer2D(this.boardRuntime.renderer))
       this.boardRuntime.renderer.clearStaticToRender();
   }
