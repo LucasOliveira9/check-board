@@ -140,10 +140,10 @@ class Draw {
           square: piece.square,
         });
 
-        events?.onHover
+        events?.onPointerHover
           ? this.boardRuntime.helpers.triggerEvent(
               events,
-              "onHover",
+              "onPointerHover",
               injection ? injection(context) : context
             )
           : this.iterator.defaultOnHover({
@@ -190,9 +190,7 @@ class Draw {
           isBlackView,
           internalRef
         )?.piece;
-        const canvas = this.boardRuntime.getEventCanvasLayers("onSelect");
-        const currCtx = this.boardRuntime.getCanvasLayers().getContext(canvas);
-        currCtx?.clearRect(0, 0, size, size);
+
         const context = this.boardRuntime.getContext(true, {
           squareSize,
           x,
@@ -202,10 +200,10 @@ class Draw {
           square: selectedRef.square,
         });
 
-        events?.onSelect
+        events?.onPointerSelect
           ? this.boardRuntime.helpers.triggerEvent(
               events,
-              "onSelect",
+              "onPointerSelect",
               injection ? injection(context) : context
             )
           : this.iterator.defaultOnSelect({

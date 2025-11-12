@@ -200,16 +200,17 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         getDraw:
           () =>
           (opts: {
-            draw: (ctx: TSafeCtx) => void;
+            onDraw: (ctx: TSafeCtx) => void;
             layer: TCanvasLayer;
             event: TEvents;
           }) => {
-            const { draw, layer, event } = opts;
+            const { onDraw, layer, event } = opts;
             const context = this.getCanvasLayers().getContext(layer);
             if (!context) return;
             const ctx_ = Utils.createSafeCtx(context);
-            draw(ctx_);
+            onDraw(ctx_);
             this.handleDrawResult(event, ctx_);
+            ctx_.__clearRegions();
           },
       },
       { cache }
@@ -220,18 +221,6 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
   getIsMoving() {
     return this.isMoving;
-  }
-
-  getEventCanvasLayers(event: string) {
-    if (!this.args.eventsCanvasLayer) return "overlay";
-    if (event in this.args.eventsCanvasLayer) {
-      const canvas =
-        (this.args.eventsCanvasLayer as any)[event] === "up"
-          ? "overlayUp"
-          : "overlay";
-      return canvas;
-    }
-    return "overlay";
   }
 
   setAnimationRef(ref: number) {
@@ -338,7 +327,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
   handleDrawResult(
     event: TEvents,
-    ctx_: CanvasRenderingContext2D & {
+    ctx_: TSafeCtx & {
       __drawRegions: TDrawRegion[];
     }
   ) {
@@ -346,11 +335,10 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
     const regions = ctx_.__drawRegions;
     if (!regions.length) return;
-
     //const bounds = Utils.mergeDrawRegions(regions); // calcula bounding box total
     for (const coords of regions) {
       switch (event) {
-        case "onHover":
+        case "onPointerHover":
           this.renderer.addHoverToClear(coords);
           break;
         /*case "onSelect":

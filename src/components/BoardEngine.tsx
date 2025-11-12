@@ -1,14 +1,14 @@
 import { useRef, useState, useEffect, useImperativeHandle } from "react";
 import CanvasLayers from "../engine/BoardRuntime/canvasLayers";
-import { TBoardEngine, TBoardRuntime } from "../types/board";
+import { TBoardProps, TBoardRuntime } from "../types/board";
 import Board from "./Board";
 import BoardRuntime from "../engine/BoardRuntime/BoardRuntime";
 import Client from "../engine/client/client";
 import React from "react";
 import { BoardHandled } from "../engine/client/interface";
 
-const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
-  ({ config }, ref) => {
+const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
+  ({ config, onMove, onUpdate }, ref) => {
     const { pieceConfig, size } = config;
     const boardCanvasRef = useRef<HTMLCanvasElement>(null);
     const pieceCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -37,6 +37,8 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardEngine>(
       }
       const args: TBoardRuntime = {
         ...config,
+        onMove,
+        onUpdate,
         board: structuredClone(config.board),
         canvasLayers: new CanvasLayers(
           boardCanvasRef,

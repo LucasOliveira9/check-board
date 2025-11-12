@@ -104,101 +104,305 @@ class Utils {
     ]);
 
     const cache = new Map<PropertyKey, any>();
-    const drawRegions: TDrawRegion[] = [];
+    let currentPath: { x: number; y: number }[] = [];
+    const recordedRegions: TDrawRegion[] = [];
 
-    const recordRegion = (
+    function recordRegion(
       type: string,
       x: number,
       y: number,
       w: number,
       h: number
-    ) => {
-      drawRegions.push({ type, x, y, w, h });
-    };
+    ) {
+      if (!Number.isFinite(x) || !Number.isFinite(y) || w <= 0 || h <= 0)
+        return;
+      recordedRegions.push({ x, y, w, h, type });
+    }
 
-    const proxy = new Proxy(ctx, {
-      get(target, prop: string | symbol, receiver) {
-        if (typeof prop === "symbol")
-          return Reflect.get(target, prop, receiver);
+    function sampleQuadratic(p0: any, p1: any, p2: any, step = 0.05) {
+      const pts: { x: number; y: number }[] = [];
+      for (let t = 0; t <= 1.001; t += step) {
+        const x =
+          (1 - t) * (1 - t) * p0.x + 2 * (1 - t) * t * p1.x + t * t * p2.x;
+        const y =
+          (1 - t) * (1 - t) * p0.y + 2 * (1 - t) * t * p1.y + t * t * p2.y;
+        pts.push({ x, y });
+      }
+      return pts;
+    }
+
+    function sampleBezier(p0: any, p1: any, p2: any, p3: any, step = 0.05) {
+      const pts: { x: number; y: number }[] = [];
+      for (let t = 0; t <= 1.001; t += step) {
+        const x =
+          Math.pow(1 - t, 3) * p0.x +
+          3 * Math.pow(1 - t, 2) * t * p1.x +
+          3 * (1 - t) * Math.pow(t, 2) * p2.x +
+          Math.pow(t, 3) * p3.x;
+        const y =
+          Math.pow(1 - t, 3) * p0.y +
+          3 * Math.pow(1 - t, 2) * t * p1.y +
+          3 * (1 - t) * Math.pow(t, 2) * p2.y +
+          Math.pow(t, 3) * p3.y;
+        pts.push({ x, y });
+      }
+      return pts;
+    }
+
+    const safeCtx = new Proxy(ctx, {
+      get(target, prop: string, receiver) {
         if (cache.has(prop)) return cache.get(prop);
 
         if (forbiddenMethods.has(prop)) {
-          const blocked = (...args: any[]) => {
-            console.warn(
-              `⚠️ [SafeCtx] Access to ${String(prop)}() is restricted.`
-            );
-          };
+          const blocked = () =>
+            console.warn(`⚠️ [SafeCtx] Access to ${prop}() is restricted.`);
           cache.set(prop, blocked);
           return blocked;
         }
 
         const value = Reflect.get(target, prop, receiver);
-        if (typeof value === "function") {
-          const wrapped = (...args: any[]) => {
-            try {
-              switch (prop) {
-                case "drawImage": {
-                  if (args.length >= 3) {
-                    const [_, dx, dy, dw, dh] = args;
-                    recordRegion(
-                      "drawImage",
-                      dx ?? 0,
-                      dy ?? 0,
-                      dw ?? 0,
-                      dh ?? 0
-                    );
-                  }
-                  break;
-                }
-                case "fillRect":
-                case "strokeRect": {
-                  const [x, y, w, h] = args;
-                  recordRegion(prop, x, y, w, h);
-                  break;
-                }
-                case "fillText":
-                case "strokeText": {
-                  const [text, x, y] = args;
-                  const metrics = ctx.measureText(text);
-                  recordRegion(
-                    prop,
-                    x,
-                    y - metrics.actualBoundingBoxAscent,
-                    metrics.width,
-                    metrics.actualBoundingBoxAscent +
-                      metrics.actualBoundingBoxDescent
-                  );
-                  break;
-                }
-              }
-            } catch {
-              // ignora se o cálculo falhar
-            }
-
-            const result = value.apply(target, args);
-            return result === target ? proxy : result;
-          };
-
-          cache.set(prop, wrapped);
-          return wrapped;
+        if (typeof value !== "function") {
+          cache.set(prop, value);
+          return value;
         }
 
-        if (prop === "__drawRegions") return drawRegions;
-        cache.set(prop, value);
-        return value;
+        const wrapped = (...args: any[]) => {
+          try {
+            switch (prop) {
+              case "beginPath":
+                currentPath = [];
+                break;
+
+              case "moveTo":
+              case "lineTo": {
+                const [x, y] = args;
+                if (Number.isFinite(x) && Number.isFinite(y))
+                  currentPath.push({ x, y });
+                break;
+              }
+
+              case "rect": {
+                const [x, y, w, h] = args;
+                recordRegion(prop, x, y, w, h);
+                currentPath.push({ x, y }, { x: x + w, y: y + h });
+                break;
+              }
+
+              case "arc": {
+                const [x, y, r] = args;
+                if (
+                  Number.isFinite(x) &&
+                  Number.isFinite(y) &&
+                  Number.isFinite(r)
+                ) {
+                  recordRegion(prop, x - r, y - r, r * 2, r * 2);
+                  currentPath.push(
+                    { x: x - r, y: y - r },
+                    { x: x + r, y: y + r }
+                  );
+                }
+                break;
+              }
+
+              case "ellipse": {
+                const [x, y, rx, ry] = args;
+                if (Number.isFinite(x) && Number.isFinite(y) && rx && ry) {
+                  recordRegion(prop, x - rx, y - ry, rx * 2, ry * 2);
+                  currentPath.push(
+                    { x: x - rx, y: y - ry },
+                    { x: x + rx, y: y + ry }
+                  );
+                }
+                break;
+              }
+
+              case "quadraticCurveTo": {
+                const [cx, cy, x, y] = args;
+                const last = currentPath[currentPath.length - 1];
+                if (last && Number.isFinite(cx) && Number.isFinite(cy)) {
+                  const pts = sampleQuadratic(last, { x: cx, y: cy }, { x, y });
+                  currentPath.push(...pts);
+                } else {
+                  currentPath.push({ x, y });
+                }
+                break;
+              }
+
+              case "bezierCurveTo": {
+                const [cx1, cy1, cx2, cy2, x, y] = args;
+                const last = currentPath[currentPath.length - 1];
+                if (last && [cx1, cy1, cx2, cy2, x, y].every(Number.isFinite)) {
+                  const pts = sampleBezier(
+                    last,
+                    { x: cx1, y: cy1 },
+                    { x: cx2, y: cy2 },
+                    { x, y }
+                  );
+                  currentPath.push(...pts);
+                } else {
+                  currentPath.push({ x, y });
+                }
+                break;
+              }
+
+              case "fill":
+              case "stroke": {
+                const arg = args[0];
+                if (arg instanceof Path2D) {
+                  recordRegion(prop, 0, 0, ctx.canvas.width, ctx.canvas.height);
+                } else if (currentPath.length) {
+                  const xs = currentPath.map((p) => p.x);
+                  const ys = currentPath.map((p) => p.y);
+                  const minX = Math.min(...xs);
+                  const minY = Math.min(...ys);
+                  const maxX = Math.max(...xs);
+                  const maxY = Math.max(...ys);
+                  const pad = Math.max((ctx.lineWidth ?? 1) * 0.75, 1);
+                  recordRegion(
+                    prop,
+                    minX - pad,
+                    minY - pad,
+                    maxX - minX + pad * 2,
+                    maxY - minY + pad * 2
+                  );
+                  currentPath = [];
+                }
+                break;
+              }
+
+              case "fillRect":
+              case "strokeRect": {
+                const [x, y, w, h] = args;
+                const pad = ctx.lineWidth ?? 2;
+                recordRegion(prop, x - pad, y - pad, w + pad * 2, h + pad * 2);
+                break;
+              }
+
+              case "fillText":
+              case "strokeText": {
+                const [text, x, y] = args;
+                if (
+                  typeof text !== "string" ||
+                  !Number.isFinite(x) ||
+                  !Number.isFinite(y)
+                )
+                  break;
+
+                const metrics = ctx.measureText(text);
+                const ascent = metrics.actualBoundingBoxAscent || 10;
+                const descent = metrics.actualBoundingBoxDescent || 4;
+                const width = metrics.width || text.length * 8;
+
+                const pad = 3; // margem geral
+                let topY, bottomY;
+
+                switch (ctx.textBaseline) {
+                  case "top":
+                    topY = y - pad;
+                    bottomY = y + ascent + descent + pad;
+                    break;
+                  case "middle":
+                    // compensação maior para cima (para fontes monospace e middle baseline)
+                    topY = y - ascent * 0.7 - pad * 2;
+                    bottomY = y + ascent * 0.7 + pad;
+                    break;
+                  case "bottom":
+                    topY = y - ascent - descent - pad;
+                    bottomY = y + pad;
+                    break;
+                  default: // alphabetic, hanging, ideographic
+                    topY = y - ascent - pad * 2;
+                    bottomY = y + descent + pad;
+                    break;
+                }
+
+                // alinhamento horizontal
+                let leftX = x - pad;
+                switch (ctx.textAlign) {
+                  case "center":
+                    leftX = x - width / 2 - pad;
+                    break;
+                  case "right":
+                  case "end":
+                    leftX = x - width - pad;
+                    break;
+                }
+
+                const rightX = leftX + width + pad * 2;
+                const height = bottomY - topY;
+
+                recordRegion(prop, leftX, topY, rightX - leftX, height);
+                break;
+              }
+
+              case "drawImage": {
+                let img: CanvasImageSource | null = null;
+                let dx = 0,
+                  dy = 0,
+                  dw = 0,
+                  dh = 0;
+
+                if (args.length === 3) {
+                  [img, dx, dy] = args;
+                  dw = (img as any)?.width ?? 32;
+                  dh = (img as any)?.height ?? 32;
+                } else if (args.length === 5) {
+                  [img, dx, dy, dw, dh] = args;
+                } else if (args.length === 9) {
+                  [, , , , , dx, dy, dw, dh] = args;
+                  img = args[0];
+                }
+
+                if (img instanceof HTMLVideoElement) {
+                  console.warn(
+                    "⚠️ [SafeCtx] drawImage with video is blocked for safety reasons."
+                  );
+                  return;
+                }
+
+                const pad = Math.max((ctx.lineWidth ?? 1) * 0.75, 1);
+                recordRegion(
+                  "drawImage",
+                  dx - pad,
+                  dy - pad,
+                  dw + pad * 2,
+                  dh + pad * 2
+                );
+                break;
+              }
+            }
+          } catch (err) {
+            console.warn(`[SafeCtx:${prop}]`, err);
+          }
+
+          return value.apply(ctx, args);
+        };
+
+        const bound = wrapped.bind(ctx);
+        cache.set(prop, bound);
+        return bound;
       },
+
       set(target, prop, value) {
         if (forbiddenProps.has(prop as string)) {
           console.warn(
             `⚠️ [SafeCtx] Modification to ${String(prop)} is restricted.`
           );
-          return true;
+          return false;
         }
         (target as any)[prop] = value;
         return true;
       },
     });
-    return proxy as CanvasRenderingContext2D & { __drawRegions: TDrawRegion[] };
+
+    (safeCtx as any).__drawRegions = recordedRegions;
+    (safeCtx as any).__currentPath = currentPath;
+    (safeCtx as any).__clearRegions = () => (recordedRegions.length = 0);
+
+    return safeCtx as CanvasRenderingContext2D & {
+      __drawRegions: TDrawRegion[];
+      __clearRegions: () => void;
+    };
   }
 }
 
