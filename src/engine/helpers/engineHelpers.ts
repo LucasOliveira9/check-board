@@ -10,6 +10,7 @@ import {
 import { TFile, TNotation, TRank, TSquare } from "../../types/square";
 import { TPieceBoard, TPieceInternalRef } from "../../types/piece";
 import Utils from "../../utils/utils";
+import { TCanvasClear } from "../../types/draw";
 
 class EngineHelpers {
   public pieceHelper: PieceHelpers = new PieceHelpers();
@@ -79,19 +80,24 @@ class EngineHelpers {
     args: T,
     extra?: K
   ) {
+    let res = null;
     try {
       const fn = events?.[event];
       if (!fn) return;
 
       if (extra !== undefined) {
-        (fn as (arg: T, extra: K) => void)(args, extra);
+        res = (fn as (arg: T, extra: K) => TCanvasClear[] | null | undefined)(
+          args,
+          extra
+        );
       } else {
-        (fn as (arg: T) => void)(args);
+        res = (fn as (arg: T) => TCanvasClear[] | null | undefined)(args);
       }
     } finally {
       if ("destroy" in args && typeof args["destroy"] === "function")
         (args as any).destroy();
     }
+    return res;
   }
 
   detectMove(e: React.PointerEvent<HTMLCanvasElement>) {

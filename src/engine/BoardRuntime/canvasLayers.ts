@@ -1,3 +1,5 @@
+import { TCanvasLayer } from "../../types/draw";
+
 class CanvasLayers {
   private piecesCanvas: React.RefObject<HTMLCanvasElement | null>;
   private boardCanvas: React.RefObject<HTMLCanvasElement | null>;
@@ -46,25 +48,18 @@ class CanvasLayers {
     }
   }
 
-  getContext(
-    canvas: "board" | "pieces" | "overlay" | "overlayUp" | "dynamicPieces"
-  ) {
+  getContext(canvas: TCanvasLayer) {
     if (this[`${canvas}Ctx`] === null && this[`${canvas}Canvas`].current)
       this[`${canvas}Ctx`] =
         this[`${canvas}Canvas`].current?.getContext("2d") || null;
     return this[`${canvas}Ctx`];
   }
 
-  getCanvas(
-    canvas: "board" | "pieces" | "overlay" | "overlayUp" | "dynamicPieces"
-  ) {
+  getCanvas(canvas: TCanvasLayer) {
     return this[`${canvas}Canvas`];
   }
 
-  keepQuality(
-    canvas: "board" | "pieces" | "overlay" | "overlayUp" | "dynamicPieces",
-    size: number
-  ) {
+  keepQuality(canvas: TCanvasLayer, size: number) {
     const curr = this[`${canvas}Canvas`].current;
     if (!curr) return;
 
@@ -93,10 +88,7 @@ class CanvasLayers {
     return this.dpr;
   }
 
-  setCanvasStyle(
-    canvas: "board" | "pieces" | "overlay" | "overlayUp" | "dynamicPieces",
-    styles: Partial<CSSStyleDeclaration>
-  ) {
+  setCanvasStyle(canvas: TCanvasLayer, styles: Partial<CSSStyleDeclaration>) {
     const curr = this[`${canvas}Canvas`].current;
     if (!curr) return;
     for (const [style, value] of Object.entries(styles)) {

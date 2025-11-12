@@ -103,15 +103,11 @@ class Draw {
     //draw static pieces
     if (type === "static" && toRenderStatic && toRenderStatic.size > 0) {
       const context = this.boardRuntime.getContext(true, {
-        ctx,
         squareSize,
         x: 0,
         y: 0,
         size,
         square: selectedRef?.square,
-        canvas:
-          this.boardRuntime.getCanvasLayers().getCanvas("pieces").current ||
-          undefined,
       });
 
       events?.onDrawPiece
@@ -136,14 +132,12 @@ class Draw {
         : undefined;
       if (piece && !piece.anim) {
         const context = this.boardRuntime.getContext(true, {
-          ctx: ctxDynamicPieces,
           squareSize,
           x: piece.x,
           y: piece.y,
           size,
           piece: piece,
           square: piece.square,
-          canvas: canvas ? canvas : undefined,
         });
 
         events?.onHover
@@ -200,16 +194,12 @@ class Draw {
         const currCtx = this.boardRuntime.getCanvasLayers().getContext(canvas);
         currCtx?.clearRect(0, 0, size, size);
         const context = this.boardRuntime.getContext(true, {
-          ctx: currCtx ? currCtx : ctx,
           squareSize,
           x,
           y,
           size,
           piece: piece_,
           square: selectedRef.square,
-          canvas:
-            this.boardRuntime.getCanvasLayers().getCanvas(canvas).current ||
-            undefined,
         });
 
         events?.onSelect

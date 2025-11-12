@@ -1,6 +1,6 @@
 import Draw from "../draw/draw";
 import { TBoardRuntime, TSelected } from "../../types/board";
-import { TAnimation, TBoardEventContext } from "../../types/events";
+import { TAnimation, TBoardEventContext, TEvents } from "../../types/events";
 import {
   TPieceBoard,
   TPieceId,
@@ -15,6 +15,8 @@ import { IRenderer } from "../render/interface";
 import Renderer2D from "../render/renderer2D";
 import Renderer3D from "../render/renderer3D";
 import Utils from "../../utils/utils";
+import { TCanvasClear, TCanvasLayer, TDrawRegion } from "src/types/draw";
+import { TSafeCtx } from "src/types/draw";
 
 class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected drawRef = 0;
@@ -180,10 +182,10 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   getContext(cache: boolean, args: TBoardEventContext) {
-    const { ctx, squareSize, size, x, y, piece, square, canvas } = args;
+    const { squareSize, size, x, y, piece, square } = args;
 
     const context = this.helpers.createLazyEventContext(
-      { ctx, squareSize, size, x, y },
+      { squareSize, size, x, y },
       {
         getPiece: () => this.getReadonlyPiece(piece ? piece : undefined),
         getPiecesImage: () => this.getPieceStyle(),
@@ -194,8 +196,21 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         getIsBlackView: () => this.getIsBlackView(),
         getLightTile: () => this.getLightTile(),
         getDarkTile: () => this.getDarkTile(),
-        getCanvas: () => canvas,
         getAnimation: () => this.getReadonlyAnimation(),
+        getDraw:
+          () =>
+          (opts: {
+            draw: (ctx: TSafeCtx) => void;
+            layer: TCanvasLayer;
+            event: TEvents;
+          }) => {
+            const { draw, layer, event } = opts;
+            const context = this.getCanvasLayers().getContext(layer);
+            if (!context) return;
+            const ctx_ = Utils.createSafeCtx(context);
+            draw(ctx_);
+            this.handleDrawResult(event, ctx_);
+          },
       },
       { cache }
     );
@@ -293,7 +308,6 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       await this.helpers.pieceHelper.preloadImages(this.args.pieceStyle);
       this.isImagesLoaded = true;
     }
-
     this.renderer.renderStaticPieces();
     this.renderer.renderDynamicPieces();
   }
@@ -319,6 +333,35 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     if (!this.args.pieceStyle) {
       this.args.pieceStyle =
         this.helpers.pieceHelper.getPieceImages[this.args.pieceConfig?.type];
+    }
+  }
+
+  handleDrawResult(
+    event: TEvents,
+    ctx_: CanvasRenderingContext2D & {
+      __drawRegions: TDrawRegion[];
+    }
+  ) {
+    if (!Utils.isRenderer2D(this.renderer)) return;
+
+    const regions = ctx_.__drawRegions;
+    if (!regions.length) return;
+
+    //const bounds = Utils.mergeDrawRegions(regions); // calcula bounding box total
+    for (const coords of regions) {
+      switch (event) {
+        case "onHover":
+          this.renderer.addHoverToClear(coords);
+          break;
+        /*case "onSelect":
+      this.renderer.addSelectToClear(bounds);
+      break;
+    case "onDanger":
+      this.renderer.addDangerToClear(bounds);
+      break;*/
+        default:
+          break;
+      }
     }
   }
 

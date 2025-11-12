@@ -1,3 +1,4 @@
+import { TDrawRegion, TSafeCtx } from "../types/draw";
 import { IRenderer, IRenderer2D } from "../engine/render/interface";
 import { TSquare, TFile, TRank } from "../types/square";
 import { TDeepReadonly } from "../types/utils";
@@ -77,6 +78,127 @@ class Utils {
 
   static isRenderer2D(r: IRenderer): r is IRenderer2D {
     return "getStaticToClear" in r;
+  }
+
+  static createSafeCtx(ctx: CanvasRenderingContext2D) {
+    const forbiddenMethods = new Set([
+      "clearRect",
+      "reset",
+      "resetTransform",
+      "restore",
+      "save",
+      "scale",
+      "rotate",
+      "translate",
+      "transform",
+      "setTransform",
+      "clip",
+      "arcTo",
+    ]);
+
+    const forbiddenProps = new Set([
+      "canvas",
+      "filter",
+      "globalAlpha",
+      "globalCompositeOperation",
+    ]);
+
+    const cache = new Map<PropertyKey, any>();
+    const drawRegions: TDrawRegion[] = [];
+
+    const recordRegion = (
+      type: string,
+      x: number,
+      y: number,
+      w: number,
+      h: number
+    ) => {
+      drawRegions.push({ type, x, y, w, h });
+    };
+
+    const proxy = new Proxy(ctx, {
+      get(target, prop: string | symbol, receiver) {
+        if (typeof prop === "symbol")
+          return Reflect.get(target, prop, receiver);
+        if (cache.has(prop)) return cache.get(prop);
+
+        if (forbiddenMethods.has(prop)) {
+          const blocked = (...args: any[]) => {
+            console.warn(
+              `⚠️ [SafeCtx] Access to ${String(prop)}() is restricted.`
+            );
+          };
+          cache.set(prop, blocked);
+          return blocked;
+        }
+
+        const value = Reflect.get(target, prop, receiver);
+        if (typeof value === "function") {
+          const wrapped = (...args: any[]) => {
+            try {
+              switch (prop) {
+                case "drawImage": {
+                  if (args.length >= 3) {
+                    const [_, dx, dy, dw, dh] = args;
+                    recordRegion(
+                      "drawImage",
+                      dx ?? 0,
+                      dy ?? 0,
+                      dw ?? 0,
+                      dh ?? 0
+                    );
+                  }
+                  break;
+                }
+                case "fillRect":
+                case "strokeRect": {
+                  const [x, y, w, h] = args;
+                  recordRegion(prop, x, y, w, h);
+                  break;
+                }
+                case "fillText":
+                case "strokeText": {
+                  const [text, x, y] = args;
+                  const metrics = ctx.measureText(text);
+                  recordRegion(
+                    prop,
+                    x,
+                    y - metrics.actualBoundingBoxAscent,
+                    metrics.width,
+                    metrics.actualBoundingBoxAscent +
+                      metrics.actualBoundingBoxDescent
+                  );
+                  break;
+                }
+              }
+            } catch {
+              // ignora se o cálculo falhar
+            }
+
+            const result = value.apply(target, args);
+            return result === target ? proxy : result;
+          };
+
+          cache.set(prop, wrapped);
+          return wrapped;
+        }
+
+        if (prop === "__drawRegions") return drawRegions;
+        cache.set(prop, value);
+        return value;
+      },
+      set(target, prop, value) {
+        if (forbiddenProps.has(prop as string)) {
+          console.warn(
+            `⚠️ [SafeCtx] Modification to ${String(prop)} is restricted.`
+          );
+          return true;
+        }
+        (target as any)[prop] = value;
+        return true;
+      },
+    });
+    return proxy as CanvasRenderingContext2D & { __drawRegions: TDrawRegion[] };
   }
 }
 

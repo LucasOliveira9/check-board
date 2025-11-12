@@ -1,4 +1,5 @@
 import { TSelected } from "./board";
+import { TCanvasClear, TCanvasLayer, TSafeCtx } from "./draw";
 import { TPieceBoard, TPieceId, TPieceImage, TPieceInternalRef } from "./piece";
 import { TNotation, TSquare } from "./square";
 import { TDeepReadonly } from "./utils";
@@ -22,7 +23,6 @@ type TPointerMove = {
 };
 
 type TBoardEventContextBase = {
-  ctx: CanvasRenderingContext2D;
   squareSize: number;
   size: number;
   x: number;
@@ -39,8 +39,12 @@ type TBoardEventContextExtras = {
   isBlackView?: boolean;
   lightTile?: string;
   darkTile?: string;
-  canvas?: HTMLCanvasElement;
   animation?: TDeepReadonly<TAnimation>;
+  draw?: (opts: {
+    draw: (ctx: TSafeCtx) => void;
+    layer: TCanvasLayer;
+    event: TEvents;
+  }) => void;
 };
 
 type TAnimation = {
@@ -68,8 +72,10 @@ type TBoardEventExtras = {
   onSelect: void;
   onHover: void;
   onDrop: void;
-  onDrawPiece: number;
+  onDrawPiece: void;
 };
+
+type TEvents = "onSelect" | "onHover";
 
 type TBoardEvents<
   T extends TGetterBoardEventContext = TGetterBoardEventContext,
@@ -97,4 +103,5 @@ export type {
   TMove,
   TAnimation,
   TGetterBoardEventContext,
+  TEvents,
 };

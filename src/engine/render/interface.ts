@@ -1,4 +1,4 @@
-import { TRender } from "../../types/draw";
+import { TCanvasClear, TCanvasLayer, TRender } from "../../types/draw";
 import {
   TPieceBoard,
   TPieceCoords,
@@ -26,6 +26,9 @@ interface IRenderer {
 interface IRenderer2D extends IRenderer {
   clearPiecesRect(x: number, y: number, id: TPieceId, type: TPieceType): void;
   clearStaticToRender(): void;
+  clearHover(): void;
+  clearRect(coords: TCanvasClear, canvas: TCanvasLayer): void;
+  addHoverToClear(coords: TCanvasClear): void;
   resetStaticPieces(): void;
   getStaticToRender(): Map<TPieceId, TRender>;
   getDynamicToRender(): Map<TPieceId, TRender>;

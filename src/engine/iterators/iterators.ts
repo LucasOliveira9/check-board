@@ -1,3 +1,4 @@
+import Utils from "../../utils/utils";
 import { TBoardEventContext } from "../../types/events";
 import { TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
@@ -13,9 +14,11 @@ class Iterators {
   }
 
   defaultOnSelect<T extends TBoardEventContext = TBoardEventContext>(args: T) {
-    const { ctx, squareSize, x, y, canvas } = args;
+    const { squareSize, x, y } = args;
     //canvas && (canvas.style.zIndex = "3");
     //const canvas = getCanvas;
+    const ctx = this.boardRuntime.getCanvasLayers().getContext("dynamicPieces");
+    if (!ctx) return;
     const SELECT_COLOR = "#ffc400ff";
     const SELECT_GLOW = "rgba(255, 196, 0, 0.75)";
 
@@ -35,9 +38,9 @@ class Iterators {
   }
 
   defaultOnHover<T extends TBoardEventContext = TBoardEventContext>(args: T) {
-    let { ctx, squareSize, piece, piecesImage } = args;
-
-    if (!piece) return;
+    const { squareSize, piece, piecesImage } = args;
+    const ctx = this.boardRuntime.getCanvasLayers().getContext("dynamicPieces");
+    if (!piece || !ctx) return;
     const image = piecesImage?.[piece.type];
 
     ctx.save();
@@ -45,16 +48,17 @@ class Iterators {
     ctx.shadowBlur = 10;
     ctx.shadowOffsetX = 3;
     ctx.shadowOffsetY = 3;
+
+    let res = null;
     if (image instanceof HTMLImageElement)
-      this.drawOnHoverHTML(image, ctx, piece, squareSize);
+      res = this.drawOnHoverHTML(image, ctx, piece, squareSize);
     else if (typeof image === "string")
-      this.drawOnHoverText(image, ctx, piece, squareSize);
+      res = this.drawOnHoverText(image, ctx, piece, squareSize);
     ctx.restore();
 
     if ("clearCache" in args && typeof args["clearCache"] === "function")
       (args as any).clearCache();
-
-    (ctx as any) = null;
+    return res;
   }
 
   drawOnHoverHTML(
@@ -71,9 +75,14 @@ class Iterators {
         squareSize * this.scale,
         squareSize * this.scale
       );
+      Utils.isRenderer2D(this.boardRuntime.renderer) &&
+        this.boardRuntime.renderer.addHoverToClear({
+          x: piece.x - (squareSize * (this.scale - 1)) / 2,
+          y: piece.x - (squareSize * (this.scale - 1)) / 2,
+          w: squareSize * this.scale,
+          h: squareSize * this.scale,
+        });
     }
-
-    (ctx as any) = null;
   }
 
   drawOnHoverText(
@@ -97,8 +106,15 @@ class Iterators {
     ctx.textBaseline = "middle";
     ctx.fillText(image_, piece.x + squareSize / 2, piece.y + squareSize / 2);
     ctx.restore();
+    const padding = squareSize * 1.5;
 
-    (ctx as any) = null;
+    Utils.isRenderer2D(this.boardRuntime.renderer) &&
+      this.boardRuntime.renderer.addHoverToClear({
+        x: piece.x + squareSize / 2 - textWidth / 2 - padding / 2,
+        y: piece.y + squareSize / 2 - fontSize / 2 - padding / 2,
+        w: textWidth + padding,
+        h: fontSize + padding,
+      });
   }
 
   drawOnHoverPath() {}

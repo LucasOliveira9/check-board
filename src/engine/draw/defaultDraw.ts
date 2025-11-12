@@ -28,7 +28,7 @@ class DefaultDraw {
 
     if (!piecesImage || !toRender) return;
     if (
-      typeof piecesImage !== "string" &&
+      typeof piecesImage.bB !== "string" &&
       !(piecesImage.bB instanceof HTMLImageElement)
     )
       return;
@@ -104,7 +104,7 @@ class DefaultDraw {
 
     if (!piecesImage || !toRender || !toRender.size) return;
     if (
-      typeof piecesImage !== "string" &&
+      typeof piecesImage.bB !== "string" &&
       !(piecesImage.bB instanceof HTMLImageElement)
     )
       return;
@@ -235,8 +235,6 @@ class DefaultDraw {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(image_, piece.x + squareSize / 2, piece.y + squareSize / 2);
-
-    (ctx as any) = null;
   }
 
   private DrawPathPiece(

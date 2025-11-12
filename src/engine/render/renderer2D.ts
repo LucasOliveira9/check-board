@@ -1,5 +1,5 @@
 import Utils from "../../utils/utils";
-import { TRender } from "../../types/draw";
+import { TCanvasClear, TCanvasLayer, TRender } from "../../types/draw";
 import {
   TPiece,
   TPieceBoard,
@@ -28,6 +28,7 @@ class Renderer2D implements IRenderer2D {
   protected dynamicCoordsMap: Map<TPieceId, TPieceCoords> = new Map();
   protected dynamicToClear: Set<TPieceId> = new Set();
   protected staticToClear: Set<TPieceId> = new Set();
+  protected hoverToClear: TCanvasClear[] = [];
 
   constructor(protected boardRuntime: BoardRuntime) {}
   renderDynamicPieces(): void {
@@ -130,6 +131,17 @@ class Renderer2D implements IRenderer2D {
     !this.dynamicToClear.has(id) && this.dynamicToClear.add(id);
   }
 
+  addHoverToClear(coords: TCanvasClear) {
+    this.hoverToClear.push(coords);
+  }
+
+  clearHover() {
+    for (const coords of this.hoverToClear)
+      this.clearRect(coords, "dynamicPieces");
+
+    this.hoverToClear = [];
+  }
+
   deleteStaticToClear(id: TPieceId) {
     this.staticToClear.delete(id);
   }
@@ -195,6 +207,17 @@ class Renderer2D implements IRenderer2D {
     for (const obj of clear) this.addStaticToClear(obj.id);
 
     this.staticPieces = structuredClone(newStaticPieces);
+  }
+
+  clearRect(coords: TCanvasClear, canvas: TCanvasLayer) {
+    const { x, y, w, h } = coords;
+    const canvasLayers = this.boardRuntime.getCanvasLayers();
+    const ctx = canvasLayers.getContext(canvas);
+    const dpr = canvasLayers.getDpr();
+    ctx?.save();
+    ctx?.setTransform(1, 0, 0, 1, 0, 0);
+    ctx?.clearRect(x * dpr, y * dpr, w * dpr, h * dpr);
+    ctx?.restore();
   }
 
   clearPiecesRect(x: number, y: number, id: TPieceId, type: TPieceType) {

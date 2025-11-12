@@ -45,7 +45,11 @@ class BoardEvents {
             to.notation,
             piece
           );
-          if (move) return;
+          if (move) {
+            Utils.isRenderer2D(this.boardRuntime.renderer) &&
+              this.boardRuntime.renderer.clearHover();
+            return;
+          }
         }
       }
 
@@ -82,6 +86,8 @@ class BoardEvents {
         const toRender = this.boardRuntime.getPieceHover();
 
         if (toRender) {
+          Utils.isRenderer2D(this.boardRuntime.renderer) &&
+            this.boardRuntime.renderer.clearHover();
           this.boardRuntime.renderer.deleteDynamicPiece(toRender);
           this.boardRuntime.renderer.addStaticPiece(
             toRender,
@@ -99,7 +105,9 @@ class BoardEvents {
       if (searchPiece) {
         this.boardRuntime.setPieceHover(searchPiece.id);
 
-        if (currHover) {
+        if (currHover && currHover !== searchPiece.id) {
+          Utils.isRenderer2D(this.boardRuntime.renderer) &&
+            this.boardRuntime.renderer.clearHover();
           this.boardRuntime.renderer.deleteDynamicPiece(currHover);
           this.boardRuntime.renderer.addStaticPiece(
             currHover,
@@ -119,7 +127,11 @@ class BoardEvents {
           cursor: "grab",
         });
       }
-    } else this.boardRuntime.setPieceHover(null);
+    } else {
+      Utils.isRenderer2D(this.boardRuntime.renderer) &&
+        this.boardRuntime.renderer.clearHover();
+      this.boardRuntime.setPieceHover(null);
+    }
 
     if (
       selected !== null &&
@@ -258,6 +270,8 @@ class BoardEvents {
       : this.boardRuntime.getPieceHover();
     if (toRender) {
       if (id) {
+        Utils.isRenderer2D(this.boardRuntime.renderer) &&
+          this.boardRuntime.renderer.clearHover();
         this.boardRuntime.renderer.deleteDynamicPiece(id);
         this.boardRuntime.renderer.addStaticPiece(
           id,
