@@ -41,7 +41,7 @@ type TBoardEventContextExtras = {
   darkTile?: string;
   animation?: TDeepReadonly<TAnimation>;
   draw?: (opts: {
-    draw: (ctx: TSafeCtx) => void;
+    onDraw: (ctx: TSafeCtx) => void;
     layer: TCanvasLayer;
     event: TEvents;
   }) => void;
@@ -61,6 +61,18 @@ type TMove = {
   piece: TPieceBoard;
 };
 
+type TEvents =
+  | "onPointerSelect"
+  | "onPointerHover"
+  | "onPointerDragStart"
+  | "onPointerDrag"
+  | "onPointerDrop"
+  | "onAnimationFrame"
+  | "onDrawPiece"
+  | "onDrawBoard"
+  | "onDrawUpOverlay"
+  | "onDrawDownOverlay";
+
 type TBoardEventContext = TBoardEventContextBase &
   Partial<TBoardEventContextExtras>;
 
@@ -69,13 +81,17 @@ type TBoardEvent<T = TBoardEventContext, E = void> = E extends void
   : (arg: T, extra: E) => void;
 
 type TBoardEventExtras = {
-  onSelect: void;
-  onHover: void;
-  onDrop: void;
+  onPointerSelect: void;
+  onPointerHover: void;
+  onPointerDragStart: void;
+  onPointerDrag: void;
+  onPointerDrop: void;
+  onAnimationFrame: void;
   onDrawPiece: void;
+  onDrawBoard: void;
+  onDrawUpOverlay: void;
+  onDrawDownOverlay: void;
 };
-
-type TEvents = "onSelect" | "onHover";
 
 type TBoardEvents<
   T extends TGetterBoardEventContext = TGetterBoardEventContext,

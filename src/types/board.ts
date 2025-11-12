@@ -15,10 +15,6 @@ type TBoardInjection<T extends TBoardEventContext> = (
   ctx: TBoardEventContext
 ) => T;
 
-type TBoardEngine = {
-  config: TConfig;
-};
-
 type TBoard = {
   boardRuntime: React.RefObject<BoardRuntime | null>;
   boardRef: React.RefObject<HTMLCanvasElement | null>;
@@ -37,7 +33,6 @@ interface TBoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   pieceConfig: TPieceConfig;
   board: TPieceBoard[];
   events?: TBoardEvents;
-  eventsCanvasLayer?: TCanvasEvent;
   injection?: TBoardInjection<T>;
   pieceStyle?: TPieceImage;
   onMove?: (arg: TMove) => boolean;
@@ -66,21 +61,18 @@ type TConfig<T extends TBoardEventContext = TBoardEventContext> = {
   size: number;
   board: TPieceBoard[];
   pieceConfig: TPieceConfig;
-  eventsCanvasLayer?: TCanvasEvent;
   lightTile?: string;
   darkTile?: string;
   events?: TBoardEvents<T>;
   injection?: TBoardInjection<T>;
-  onMove?: (arg: TMove) => boolean;
-  onUpdate?: () => void;
   defaultAnimation?: boolean;
 };
 
-type TCanvasEvent = {
-  onSelect?: TCanvas;
+type TBoardProps = {
+  config: TConfig;
+  onMove?: (arg: TMove) => boolean;
+  onUpdate?: () => void;
 };
-
-type TCanvas = "up" | "down";
 
 type TSelected = {
   id: TPieceId;
@@ -98,7 +90,6 @@ export type {
   TConfig,
   TBoardInjection,
   TPieceConfig,
-  TBoardEngine,
   TBoardRuntime,
-  TCanvas,
+  TBoardProps,
 };
