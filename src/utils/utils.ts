@@ -149,6 +149,12 @@ class Utils {
       return pts;
     }
 
+    function getFontSize(ctx: CanvasRenderingContext2D): number {
+      const font = ctx.font;
+      const match = font.match(/(\d+(?:\.\d+)?)px/);
+      return match ? parseFloat(match[1]) : 16;
+    }
+
     const safeCtx = new Proxy(ctx, {
       get(target, prop: string, receiver) {
         if (cache.has(prop)) return cache.get(prop);
@@ -288,50 +294,68 @@ class Utils {
                 )
                   break;
 
+                // Extrai o tamanho da fonte atual (ex: "20px monospace" → 20)
+                const fontSize = getFontSize(ctx);
+
+                // Mede o texto com base na fonte atual
                 const metrics = ctx.measureText(text);
-                const ascent = metrics.actualBoundingBoxAscent || 10;
-                const descent = metrics.actualBoundingBoxDescent || 4;
-                const width = metrics.width || text.length * 8;
+                const ascent =
+                  metrics.actualBoundingBoxAscent || fontSize * 0.8;
+                const descent =
+                  metrics.actualBoundingBoxDescent || fontSize * 0.2;
+                const width = metrics.width || text.length * fontSize * 0.5;
 
-                const pad = 3; // margem geral
-                let topY, bottomY;
+                // Padding assimétrico
+                const padTop = fontSize * 0.35; // um pouco maior no topo
+                const padBottom = fontSize * 0.15; // menor embaixo
+                const padSides = fontSize * 0.2; // menor nas laterais
 
-                switch (ctx.textBaseline) {
-                  case "top":
-                    topY = y - pad;
-                    bottomY = y + ascent + descent + pad;
-                    break;
-                  case "middle":
-                    // compensação maior para cima (para fontes monospace e middle baseline)
-                    topY = y - ascent * 0.7 - pad * 2;
-                    bottomY = y + ascent * 0.7 + pad;
-                    break;
-                  case "bottom":
-                    topY = y - ascent - descent - pad;
-                    bottomY = y + pad;
-                    break;
-                  default: // alphabetic, hanging, ideographic
-                    topY = y - ascent - pad * 2;
-                    bottomY = y + descent + pad;
-                    break;
-                }
+                // Base inicial do bounding box
+                let leftX = x;
+                let topY = y - ascent;
 
-                // alinhamento horizontal
-                let leftX = x - pad;
+                // Ajuste horizontal conforme textAlign
                 switch (ctx.textAlign) {
                   case "center":
-                    leftX = x - width / 2 - pad;
+                    leftX = x - width / 2;
                     break;
                   case "right":
                   case "end":
-                    leftX = x - width - pad;
+                    leftX = x - width;
+                    break;
+                  // left/start = default
+                }
+
+                // Ajuste vertical conforme baseline
+                switch (ctx.textBaseline) {
+                  case "top":
+                    topY = y;
+                    break;
+                  case "middle":
+                    topY = y - ascent * 0.6;
+                    break;
+                  case "bottom":
+                    topY = y - ascent - descent;
+                    break;
+                  case "alphabetic":
+                  default:
+                    topY = y - ascent;
                     break;
                 }
 
-                const rightX = leftX + width + pad * 2;
-                const height = bottomY - topY;
+                // Dimensões finais
+                const rectX = leftX - padSides;
+                const rectY = topY - padTop;
+                const rectW = width + padSides * 2;
+                const rectH = ascent + descent + padTop + padBottom;
 
-                recordRegion(prop, leftX, topY, rightX - leftX, height);
+                // Debug visual opcional (ver bordas)
+                /*ctx.save();
+                ctx.strokeStyle = "rgba(255,0,0,0.4)";
+                ctx.strokeRect(rectX, rectY, rectW, rectH);
+                ctx.restore();*/
+
+                recordRegion(prop, rectX, rectY, rectW, rectH);
                 break;
               }
 

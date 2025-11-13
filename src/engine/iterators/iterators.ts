@@ -4,7 +4,7 @@ import { TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 
 class Iterators {
-  private scale = 1.03;
+  private scale = 8;
   constructor(protected boardRuntime: BoardRuntime) {}
 
   destroy() {
@@ -107,6 +107,17 @@ class Iterators {
     ctx.fillText(image_, piece.x + squareSize / 2, piece.y + squareSize / 2);
     ctx.restore();
     const padding = squareSize * 1.5;
+
+    // DEBUG
+    /*ctx.save();
+    ctx.strokeStyle = "rgba(255,0,0,0.4)";
+    ctx.strokeRect(
+      piece.x + squareSize / 2 - textWidth / 2 - padding / 2,
+      piece.y + squareSize / 2 - fontSize / 2 - padding / 2,
+      textWidth + padding,
+      fontSize + padding
+    );
+    ctx.restore();*/
 
     Utils.isRenderer2D(this.boardRuntime.renderer) &&
       this.boardRuntime.renderer.addDynamicToClear({
