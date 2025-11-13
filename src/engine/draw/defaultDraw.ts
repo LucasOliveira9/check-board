@@ -144,7 +144,12 @@ class DefaultDraw {
       piece_.y = anim.from.y + (anim.to.y - anim.from.y) * eased;
 
       if (Utils.isRenderer2D(this.boardRuntime.renderer) && eased < 1) {
-        this.boardRuntime.renderer.addDynamicToClear(anim.id);
+        this.boardRuntime.renderer.addDynamicToClear({
+          x: piece_.x,
+          y: piece_.y,
+          w: squareSize,
+          h: squareSize,
+        });
         this.boardRuntime.renderer.addDynamicPosition(anim.id, {
           x: piece_.x,
           y: piece_.y,

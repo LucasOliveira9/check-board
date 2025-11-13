@@ -1,13 +1,7 @@
 import Draw from "../draw/draw";
 import { TBoardRuntime, TSelected } from "../../types/board";
 import { TAnimation, TBoardEventContext, TEvents } from "../../types/events";
-import {
-  TPieceBoard,
-  TPieceId,
-  TPieceImage,
-  TPieceInternalRef,
-  TPieceKey,
-} from "../../types/piece";
+import { TPieceBoard, TPieceId, TPieceInternalRef } from "../../types/piece";
 import BoardEvents from "./BoardEvents";
 import EngineHelpers from "../helpers/engineHelpers";
 import { TFile, TNotation, TRank, TSquare } from "../../types/square";
@@ -15,7 +9,7 @@ import { IRenderer } from "../render/interface";
 import Renderer2D from "../render/renderer2D";
 import Renderer3D from "../render/renderer3D";
 import Utils from "../../utils/utils";
-import { TCanvasClear, TCanvasLayer, TDrawRegion } from "src/types/draw";
+import { TCanvasLayer, TDrawRegion } from "src/types/draw";
 import { TSafeCtx } from "src/types/draw";
 
 class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
@@ -339,7 +333,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     for (const coords of regions) {
       switch (event) {
         case "onPointerHover":
-          this.renderer.addHoverToClear(coords);
+          this.renderer.addDynamicToClear(coords);
           break;
         /*case "onSelect":
       this.renderer.addSelectToClear(bounds);
@@ -425,7 +419,12 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         });
 
         if (Utils.isRenderer2D(this.renderer))
-          this.renderer.addStaticToClear(piece.id);
+          this.renderer.addStaticToClear({
+            x: startX,
+            y: startY,
+            w: squareSize,
+            h: squareSize,
+          });
 
         this.renderer.deleteStaticPiece(piece.id);
         this.renderer.addDynamicPiece(piece.id, ref);

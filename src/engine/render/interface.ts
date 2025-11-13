@@ -1,4 +1,4 @@
-import { TCanvasClear, TCanvasLayer, TRender } from "../../types/draw";
+import { TCanvasCoords, TCanvasLayer, TRender } from "../../types/draw";
 import {
   TPieceBoard,
   TPieceCoords,
@@ -24,16 +24,13 @@ interface IRenderer {
 }
 
 interface IRenderer2D extends IRenderer {
-  clearPiecesRect(x: number, y: number, id: TPieceId, type: TPieceType): void;
   clearStaticToRender(): void;
-  clearHover(): void;
-  clearRect(coords: TCanvasClear, canvas: TCanvasLayer): void;
-  addHoverToClear(coords: TCanvasClear): void;
+  clearRect(coords: TCanvasCoords, canvas: TCanvasLayer): void;
   resetStaticPieces(): void;
   getStaticToRender(): Map<TPieceId, TRender>;
   getDynamicToRender(): Map<TPieceId, TRender>;
-  getStaticToClear(): Set<TPieceId>;
-  getDynamicToClear(): Set<TPieceId>;
+  getStaticToClear(): TCanvasCoords[];
+  getDynamicToClear(): TCanvasCoords[];
   getDynamicPosition(
     id: TPieceId
   ): { readonly x: number; readonly y: number } | undefined;
@@ -41,12 +38,12 @@ interface IRenderer2D extends IRenderer {
     id: TPieceId
   ): { readonly x: number; readonly y: number } | undefined;
   clearStaticPieces(board: TPieceBoard[]): void;
-  addStaticToClear(id: TPieceId): void;
-  addDynamicToClear(id: TPieceId): void;
+  addStaticToClear(coords: TCanvasCoords): void;
+  addDynamicToClear(coords: TCanvasCoords): void;
   addDynamicPosition(id: TPieceId, coords: TPieceCoords): void;
   addStaticPosition(id: TPieceId, coords: TPieceCoords): void;
-  deleteStaticToClear(id: TPieceId): void;
-  deleteDynamicToClear(id: TPieceId): void;
+  resetDynamicToClear(): void;
+  resetStaticToClear(): void;
 }
 
 export { IRenderer, IRenderer2D };

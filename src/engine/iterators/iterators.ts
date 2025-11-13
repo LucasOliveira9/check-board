@@ -76,7 +76,7 @@ class Iterators {
         squareSize * this.scale
       );
       Utils.isRenderer2D(this.boardRuntime.renderer) &&
-        this.boardRuntime.renderer.addHoverToClear({
+        this.boardRuntime.renderer.addDynamicToClear({
           x: piece.x - (squareSize * (this.scale - 1)) / 2,
           y: piece.x - (squareSize * (this.scale - 1)) / 2,
           w: squareSize * this.scale,
@@ -109,7 +109,7 @@ class Iterators {
     const padding = squareSize * 1.5;
 
     Utils.isRenderer2D(this.boardRuntime.renderer) &&
-      this.boardRuntime.renderer.addHoverToClear({
+      this.boardRuntime.renderer.addDynamicToClear({
         x: piece.x + squareSize / 2 - textWidth / 2 - padding / 2,
         y: piece.y + squareSize / 2 - fontSize / 2 - padding / 2,
         w: textWidth + padding,

@@ -1,5 +1,5 @@
 import { TSelected } from "./board";
-import { TCanvasClear, TCanvasLayer, TSafeCtx } from "./draw";
+import { TCanvasLayer, TSafeCtx } from "./draw";
 import { TPieceBoard, TPieceId, TPieceImage, TPieceInternalRef } from "./piece";
 import { TNotation, TSquare } from "./square";
 import { TDeepReadonly } from "./utils";

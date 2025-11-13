@@ -22,7 +22,7 @@ type TDrawPieces<T extends TBoardEventContext = TBoardEventContext> = {
   injection?: TBoardInjection<T>;
 };
 
-type TCanvasClear = { x: number; y: number; w: number; h: number };
+type TCanvasCoords = { x: number; y: number; w: number; h: number };
 type TCanvasLayer =
   | "board"
   | "pieces"
@@ -66,7 +66,7 @@ export type {
   TDrawBoard,
   TDrawPieces,
   TRender,
-  TCanvasClear,
+  TCanvasCoords,
   TCanvasLayer,
   TSafeCtx,
   TDrawRegion,

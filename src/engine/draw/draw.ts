@@ -55,8 +55,8 @@ class Draw {
   }
 
   pieces(type: TPieceType, time?: number) {
-    let ctx = this.boardRuntime.getCanvasLayers().getContext("pieces");
-    let ctxDynamicPieces = this.boardRuntime
+    const ctx = this.boardRuntime.getCanvasLayers().getContext("pieces");
+    const ctxDynamicPieces = this.boardRuntime
       .getCanvasLayers()
       .getContext("dynamicPieces");
     if (!ctx) return;
@@ -82,26 +82,22 @@ class Draw {
       Utils.isRenderer2D(renderer) && renderer.getDynamicToClear();
 
     // clear static pieces
-    if (staticToClear && staticToClear.size && type === "static") {
-      for (const id of staticToClear) {
-        const coords = renderer.getStaticPosition(id);
-        if (!coords) continue;
-        const { x, y } = coords;
-        renderer.clearPiecesRect(x, y, id, "static");
+    if (staticToClear && staticToClear.length && type === "static") {
+      for (const coords of staticToClear) {
+        renderer.clearRect(coords, "pieces");
       }
+      renderer.resetStaticToClear();
     }
     // clear dynamic pieces
-    if (dynamicToClear && dynamicToClear.size && type === "dynamic") {
-      for (const id of dynamicToClear) {
-        const coords = renderer.getDynamicPosition(id);
-        if (!coords) continue;
-        const { x, y } = coords;
-        renderer.clearPiecesRect(x, y, id, "dynamic");
+    if (dynamicToClear && dynamicToClear.length && type === "dynamic") {
+      for (const coords of dynamicToClear) {
+        renderer.clearRect(coords, "dynamicPieces");
       }
+      renderer.resetStaticToClear();
     }
 
     //draw static pieces
-    if (type === "static" && toRenderStatic && toRenderStatic.size > 0) {
+    if (type === "static" && toRenderStatic && toRenderStatic.size) {
       const context = this.boardRuntime.getContext(true, {
         squareSize,
         x: 0,
@@ -118,7 +114,7 @@ class Draw {
             time
           )
         : this.defaultDraw.drawStaticPiece();
-    } else if (type === "dynamic") {
+    } else if (type === "dynamic" && toRenderDynamic && toRenderDynamic.size) {
       this.defaultDraw.drawDynamicPieces(time || 0);
     }
 
@@ -159,7 +155,6 @@ class Draw {
             });
       }
     }
-    ctx = null;
     this.boardRuntime.updateAnimation();
   }
 

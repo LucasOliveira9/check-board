@@ -10,7 +10,7 @@ import {
 import { TFile, TNotation, TRank, TSquare } from "../../types/square";
 import { TPieceBoard, TPieceInternalRef } from "../../types/piece";
 import Utils from "../../utils/utils";
-import { TCanvasClear } from "../../types/draw";
+import { TCanvasCoords } from "../../types/draw";
 
 class EngineHelpers {
   public pieceHelper: PieceHelpers = new PieceHelpers();
@@ -86,12 +86,12 @@ class EngineHelpers {
       if (!fn) return;
 
       if (extra !== undefined) {
-        res = (fn as (arg: T, extra: K) => TCanvasClear[] | null | undefined)(
+        res = (fn as (arg: T, extra: K) => TCanvasCoords[] | null | undefined)(
           args,
           extra
         );
       } else {
-        res = (fn as (arg: T) => TCanvasClear[] | null | undefined)(args);
+        res = (fn as (arg: T) => TCanvasCoords[] | null | undefined)(args);
       }
     } finally {
       if ("destroy" in args && typeof args["destroy"] === "function")
@@ -111,11 +111,9 @@ class EngineHelpers {
     const coords = Utils.squareToCoords(sqr, squareSize, isBlackView);
     if (selected && selected.isDragging) {
       if (Utils.isRenderer2D(this.boardRuntime.renderer) && piece) {
-        this.boardRuntime.renderer.clearPiecesRect(
-          piece.x,
-          piece.y,
-          selected.id,
-          "dynamic"
+        this.boardRuntime.renderer.clearRect(
+          { x: piece.x, y: piece.y, w: squareSize, h: squareSize },
+          "dynamicPieces"
         );
       }
       if (piece && sqr && coords) {

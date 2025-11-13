@@ -47,7 +47,7 @@ class BoardEvents {
           );
           if (move) {
             Utils.isRenderer2D(this.boardRuntime.renderer) &&
-              this.boardRuntime.renderer.clearHover();
+              this.boardRuntime.renderPieces();
             return;
           }
         }
@@ -87,8 +87,7 @@ class BoardEvents {
 
         if (toRender) {
           Utils.isRenderer2D(this.boardRuntime.renderer) &&
-            this.boardRuntime.renderer.clearHover();
-          this.boardRuntime.renderer.deleteDynamicPiece(toRender);
+            this.boardRuntime.renderer.deleteDynamicPiece(toRender);
           this.boardRuntime.renderer.addStaticPiece(
             toRender,
             this.boardRuntime.getInternalRefVal(toRender)
@@ -107,8 +106,7 @@ class BoardEvents {
 
         if (currHover && currHover !== searchPiece.id) {
           Utils.isRenderer2D(this.boardRuntime.renderer) &&
-            this.boardRuntime.renderer.clearHover();
-          this.boardRuntime.renderer.deleteDynamicPiece(currHover);
+            this.boardRuntime.renderer.deleteDynamicPiece(currHover);
           this.boardRuntime.renderer.addStaticPiece(
             currHover,
             this.boardRuntime.getInternalRefVal(currHover)
@@ -129,7 +127,7 @@ class BoardEvents {
       }
     } else {
       Utils.isRenderer2D(this.boardRuntime.renderer) &&
-        this.boardRuntime.renderer.clearHover();
+        this.boardRuntime.renderPieces();
       this.boardRuntime.setPieceHover(null);
     }
 
@@ -156,11 +154,9 @@ class BoardEvents {
             this.boardRuntime.renderer.deleteStaticPiece(selected.id);
             this.boardRuntime.renderer.addDynamicPiece(selected.id, piece);
             if (Utils.isRenderer2D(this.boardRuntime.renderer) && piece) {
-              this.boardRuntime.renderer.clearPiecesRect(
-                piece.x,
-                piece.y,
-                selected.id,
-                "dynamic"
+              this.boardRuntime.renderer.clearRect(
+                { x: piece.x, y: piece.y, w: squareSize, h: squareSize },
+                "dynamicPieces"
               );
             }
             piece.x = offsetX - half;
@@ -170,7 +166,12 @@ class BoardEvents {
           }
 
           if (Utils.isRenderer2D(this.boardRuntime.renderer)) {
-            this.boardRuntime.renderer.addDynamicToClear(selected.id);
+            this.boardRuntime.renderer.addDynamicToClear({
+              x: piece.x,
+              y: piece.y,
+              w: squareSize,
+              h: squareSize,
+            });
             this.boardRuntime.renderer.addDynamicPosition(selected.id, {
               x: piece.x,
               y: piece.y,
@@ -240,6 +241,7 @@ class BoardEvents {
   onPointerLeave(e: React.PointerEvent<HTMLCanvasElement>) {
     const selected = this.boardRuntime.getSelected();
     const toRender = this.boardRuntime.getPieceHover() || selected?.isDragging;
+    const squareSize = this.boardRuntime.getSize() / 8;
     selected &&
       this.boardRuntime.setSelected({
         ...selected,
@@ -256,11 +258,9 @@ class BoardEvents {
       piece &&
       Utils.isRenderer2D(this.boardRuntime.renderer)
     ) {
-      this.boardRuntime.renderer.clearPiecesRect(
-        piece.x,
-        piece.y,
-        selected.id,
-        "dynamic"
+      this.boardRuntime.renderer.clearRect(
+        { x: piece.x, y: piece.y, w: squareSize, h: squareSize },
+        "dynamicPieces"
       );
     }
     piece && ((piece.x = selected.x), (piece.y = selected.y));
@@ -271,8 +271,7 @@ class BoardEvents {
     if (toRender) {
       if (id) {
         Utils.isRenderer2D(this.boardRuntime.renderer) &&
-          this.boardRuntime.renderer.clearHover();
-        this.boardRuntime.renderer.deleteDynamicPiece(id);
+          this.boardRuntime.renderer.deleteDynamicPiece(id);
         this.boardRuntime.renderer.addStaticPiece(
           id,
           this.boardRuntime.getInternalRefVal(id)
