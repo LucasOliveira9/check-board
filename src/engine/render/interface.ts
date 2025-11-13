@@ -35,6 +35,16 @@ interface IRenderer2D extends IRenderer {
   clearStaticPieces(board: TPieceBoard[]): void;
   addPosition(id: TPieceId, coords: TPieceCoords, canvas: TCanvasLayer): void;
   addToClear(coords: TCanvasCoords, canvas: TCanvasLayer): void;
+  addEvent(
+    key: string,
+    opts: { canvas: TCanvasLayer; coords: TCanvasCoords[] }
+  ): void;
+  addAnimation(
+    key: string,
+    opts: { canvas: TCanvasLayer; coords: TCanvasCoords[] }
+  ): void;
+  clearEvent(key: string): void;
+  clearAnimation(key: string): void;
   getToClear(canvas: TCanvasLayer): TCanvasCoords[];
   resetToClear(canvas: TCanvasLayer): void;
 }

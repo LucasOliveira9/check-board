@@ -4,7 +4,7 @@ import { TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 
 class Iterators {
-  private scale = 8;
+  private scale = 1.03;
   constructor(protected boardRuntime: BoardRuntime) {}
 
   destroy() {
@@ -17,7 +17,7 @@ class Iterators {
     const { squareSize, x, y } = args;
     //canvas && (canvas.style.zIndex = "3");
     //const canvas = getCanvas;
-    const ctx = this.boardRuntime.getCanvasLayers().getContext("dynamicPieces");
+    const ctx = this.boardRuntime.getCanvasLayers().getContext("overlay");
     if (!ctx) return;
     const SELECT_COLOR = "#ffc400ff";
     const SELECT_GLOW = "rgba(255, 196, 0, 0.75)";
@@ -35,6 +35,29 @@ class Iterators {
     ctx.fillStyle = SELECT_GLOW;
     ctx.stroke();
     ctx.fill();
+
+    const cx = x + squareSize / 2;
+    const cy = y + squareSize / 2;
+    const r = squareSize * 0.35;
+
+    const clearX = cx - r;
+    const clearY = cy - r;
+    const clearW = r * 2;
+    const clearH = r * 2;
+    const pad = ctx.lineWidth ?? 2;
+
+    Utils.isRenderer2D(this.boardRuntime.renderer) &&
+      this.boardRuntime.renderer.addEvent("select", {
+        canvas: "overlay",
+        coords: [
+          {
+            x: clearX - pad,
+            y: clearY - pad,
+            w: clearW + pad * 2,
+            h: clearH + pad * 2,
+          },
+        ],
+      });
   }
 
   defaultOnHover<T extends TBoardEventContext = TBoardEventContext>(args: T) {

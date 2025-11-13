@@ -158,19 +158,90 @@ class Draw {
     this.boardRuntime.updateAnimation();
   }
 
-  overlay() {
+  downOverlay() {
     const ctx = this.boardRuntime.getCanvasLayers().getContext("overlay"),
       isBlackView = this.boardRuntime.getIsBlackView(),
       size = this.boardRuntime.getSize(),
       piecesImage = this.boardRuntime.getPieceStyle(),
       internalRef = this.boardRuntime.getInternalRefObj(),
-      pieceHoverRef = this.boardRuntime.getPieceHover(),
       selectedRef = this.boardRuntime.getSelected(),
       events = this.boardRuntime.getEvents(),
       injection = this.boardRuntime.getInjection();
     const squareSize = size / 8;
+    const renderer = this.boardRuntime.renderer;
+    const toClear =
+      Utils.isRenderer2D(renderer) && renderer.getToClear("overlay");
 
-    ctx?.clearRect(0, 0, size, size);
+    if (toClear && toClear.length) {
+      for (const coords of toClear) renderer.clearRect(coords, "overlay");
+      renderer.resetToClear("overlay");
+    }
+
+    //ctx?.clearRect(0, 0, size, size);
+    if (selectedRef?.id && ctx) {
+      const sqr = internalRef[selectedRef.id]
+        ? Utils.squareToCoords(selectedRef.square, squareSize, isBlackView)
+        : null;
+
+      if (sqr) {
+        const { x, y } = sqr;
+        const piece_ = this.boardRuntime.helpers.pieceHelper.getPieceAt(
+          x,
+          y,
+          squareSize,
+          isBlackView,
+          internalRef
+        )?.piece;
+
+        const context = this.boardRuntime.getContext(true, {
+          squareSize,
+          x,
+          y,
+          size,
+          piece: piece_,
+          square: selectedRef.square,
+        });
+
+        events?.onPointerSelect
+          ? this.boardRuntime.helpers.triggerEvent(
+              events,
+              "onPointerSelect",
+              injection ? injection(context) : context
+            )
+          : this.iterator.defaultOnSelect({
+              ctx,
+              x,
+              y,
+              size,
+              squareSize,
+              getPiece: piece_,
+              getPiecesImage: piecesImage,
+              getSquare: selectedRef.square,
+            });
+      }
+    }
+  }
+
+  upOverlay() {
+    const ctx = this.boardRuntime.getCanvasLayers().getContext("overlayUp"),
+      isBlackView = this.boardRuntime.getIsBlackView(),
+      size = this.boardRuntime.getSize(),
+      piecesImage = this.boardRuntime.getPieceStyle(),
+      internalRef = this.boardRuntime.getInternalRefObj(),
+      selectedRef = this.boardRuntime.getSelected(),
+      events = this.boardRuntime.getEvents(),
+      injection = this.boardRuntime.getInjection();
+    const squareSize = size / 8;
+    const renderer = this.boardRuntime.renderer;
+    const toClear =
+      Utils.isRenderer2D(renderer) && renderer.getToClear("overlayUp");
+
+    if (toClear && toClear.length) {
+      for (const coords of toClear) renderer.clearRect(coords, "overlayUp");
+      renderer.resetToClear("overlayUp");
+    }
+
+    //ctx?.clearRect(0, 0, size, size);
     if (selectedRef?.id && ctx) {
       const sqr = internalRef[selectedRef.id]
         ? Utils.squareToCoords(selectedRef.square, squareSize, isBlackView)

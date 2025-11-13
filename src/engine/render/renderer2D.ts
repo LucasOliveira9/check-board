@@ -44,6 +44,16 @@ class Renderer2D implements IRenderer2D {
     overlayUp: [],
   };
 
+  private animationMap: Record<
+    string,
+    { canvas: TCanvasLayer; coords: TCanvasCoords[] }
+  > = {};
+
+  private eventsMap: Record<
+    string,
+    { canvas: TCanvasLayer; coords: TCanvasCoords[] }
+  > = {};
+
   constructor(protected boardRuntime: BoardRuntime) {}
   renderDynamicPieces(): void {
     const boardRuntime = this.boardRuntime,
@@ -69,9 +79,6 @@ class Renderer2D implements IRenderer2D {
     if (!animationRef && animation.length)
       boardRuntime.setAnimationRef(requestAnimationFrame(render));
   }
-  renderUpOverlay(): void {
-    throw new Error("Method not implemented.");
-  }
   destroy(): void {
     for (const key of Object.getOwnPropertyNames(this)) {
       (this as any)[key] = null;
@@ -92,9 +99,17 @@ class Renderer2D implements IRenderer2D {
     const canvas = canvasLayers.getCanvas("overlay").current;
     if (!canvas === null) return;
     canvasLayers.keepQuality("overlay", boardRuntime.getSize());
+    boardRuntime.draw.downOverlay();
+  }
+
+  renderUpOverlay(): void {
+    const boardRuntime = this.boardRuntime,
+      canvasLayers = boardRuntime.getCanvasLayers();
+    const canvas = canvasLayers.getCanvas("overlayUp").current;
+    if (!canvas === null) return;
     canvasLayers.keepQuality("overlayUp", boardRuntime.getSize());
 
-    boardRuntime.draw.overlay();
+    boardRuntime.draw.upOverlay();
   }
 
   renderBoard(): void {
@@ -135,6 +150,38 @@ class Renderer2D implements IRenderer2D {
 
   addToClear(coords: TCanvasCoords, canvas: TCanvasLayer) {
     this.clearMap[canvas].push(coords);
+  }
+
+  addEvent(
+    key: string,
+    opts: { canvas: TCanvasLayer; coords: TCanvasCoords[] }
+  ) {
+    if (!this.eventsMap[key]) this.eventsMap[key] = opts;
+    else this.eventsMap[key].coords.push(...opts.coords);
+  }
+
+  addAnimation(
+    key: string,
+    opts: { canvas: TCanvasLayer; coords: TCanvasCoords[] }
+  ) {
+    if (!this.animationMap[key]) this.animationMap[key] = opts;
+    else this.animationMap[key].coords.push(...opts.coords);
+  }
+
+  clearEvent(key: string) {
+    const curr = this.eventsMap[key];
+    if (!curr) return;
+
+    for (const coords of curr.coords) this.addToClear(coords, curr.canvas);
+    delete this.eventsMap[key];
+  }
+
+  clearAnimation(key: string) {
+    const curr = this.animationMap[key];
+    if (!curr) return;
+
+    for (const coords of curr.coords) this.addToClear(coords, curr.canvas);
+    delete this.animationMap[key];
   }
 
   deleteStaticPosition(id: TPieceId) {

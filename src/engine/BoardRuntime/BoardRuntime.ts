@@ -203,7 +203,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
             if (!context) return;
             const ctx_ = Utils.createSafeCtx(context);
             onDraw(ctx_);
-            this.handleDrawResult(event, ctx_);
+            this.handleDrawResult(event, ctx_, layer);
             ctx_.__clearRegions();
           },
       },
@@ -262,6 +262,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   setSelected(selected: TSelected | null) {
+    Utils.isRenderer2D(this.renderer) && this.renderer.clearEvent("select");
     this.selected = selected;
   }
 
@@ -323,7 +324,8 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     event: TEvents,
     ctx_: TSafeCtx & {
       __drawRegions: TDrawRegion[];
-    }
+    },
+    layer: TCanvasLayer
   ) {
     if (!Utils.isRenderer2D(this.renderer)) return;
 
@@ -333,12 +335,12 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     for (const coords of regions) {
       switch (event) {
         case "onPointerHover":
-          this.renderer.addToClear(coords, "dynamicPieces");
+          this.renderer.addToClear(coords, layer);
           break;
-        /*case "onSelect":
-      this.renderer.addSelectToClear(bounds);
-      break;
-    case "onDanger":
+        case "onPointerSelect":
+          this.renderer.addToClear(coords, layer);
+          break;
+        /*case "onDanger":
       this.renderer.addDangerToClear(bounds);
       break;*/
         default:
