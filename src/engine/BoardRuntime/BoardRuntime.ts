@@ -333,7 +333,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     for (const coords of regions) {
       switch (event) {
         case "onPointerHover":
-          this.renderer.addDynamicToClear(coords);
+          this.renderer.addToClear(coords, "dynamicPieces");
           break;
         /*case "onSelect":
       this.renderer.addSelectToClear(bounds);
@@ -419,12 +419,15 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         });
 
         if (Utils.isRenderer2D(this.renderer))
-          this.renderer.addStaticToClear({
-            x: startX,
-            y: startY,
-            w: squareSize,
-            h: squareSize,
-          });
+          this.renderer.addToClear(
+            {
+              x: startX,
+              y: startY,
+              w: squareSize,
+              h: squareSize,
+            },
+            "pieces"
+          );
 
         this.renderer.deleteStaticPiece(piece.id);
         this.renderer.addDynamicPiece(piece.id, ref);

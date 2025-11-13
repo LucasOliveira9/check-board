@@ -166,16 +166,23 @@ class BoardEvents {
           }
 
           if (Utils.isRenderer2D(this.boardRuntime.renderer)) {
-            this.boardRuntime.renderer.addDynamicToClear({
-              x: piece.x,
-              y: piece.y,
-              w: squareSize,
-              h: squareSize,
-            });
-            this.boardRuntime.renderer.addDynamicPosition(selected.id, {
-              x: piece.x,
-              y: piece.y,
-            });
+            this.boardRuntime.renderer.addToClear(
+              {
+                x: piece.x,
+                y: piece.y,
+                w: squareSize,
+                h: squareSize,
+              },
+              "dynamicPieces"
+            );
+            this.boardRuntime.renderer.addPosition(
+              selected.id,
+              {
+                x: piece.x,
+                y: piece.y,
+              },
+              "dynamicPieces"
+            );
           }
           const clampX = offsetX - half;
           const clampY = offsetY - half;

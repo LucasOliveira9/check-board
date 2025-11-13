@@ -77,7 +77,7 @@ class Utils {
   }
 
   static isRenderer2D(r: IRenderer): r is IRenderer2D {
-    return "getStaticToClear" in r;
+    return "addToClear" in r;
   }
 
   static createSafeCtx(ctx: CanvasRenderingContext2D) {

@@ -76,12 +76,15 @@ class Iterators {
         squareSize * this.scale
       );
       Utils.isRenderer2D(this.boardRuntime.renderer) &&
-        this.boardRuntime.renderer.addDynamicToClear({
-          x: piece.x - (squareSize * (this.scale - 1)) / 2,
-          y: piece.x - (squareSize * (this.scale - 1)) / 2,
-          w: squareSize * this.scale,
-          h: squareSize * this.scale,
-        });
+        this.boardRuntime.renderer.addToClear(
+          {
+            x: piece.x - (squareSize * (this.scale - 1)) / 2,
+            y: piece.x - (squareSize * (this.scale - 1)) / 2,
+            w: squareSize * this.scale,
+            h: squareSize * this.scale,
+          },
+          "dynamicPieces"
+        );
     }
   }
 
@@ -120,12 +123,15 @@ class Iterators {
     ctx.restore();*/
 
     Utils.isRenderer2D(this.boardRuntime.renderer) &&
-      this.boardRuntime.renderer.addDynamicToClear({
-        x: piece.x + squareSize / 2 - textWidth / 2 - padding / 2,
-        y: piece.y + squareSize / 2 - fontSize / 2 - padding / 2,
-        w: textWidth + padding,
-        h: fontSize + padding,
-      });
+      this.boardRuntime.renderer.addToClear(
+        {
+          x: piece.x + squareSize / 2 - textWidth / 2 - padding / 2,
+          y: piece.y + squareSize / 2 - fontSize / 2 - padding / 2,
+          w: textWidth + padding,
+          h: fontSize + padding,
+        },
+        "dynamicPieces"
+      );
   }
 
   drawOnHoverPath() {}

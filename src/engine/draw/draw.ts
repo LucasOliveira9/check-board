@@ -73,27 +73,27 @@ class Draw {
     const renderer = this.boardRuntime.renderer;
     const squareSize = size / 8;
     const toRenderStatic =
-      Utils.isRenderer2D(renderer) && renderer.getStaticToRender();
+      Utils.isRenderer2D(renderer) && renderer.getToRender("pieces");
     const staticToClear =
-      Utils.isRenderer2D(renderer) && renderer.getStaticToClear();
+      Utils.isRenderer2D(renderer) && renderer.getToClear("pieces");
     const toRenderDynamic =
-      Utils.isRenderer2D(renderer) && renderer.getDynamicToRender();
+      Utils.isRenderer2D(renderer) && renderer.getToRender("dynamicPieces");
     const dynamicToClear =
-      Utils.isRenderer2D(renderer) && renderer.getDynamicToClear();
+      Utils.isRenderer2D(renderer) && renderer.getToClear("dynamicPieces");
 
     // clear static pieces
     if (staticToClear && staticToClear.length && type === "static") {
       for (const coords of staticToClear) {
         renderer.clearRect(coords, "pieces");
       }
-      renderer.resetStaticToClear();
+      renderer.resetToClear("pieces");
     }
     // clear dynamic pieces
     if (dynamicToClear && dynamicToClear.length && type === "dynamic") {
       for (const coords of dynamicToClear) {
         renderer.clearRect(coords, "dynamicPieces");
       }
-      renderer.resetStaticToClear();
+      renderer.resetToClear("dynamicPieces");
     }
 
     //draw static pieces

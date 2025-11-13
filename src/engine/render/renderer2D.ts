@@ -22,15 +22,27 @@ class Renderer2D implements IRenderer2D {
     TPieceInternalRef
   >;
 
-  protected staticToRender: Map<TPieceId, TRender> = new Map();
-  protected dynamicToRender: Map<TPieceId, TRender> = new Map();
-  protected staticCoordsMap: Map<TPieceId, TPieceCoords> = new Map();
-  protected dynamicCoordsMap: Map<TPieceId, TPieceCoords> = new Map();
-  protected dynamicToClear: TCanvasCoords[] = [];
-  protected staticToClear: TCanvasCoords[] = [];
-  protected boardToClear: TCanvasCoords[] = [];
-  protected upOverlayToClear: TCanvasCoords[] = [];
-  protected downOverlayToClear: TCanvasCoords[] = [];
+  private coordsMap: Record<TCanvasLayer, Map<TPieceId, TPieceCoords>> = {
+    board: new Map(),
+    pieces: new Map(),
+    dynamicPieces: new Map(),
+    overlay: new Map(),
+    overlayUp: new Map(),
+  };
+  private renderMap: Record<TCanvasLayer, Map<TPieceId, TRender>> = {
+    board: new Map(),
+    pieces: new Map(),
+    dynamicPieces: new Map(),
+    overlay: new Map(),
+    overlayUp: new Map(),
+  };
+  private clearMap: Record<TCanvasLayer, TCanvasCoords[]> = {
+    board: [],
+    pieces: [],
+    dynamicPieces: [],
+    overlay: [],
+    overlayUp: [],
+  };
 
   constructor(protected boardRuntime: BoardRuntime) {}
   renderDynamicPieces(): void {
@@ -96,9 +108,9 @@ class Renderer2D implements IRenderer2D {
   }
 
   addStaticPiece(id: TPieceId, piece: TPieceInternalRef) {
-    piece && this.addStaticPosition(id, { x: piece.x, y: piece.y });
+    piece && this.addPosition(id, { x: piece.x, y: piece.y }, "pieces");
     if (!piece) return;
-    this.staticToRender.set(id, {
+    this.renderMap.pieces.set(id, {
       piece,
       x: piece.x,
       y: piece.y,
@@ -107,9 +119,9 @@ class Renderer2D implements IRenderer2D {
   }
 
   addDynamicPiece(id: TPieceId, piece: TPieceInternalRef) {
-    piece && this.addDynamicPosition(id, { x: piece.x, y: piece.y });
+    piece && this.addPosition(id, { x: piece.x, y: piece.y }, "dynamicPieces");
     if (!piece || this.dynamicPieces[id]) return;
-    this.dynamicToRender.set(id, {
+    this.renderMap.dynamicPieces.set(id, {
       piece,
       x: piece.x,
       y: piece.y,
@@ -117,66 +129,53 @@ class Renderer2D implements IRenderer2D {
     this.dynamicPieces[id] = piece;
   }
 
-  addStaticPosition(id: TPieceId, coords: TPieceCoords) {
-    this.staticCoordsMap.set(id, coords);
+  addPosition(id: TPieceId, coords: TPieceCoords, canvas: TCanvasLayer) {
+    this.coordsMap[canvas].set(id, coords);
   }
 
-  addDynamicPosition(id: TPieceId, coords: TPieceCoords) {
-    this.dynamicCoordsMap.set(id, coords);
-  }
-
-  addStaticToClear(coords: TCanvasCoords) {
-    this.staticToClear.push(coords);
-  }
-
-  addDynamicToClear(coords: TCanvasCoords) {
-    this.dynamicToClear.push(coords);
+  addToClear(coords: TCanvasCoords, canvas: TCanvasLayer) {
+    this.clearMap[canvas].push(coords);
   }
 
   deleteStaticPosition(id: TPieceId) {
-    this.staticCoordsMap.delete(id);
+    this.coordsMap.pieces.delete(id);
   }
 
   deleteDynamicPosition(id: TPieceId) {
-    this.dynamicCoordsMap.delete(id);
+    this.coordsMap.dynamicPieces.delete(id);
   }
 
-  getStaticPosition(id: TPieceId) {
-    return Utils.deepFreeze(this.staticCoordsMap.get(id));
-  }
-
-  getDynamicPosition(id: TPieceId) {
-    return Utils.deepFreeze(this.dynamicCoordsMap.get(id));
+  getPosition(id: TPieceId, canvas: TCanvasLayer) {
+    return Utils.deepFreeze(this.coordsMap[canvas].get(id));
   }
 
   getAllDynamicCoords() {
-    return Utils.deepFreeze(this.dynamicCoordsMap.entries());
+    return Utils.deepFreeze(this.coordsMap.dynamicPieces.entries());
   }
 
   getAllStaticCoords() {
-    return Utils.deepFreeze(this.staticCoordsMap.entries());
+    return Utils.deepFreeze(this.coordsMap.pieces.entries());
   }
 
-  getStaticToClear() {
-    return this.staticToClear;
-  }
-
-  getDynamicToClear() {
-    return this.dynamicToClear;
+  getToClear(canvas: TCanvasLayer) {
+    return this.clearMap[canvas];
   }
 
   deleteStaticPiece(id: TPieceId) {
     const piece = this.staticPieces[id];
     const squareSize = this.boardRuntime.getSize() / 8;
     if (!piece) return;
-    this.addStaticToClear({
-      x: piece.x,
-      y: piece.y,
-      w: squareSize,
-      h: squareSize,
-    });
+    this.addToClear(
+      {
+        x: piece.x,
+        y: piece.y,
+        w: squareSize,
+        h: squareSize,
+      },
+      "pieces"
+    );
     this.deleteStaticPosition(id);
-    this.staticToRender.delete(id);
+    this.renderMap.pieces.delete(id);
     delete this.staticPieces[id];
   }
 
@@ -194,20 +193,26 @@ class Renderer2D implements IRenderer2D {
     }
 
     for (const [_, piece] of Object.entries(this.staticPieces))
-      this.addStaticToClear({
-        x: piece.x,
-        y: piece.y,
-        w: squareSize,
-        h: squareSize,
-      });
+      this.addToClear(
+        {
+          x: piece.x,
+          y: piece.y,
+          w: squareSize,
+          h: squareSize,
+        },
+        "pieces"
+      );
 
     for (const obj of clear)
-      this.addStaticToClear({
-        x: obj.piece.x,
-        y: obj.piece.y,
-        w: squareSize,
-        h: squareSize,
-      });
+      this.addToClear(
+        {
+          x: obj.piece.x,
+          y: obj.piece.y,
+          w: squareSize,
+          h: squareSize,
+        },
+        "pieces"
+      );
 
     this.staticPieces = structuredClone(newStaticPieces);
   }
@@ -225,36 +230,35 @@ class Renderer2D implements IRenderer2D {
 
   resetStaticPieces() {
     this.staticPieces = {} as Record<TPieceId, TPieceInternalRef>;
-    this.staticToRender.clear();
-    this.staticCoordsMap.clear();
-    this.dynamicCoordsMap.clear();
+    this.renderMap.pieces.clear();
+    this.coordsMap.pieces.clear();
+    this.coordsMap.dynamicPieces.clear();
   }
 
-  resetDynamicToClear() {
-    this.dynamicToClear = [];
-  }
-
-  resetStaticToClear() {
-    this.staticToClear = [];
+  resetToClear(canvas: TCanvasLayer) {
+    this.clearMap[canvas] = [];
   }
 
   deleteDynamicPiece(id: TPieceId) {
     const piece = this.dynamicPieces[id];
     const squareSize = this.boardRuntime.getSize() / 8;
     if (!piece) return;
-    this.addDynamicToClear({
-      x: piece.x,
-      y: piece.y,
-      w: squareSize,
-      h: squareSize,
-    });
+    this.addToClear(
+      {
+        x: piece.x,
+        y: piece.y,
+        w: squareSize,
+        h: squareSize,
+      },
+      "dynamicPieces"
+    );
     this.deleteDynamicPosition(id);
-    this.dynamicToRender.delete(id);
+    this.renderMap.dynamicPieces.delete(id);
     delete this.dynamicPieces[id];
   }
 
   clearStaticToRender() {
-    this.staticToRender.clear();
+    this.renderMap.pieces.clear();
   }
 
   getDynamicPieceObj() {
@@ -265,12 +269,8 @@ class Renderer2D implements IRenderer2D {
     return this.staticPieces;
   }
 
-  getStaticToRender() {
-    return this.staticToRender;
-  }
-
-  getDynamicToRender() {
-    return this.dynamicToRender;
+  getToRender(canvas: TCanvasLayer) {
+    return this.renderMap[canvas];
   }
 
   clear(): void {

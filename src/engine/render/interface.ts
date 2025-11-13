@@ -27,23 +27,16 @@ interface IRenderer2D extends IRenderer {
   clearStaticToRender(): void;
   clearRect(coords: TCanvasCoords, canvas: TCanvasLayer): void;
   resetStaticPieces(): void;
-  getStaticToRender(): Map<TPieceId, TRender>;
-  getDynamicToRender(): Map<TPieceId, TRender>;
-  getStaticToClear(): TCanvasCoords[];
-  getDynamicToClear(): TCanvasCoords[];
-  getDynamicPosition(
-    id: TPieceId
-  ): { readonly x: number; readonly y: number } | undefined;
-  getStaticPosition(
-    id: TPieceId
+  getToRender(canvas: TCanvasLayer): Map<TPieceId, TRender>;
+  getPosition(
+    id: TPieceId,
+    canvas: TCanvasLayer
   ): { readonly x: number; readonly y: number } | undefined;
   clearStaticPieces(board: TPieceBoard[]): void;
-  addStaticToClear(coords: TCanvasCoords): void;
-  addDynamicToClear(coords: TCanvasCoords): void;
-  addDynamicPosition(id: TPieceId, coords: TPieceCoords): void;
-  addStaticPosition(id: TPieceId, coords: TPieceCoords): void;
-  resetDynamicToClear(): void;
-  resetStaticToClear(): void;
+  addPosition(id: TPieceId, coords: TPieceCoords, canvas: TCanvasLayer): void;
+  addToClear(coords: TCanvasCoords, canvas: TCanvasLayer): void;
+  getToClear(canvas: TCanvasLayer): TCanvasCoords[];
+  resetToClear(canvas: TCanvasLayer): void;
 }
 
 export { IRenderer, IRenderer2D };
