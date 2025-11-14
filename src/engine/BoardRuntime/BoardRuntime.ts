@@ -194,15 +194,26 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         getAnimation: () => this.getReadonlyAnimation(),
         getDraw:
           () =>
-          (opts: { onDraw: (ctx: TSafeCtx) => void; layer: TCanvasLayer }) => {
-            const { onDraw, layer } = opts;
-            const context_ = this.getCanvasLayers().getContext(layer);
+          (
+            opts:
+              | { onDraw: (ctx: TSafeCtx) => void; layer: TCanvasLayer }[]
+              | { onDraw: (ctx: TSafeCtx) => void; layer: TCanvasLayer }
+          ) => {
+            const drawDepend = Array.isArray(opts) ? opts : [opts];
             const event = (context as any).__event;
-            if (!context_) return;
-            const ctx_ = Utils.createSafeCtx(context_);
-            onDraw(ctx_);
-            this.handleDrawResult(event, ctx_, layer);
-            ctx_.__clearRegions();
+
+            for (const currDraw of drawDepend) {
+              const { onDraw, layer } = currDraw;
+
+              const context_ = this.getCanvasLayers().getContext(layer);
+              if (!context_) continue;
+
+              const ctx_ = Utils.createSafeCtx(context_);
+              onDraw(ctx_);
+
+              this.handleDrawResult(event, ctx_, layer);
+              ctx_.__clearRegions();
+            }
           },
       },
       { cache }

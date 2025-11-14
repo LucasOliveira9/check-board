@@ -40,10 +40,14 @@ type TBoardEventContextExtras = {
   lightTile?: string;
   darkTile?: string;
   animation?: TDeepReadonly<TAnimation>;
-  draw?: (opts: {
-    onDraw: (ctx: TSafeCtx) => void;
-    layer: TCanvasLayer;
-  }) => void;
+  draw?: (
+    opts:
+      | {
+          onDraw: (ctx: TSafeCtx) => void;
+          layer: TCanvasLayer;
+        }[]
+      | { onDraw: (ctx: TSafeCtx) => void; layer: TCanvasLayer }
+  ) => void;
 };
 
 type TAnimation = {
