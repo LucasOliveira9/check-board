@@ -63,7 +63,6 @@ class Renderer2D implements IRenderer2D {
       animationRef = boardRuntime.getAnimationRef();
     const canvas = canvasLayers.getCanvas("dynamicPieces").current;
     if (canvas === null) return;
-    canvasLayers.keepQuality("dynamicPieces", boardRuntime.getSize());
 
     if (animation.length <= 0) {
       boardRuntime.clearAnimation();
@@ -90,7 +89,6 @@ class Renderer2D implements IRenderer2D {
       canvasLayers = boardRuntime.getCanvasLayers();
     const canvas = canvasLayers.getCanvas("staticPieces").current;
     if (canvas === null) return;
-    canvasLayers.keepQuality("staticPieces", boardRuntime.getSize());
 
     boardRuntime.draw.pieces("static");
   }
@@ -108,7 +106,6 @@ class Renderer2D implements IRenderer2D {
       canvasLayers = boardRuntime.getCanvasLayers();
     const canvas = canvasLayers.getCanvas("overlay").current;
     if (!canvas === null) return;
-    canvasLayers.keepQuality("overlay", boardRuntime.getSize());
 
     boardRuntime.draw.overlay();
   }
@@ -119,13 +116,13 @@ class Renderer2D implements IRenderer2D {
     if (!canvasLayers) return;
     const canvas = canvasLayers.getCanvas("board").current;
     if (!canvas) return;
-    canvasLayers?.keepQuality("board", boardRuntime.getSize());
+
     boardRuntime.draw.board();
   }
 
   addStaticPiece(id: TPieceId, piece: TPieceInternalRef) {
     piece && this.addPosition(id, { x: piece.x, y: piece.y }, "staticPieces");
-    if (!piece) return;
+    if (!piece || this.staticPieces[id]) return;
     this.renderMap.staticPieces.set(id, {
       piece,
       x: piece.x,

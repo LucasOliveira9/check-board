@@ -72,16 +72,14 @@ class Iterators {
     ctx.shadowOffsetX = 3;
     ctx.shadowOffsetY = 3;
 
-    let res = null;
     if (image instanceof HTMLImageElement)
-      res = this.drawOnHoverHTML(image, ctx, piece, squareSize);
+      this.drawOnHoverHTML(image, ctx, piece, squareSize);
     else if (typeof image === "string")
-      res = this.drawOnHoverText(image, ctx, piece, squareSize);
+      this.drawOnHoverText(image, ctx, piece, squareSize);
     ctx.restore();
 
     if ("clearCache" in args && typeof args["clearCache"] === "function")
       (args as any).clearCache();
-    return res;
   }
 
   drawOnHoverHTML(
@@ -102,7 +100,7 @@ class Iterators {
         this.boardRuntime.renderer.addToClear(
           {
             x: piece.x - (squareSize * (this.scale - 1)) / 2,
-            y: piece.x - (squareSize * (this.scale - 1)) / 2,
+            y: piece.y - (squareSize * (this.scale - 1)) / 2,
             w: squareSize * this.scale,
             h: squareSize * this.scale,
           },

@@ -366,9 +366,9 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   initInternalRef(internal?: boolean) {
-    if (!this.internalRefClone)
-      this.internalRefClone = structuredClone(this.internalRef);
+    this.internalRefClone = structuredClone(this.internalRef);
     const lastInternalRef = this.internalRefClone;
+
     if (!internal)
       this.setInternalRefObj({} as Record<TPieceId, TPieceInternalRef>);
     const squareSize = this.args.size / 8;
@@ -405,7 +405,10 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         currInternal &&
         piece.square.notation !== currInternal.square.notation
       ) {
-        if (!this.getEvents()?.onDrawPiece) ref.anim = true;
+        if (!this.getEvents()?.onDrawPiece) {
+          ref.anim = true;
+          this.setIsMoving(true);
+        }
         this.animation.push({
           from: { x: startX, y: startY },
           to: { x: square.x, y: square.y },

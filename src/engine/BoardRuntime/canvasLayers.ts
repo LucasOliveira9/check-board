@@ -39,6 +39,7 @@ class CanvasLayers {
     this.dynamicPiecesCanvas = dynamicPiecesCanvas;
     this.size = size;
     this.setContext();
+    this.setQuality();
   }
 
   destroy() {
@@ -69,11 +70,15 @@ class CanvasLayers {
     const targetW = size * dpr;
     const targetH = size * dpr;
 
-    if (curr.width !== targetW || curr.height !== targetH) {
-      curr.width = targetW;
-      curr.height = targetH;
-    }
-
+    if (
+      curr.width === targetW ||
+      curr.height === targetH ||
+      curr.style.width === size + "px" ||
+      curr.style.height === size + "px"
+    )
+      return;
+    curr.width = targetW;
+    curr.height = targetH;
     curr.style.width = size + "px";
     curr.style.height = size + "px";
 
@@ -81,6 +86,8 @@ class CanvasLayers {
     if (ctx) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
     }
   }
 
@@ -122,6 +129,18 @@ class CanvasLayers {
     this.underlayCtx = this.underlayCanvas.current?.getContext("2d") ?? null;
     this.dynamicPiecesCtx =
       this.dynamicPiecesCanvas.current?.getContext("2d") ?? null;
+  }
+
+  setQuality() {
+    (
+      [
+        "board",
+        "staticPieces",
+        "overlay",
+        "underlay",
+        "dynamicPieces",
+      ] as TCanvasLayer[]
+    ).forEach((key) => this.keepQuality(key, this.size));
   }
 
   blitOffscreenToMain() {

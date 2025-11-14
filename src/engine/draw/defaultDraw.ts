@@ -45,7 +45,6 @@ class DefaultDraw {
 
     if (!internalRef || internalRef === null || !ctx) return;
     const sameSquarePiece: { piece: TPieceInternalRef; id: TPieceId }[] = [];
-
     for (const [id, piece] of Object.entries(internalRef)) {
       if (!piece) continue;
       if (
@@ -119,7 +118,7 @@ class DefaultDraw {
     const moveCanvas: TPieceId[] = [];
     if (!internalRef || internalRef === null || !ctx) return;
 
-    animation.length > 0 && this.boardRuntime.setIsMoving(true);
+    //animation.length > 0 && this.boardRuntime.setIsMoving(true);
 
     for (let i = 0; i < animation.length; i++) {
       const anim = animation[i];

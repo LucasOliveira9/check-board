@@ -29,6 +29,7 @@ class BoardEvents {
     if (!square) return;
 
     const selected = this.boardRuntime.getSelected();
+    if (selected?.isDragging) return;
     const piece_ = this.boardRuntime.helpers.pieceHelper.getPieceAt(
       offsetX,
       offsetY,
@@ -203,6 +204,7 @@ class BoardEvents {
   }
 
   onPointerUp(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (this.boardRuntime.getIsMoving()) return;
     const { from, to, piece } = this.boardRuntime.helpers.detectMove(e);
     let move = false;
     let selected = this.boardRuntime.getSelected();
