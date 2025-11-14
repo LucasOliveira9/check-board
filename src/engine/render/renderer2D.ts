@@ -100,7 +100,6 @@ class Renderer2D implements IRenderer2D {
       canvasLayers = boardRuntime.getCanvasLayers();
     const canvas = canvasLayers.getCanvas("underlay").current;
     if (!canvas === null) return;
-    canvasLayers.keepQuality("underlay", boardRuntime.getSize());
     boardRuntime.draw.underlay();
   }
 

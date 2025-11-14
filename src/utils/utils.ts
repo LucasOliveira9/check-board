@@ -1,6 +1,6 @@
 import { TDrawRegion, TSafeCtx } from "../types/draw";
 import { IRenderer, IRenderer2D } from "../engine/render/interface";
-import { TSquare, TFile, TRank } from "../types/square";
+import { TSquare, TFile, TRank, TNotation } from "../types/square";
 import { TDeepReadonly } from "../types/utils";
 
 class Utils {
@@ -43,6 +43,18 @@ class Utils {
       return { file: file_, rank: rank_, notation: `${file_}${rank_}` };
     return null;
   };
+
+  static notationToSquare(notation: TNotation): TSquare | null {
+    if (notation.length !== 2) return null;
+
+    const file = notation.charAt(0);
+    const rank = parseInt(notation.charAt(1));
+
+    if (!/^[a-h]$/.test(file)) return null;
+    else if (rank < 1 || rank > 8) return null;
+
+    return { file, rank, notation } as TSquare;
+  }
 
   static getCanvasCoords = (e: React.PointerEvent<HTMLCanvasElement>) => {
     const rect = e.currentTarget.getBoundingClientRect();

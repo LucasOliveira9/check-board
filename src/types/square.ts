@@ -6,7 +6,6 @@ type TSquare = {
   file: TFile;
   rank: TRank;
   notation: TNotation;
-  captured?: boolean;
 };
 
 export type { TFile, TRank, TSquare, TNotation };
