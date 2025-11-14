@@ -1,5 +1,7 @@
+import { TNotation } from "../../types/square";
 import { TPieceBoard, TPieceId, TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
+import Utils from "../../utils/utils";
 
 const runtimeMap = new WeakMap<Client, BoardRuntime>();
 
@@ -35,6 +37,20 @@ class Client {
 
   public flip() {
     this.getRuntime()?.setBlackView(!this.getRuntime().getIsBlackView());
+  }
+
+  public getSquareCoords(notation: TNotation) {
+    const boardRuntime = this.getRuntime();
+    if (!boardRuntime) return null;
+    const square = Utils.notationToSquare(notation);
+    if (!square) return null;
+    const coords = Utils.squareToCoords(
+      square,
+      boardRuntime.getSize() / 8,
+      boardRuntime.getIsBlackView()
+    );
+    if (!coords) return null;
+    return coords;
   }
 }
 

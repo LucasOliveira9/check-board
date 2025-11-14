@@ -94,6 +94,10 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
         if (!clientRef.current) return null;
         return clientRef.current.getBoard();
       },
+      getSquareCoords: (notation) => {
+        if (!clientRef.current) return null;
+        return clientRef.current.getSquareCoords(notation);
+      },
     }));
 
     return (
