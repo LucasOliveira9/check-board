@@ -55,7 +55,7 @@ class Draw {
   }
 
   pieces(type: TPieceType, time?: number) {
-    const ctx = this.boardRuntime.getCanvasLayers().getContext("pieces");
+    const ctx = this.boardRuntime.getCanvasLayers().getContext("staticPieces");
     const ctxDynamicPieces = this.boardRuntime
       .getCanvasLayers()
       .getContext("dynamicPieces");
@@ -73,9 +73,9 @@ class Draw {
     const renderer = this.boardRuntime.renderer;
     const squareSize = size / 8;
     const toRenderStatic =
-      Utils.isRenderer2D(renderer) && renderer.getToRender("pieces");
+      Utils.isRenderer2D(renderer) && renderer.getToRender("staticPieces");
     const staticToClear =
-      Utils.isRenderer2D(renderer) && renderer.getToClear("pieces");
+      Utils.isRenderer2D(renderer) && renderer.getToClear("staticPieces");
     const toRenderDynamic =
       Utils.isRenderer2D(renderer) && renderer.getToRender("dynamicPieces");
     const dynamicToClear =
@@ -84,9 +84,9 @@ class Draw {
     // clear static pieces
     if (staticToClear && staticToClear.length && type === "static") {
       for (const coords of staticToClear) {
-        renderer.clearRect(coords, "pieces");
+        renderer.clearRect(coords, "staticPieces");
       }
-      renderer.resetToClear("pieces");
+      renderer.resetToClear("staticPieces");
     }
     // clear dynamic pieces
     if (dynamicToClear && dynamicToClear.length && type === "dynamic") {
@@ -158,8 +158,8 @@ class Draw {
     this.boardRuntime.updateAnimation();
   }
 
-  downOverlay() {
-    const ctx = this.boardRuntime.getCanvasLayers().getContext("overlay"),
+  underlay() {
+    const ctx = this.boardRuntime.getCanvasLayers().getContext("underlay"),
       isBlackView = this.boardRuntime.getIsBlackView(),
       size = this.boardRuntime.getSize(),
       piecesImage = this.boardRuntime.getPieceStyle(),
@@ -170,11 +170,11 @@ class Draw {
     const squareSize = size / 8;
     const renderer = this.boardRuntime.renderer;
     const toClear =
-      Utils.isRenderer2D(renderer) && renderer.getToClear("overlay");
+      Utils.isRenderer2D(renderer) && renderer.getToClear("underlay");
 
     if (toClear && toClear.length) {
-      for (const coords of toClear) renderer.clearRect(coords, "overlay");
-      renderer.resetToClear("overlay");
+      for (const coords of toClear) renderer.clearRect(coords, "underlay");
+      renderer.resetToClear("underlay");
     }
 
     //ctx?.clearRect(0, 0, size, size);
@@ -222,8 +222,8 @@ class Draw {
     }
   }
 
-  upOverlay() {
-    const ctx = this.boardRuntime.getCanvasLayers().getContext("overlayUp"),
+  overlay() {
+    const ctx = this.boardRuntime.getCanvasLayers().getContext("overlay"),
       isBlackView = this.boardRuntime.getIsBlackView(),
       size = this.boardRuntime.getSize(),
       piecesImage = this.boardRuntime.getPieceStyle(),
@@ -234,11 +234,11 @@ class Draw {
     const squareSize = size / 8;
     const renderer = this.boardRuntime.renderer;
     const toClear =
-      Utils.isRenderer2D(renderer) && renderer.getToClear("overlayUp");
+      Utils.isRenderer2D(renderer) && renderer.getToClear("overlay");
 
     if (toClear && toClear.length) {
-      for (const coords of toClear) renderer.clearRect(coords, "overlayUp");
-      renderer.resetToClear("overlayUp");
+      for (const coords of toClear) renderer.clearRect(coords, "overlay");
+      renderer.resetToClear("overlay");
     }
 
     //ctx?.clearRect(0, 0, size, size);

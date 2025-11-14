@@ -11,10 +11,10 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
   ({ config, onMove, onUpdate }, ref) => {
     const { pieceConfig, size } = config;
     const boardCanvasRef = useRef<HTMLCanvasElement>(null);
-    const pieceCanvasRef = useRef<HTMLCanvasElement>(null);
+    const staticPiecesCanvasRef = useRef<HTMLCanvasElement>(null);
     const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
-    const overlayUpCanvasRef = useRef<HTMLCanvasElement>(null);
-    const dynamicPiecesRef = useRef<HTMLCanvasElement>(null);
+    const underlayCanvasRef = useRef<HTMLCanvasElement>(null);
+    const dynamicPiecesCanvasRef = useRef<HTMLCanvasElement>(null);
     //
     const boardRuntime = useRef<BoardRuntime>(null);
     const clientRef = useRef<Client>(null);
@@ -42,10 +42,10 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
         board: structuredClone(config.board),
         canvasLayers: new CanvasLayers(
           boardCanvasRef,
-          pieceCanvasRef,
+          staticPiecesCanvasRef,
+          underlayCanvasRef,
           overlayCanvasRef,
-          overlayUpCanvasRef,
-          dynamicPiecesRef,
+          dynamicPiecesCanvasRef,
           size
         ),
         pieceStyle: pieceConfig.piecesImage,
@@ -62,10 +62,10 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
         client_.destroy();
         clientRef.current = null;
         boardCanvasRef.current = null;
-        pieceCanvasRef.current = null;
+        staticPiecesCanvasRef.current = null;
         overlayCanvasRef.current = null;
-        overlayUpCanvasRef.current = null;
-        dynamicPiecesRef.current = null;
+        underlayCanvasRef.current = null;
+        dynamicPiecesCanvasRef.current = null;
       };
     }, []);
 
@@ -74,10 +74,10 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
         boardRuntime.current?.destroy();
         boardRuntime.current = null;
         boardCanvasRef.current = null;
-        pieceCanvasRef.current = null;
+        staticPiecesCanvasRef.current = null;
         overlayCanvasRef.current = null;
-        overlayUpCanvasRef.current = null;
-        dynamicPiecesRef.current = null;
+        underlayCanvasRef.current = null;
+        dynamicPiecesCanvasRef.current = null;
       });
     }
 
@@ -100,10 +100,10 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
       <Board
         boardRuntime={boardRuntime}
         boardRef={boardCanvasRef}
-        piecesRef={pieceCanvasRef}
+        staticPiecesRef={staticPiecesCanvasRef}
         overlayRef={overlayCanvasRef}
-        overlayUpRef={overlayUpCanvasRef}
-        dynamicPiecesRef={dynamicPiecesRef}
+        underlayRef={underlayCanvasRef}
+        dynamicPiecesRef={dynamicPiecesCanvasRef}
         size={size}
       />
     );

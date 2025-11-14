@@ -7,7 +7,7 @@ class Renderer3D implements IRenderer {
   renderDynamicPieces(): void {
     throw new Error("Method not implemented.");
   }
-  renderUpOverlay(): void {
+  renderOverlay(): void {
     throw new Error("Method not implemented.");
   }
   getDynamicPieceObj(): Record<TPieceId, TPieceInternalRef> {
@@ -40,7 +40,7 @@ class Renderer3D implements IRenderer {
   renderStaticPieces(): void {
     throw new Error("Method not implemented.");
   }
-  renderDownOverlay(): void {
+  renderUnderlay(): void {
     throw new Error("Method not implemented.");
   }
   renderBoard(): void {

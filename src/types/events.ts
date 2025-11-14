@@ -70,8 +70,8 @@ type TEvents =
   | "onAnimationFrame"
   | "onDrawPiece"
   | "onDrawBoard"
-  | "onDrawUpOverlay"
-  | "onDrawDownOverlay";
+  | "onDrawOverlay"
+  | "onDrawUnderlay";
 
 type TBoardEventContext = TBoardEventContextBase &
   Partial<TBoardEventContextExtras>;
@@ -89,8 +89,8 @@ type TBoardEventExtras = {
   onAnimationFrame: void;
   onDrawPiece: void;
   onDrawBoard: void;
-  onDrawUpOverlay: void;
-  onDrawDownOverlay: void;
+  onDrawOverlay: void;
+  onDrawUnderlay: void;
 };
 
 type TBoardEvents<

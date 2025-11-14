@@ -25,9 +25,9 @@ type TDrawPieces<T extends TBoardEventContext = TBoardEventContext> = {
 type TCanvasCoords = { x: number; y: number; w: number; h: number };
 type TCanvasLayer =
   | "board"
-  | "pieces"
+  | "staticPieces"
   | "overlay"
-  | "overlayUp"
+  | "underlay"
   | "dynamicPieces";
 
 type TRender = {

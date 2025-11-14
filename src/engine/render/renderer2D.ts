@@ -24,24 +24,24 @@ class Renderer2D implements IRenderer2D {
 
   private coordsMap: Record<TCanvasLayer, Map<TPieceId, TPieceCoords>> = {
     board: new Map(),
-    pieces: new Map(),
+    staticPieces: new Map(),
     dynamicPieces: new Map(),
     overlay: new Map(),
-    overlayUp: new Map(),
+    underlay: new Map(),
   };
   private renderMap: Record<TCanvasLayer, Map<TPieceId, TRender>> = {
     board: new Map(),
-    pieces: new Map(),
+    staticPieces: new Map(),
     dynamicPieces: new Map(),
     overlay: new Map(),
-    overlayUp: new Map(),
+    underlay: new Map(),
   };
   private clearMap: Record<TCanvasLayer, TCanvasCoords[]> = {
     board: [],
-    pieces: [],
+    staticPieces: [],
     dynamicPieces: [],
     overlay: [],
-    overlayUp: [],
+    underlay: [],
   };
 
   private animationMap: Record<
@@ -87,29 +87,29 @@ class Renderer2D implements IRenderer2D {
   renderStaticPieces(): void {
     const boardRuntime = this.boardRuntime,
       canvasLayers = boardRuntime.getCanvasLayers();
-    const canvas = canvasLayers.getCanvas("pieces").current;
+    const canvas = canvasLayers.getCanvas("staticPieces").current;
     if (canvas === null) return;
-    canvasLayers.keepQuality("pieces", boardRuntime.getSize());
+    canvasLayers.keepQuality("staticPieces", boardRuntime.getSize());
 
     boardRuntime.draw.pieces("static");
   }
-  renderDownOverlay(): void {
+  renderUnderlay(): void {
+    const boardRuntime = this.boardRuntime,
+      canvasLayers = boardRuntime.getCanvasLayers();
+    const canvas = canvasLayers.getCanvas("underlay").current;
+    if (!canvas === null) return;
+    canvasLayers.keepQuality("underlay", boardRuntime.getSize());
+    boardRuntime.draw.underlay();
+  }
+
+  renderOverlay(): void {
     const boardRuntime = this.boardRuntime,
       canvasLayers = boardRuntime.getCanvasLayers();
     const canvas = canvasLayers.getCanvas("overlay").current;
     if (!canvas === null) return;
     canvasLayers.keepQuality("overlay", boardRuntime.getSize());
-    boardRuntime.draw.downOverlay();
-  }
 
-  renderUpOverlay(): void {
-    const boardRuntime = this.boardRuntime,
-      canvasLayers = boardRuntime.getCanvasLayers();
-    const canvas = canvasLayers.getCanvas("overlayUp").current;
-    if (!canvas === null) return;
-    canvasLayers.keepQuality("overlayUp", boardRuntime.getSize());
-
-    boardRuntime.draw.upOverlay();
+    boardRuntime.draw.overlay();
   }
 
   renderBoard(): void {
@@ -123,9 +123,9 @@ class Renderer2D implements IRenderer2D {
   }
 
   addStaticPiece(id: TPieceId, piece: TPieceInternalRef) {
-    piece && this.addPosition(id, { x: piece.x, y: piece.y }, "pieces");
+    piece && this.addPosition(id, { x: piece.x, y: piece.y }, "staticPieces");
     if (!piece) return;
-    this.renderMap.pieces.set(id, {
+    this.renderMap.staticPieces.set(id, {
       piece,
       x: piece.x,
       y: piece.y,
@@ -185,7 +185,7 @@ class Renderer2D implements IRenderer2D {
   }
 
   deleteStaticPosition(id: TPieceId) {
-    this.coordsMap.pieces.delete(id);
+    this.coordsMap.staticPieces.delete(id);
   }
 
   deleteDynamicPosition(id: TPieceId) {
@@ -201,7 +201,7 @@ class Renderer2D implements IRenderer2D {
   }
 
   getAllStaticCoords() {
-    return Utils.deepFreeze(this.coordsMap.pieces.entries());
+    return Utils.deepFreeze(this.coordsMap.staticPieces.entries());
   }
 
   getToClear(canvas: TCanvasLayer) {
@@ -219,10 +219,10 @@ class Renderer2D implements IRenderer2D {
         w: squareSize,
         h: squareSize,
       },
-      "pieces"
+      "staticPieces"
     );
     this.deleteStaticPosition(id);
-    this.renderMap.pieces.delete(id);
+    this.renderMap.staticPieces.delete(id);
     delete this.staticPieces[id];
   }
 
@@ -247,7 +247,7 @@ class Renderer2D implements IRenderer2D {
           w: squareSize,
           h: squareSize,
         },
-        "pieces"
+        "staticPieces"
       );
 
     for (const obj of clear)
@@ -258,7 +258,7 @@ class Renderer2D implements IRenderer2D {
           w: squareSize,
           h: squareSize,
         },
-        "pieces"
+        "staticPieces"
       );
 
     this.staticPieces = structuredClone(newStaticPieces);
@@ -277,8 +277,8 @@ class Renderer2D implements IRenderer2D {
 
   resetStaticPieces() {
     this.staticPieces = {} as Record<TPieceId, TPieceInternalRef>;
-    this.renderMap.pieces.clear();
-    this.coordsMap.pieces.clear();
+    this.renderMap.staticPieces.clear();
+    this.coordsMap.staticPieces.clear();
     this.coordsMap.dynamicPieces.clear();
   }
 
@@ -305,7 +305,7 @@ class Renderer2D implements IRenderer2D {
   }
 
   clearStaticToRender() {
-    this.renderMap.pieces.clear();
+    this.renderMap.staticPieces.clear();
   }
 
   getDynamicPieceObj() {

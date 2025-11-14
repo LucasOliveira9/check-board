@@ -18,9 +18,9 @@ type TBoardInjection<T extends TBoardEventContext> = (
 type TBoard = {
   boardRuntime: React.RefObject<BoardRuntime | null>;
   boardRef: React.RefObject<HTMLCanvasElement | null>;
-  piecesRef: React.RefObject<HTMLCanvasElement | null>;
+  staticPiecesRef: React.RefObject<HTMLCanvasElement | null>;
   overlayRef: React.RefObject<HTMLCanvasElement | null>;
-  overlayUpRef: React.RefObject<HTMLCanvasElement | null>;
+  underlayRef: React.RefObject<HTMLCanvasElement | null>;
   dynamicPiecesRef: React.RefObject<HTMLCanvasElement | null>;
   size: number;
 };

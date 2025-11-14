@@ -16,8 +16,8 @@ class DefaultDraw {
   drawStaticPiece() {
     const toRender =
       Utils.isRenderer2D(this.boardRuntime.renderer) &&
-      this.boardRuntime.renderer.getToRender("pieces");
-    const ctx = this.boardRuntime.getCanvasLayers().getContext("pieces"),
+      this.boardRuntime.renderer.getToRender("staticPieces");
+    const ctx = this.boardRuntime.getCanvasLayers().getContext("staticPieces"),
       piecesImage = this.boardRuntime.getPieceStyle(),
       internalRefObj = this.boardRuntime.renderer.getStaticPieceObj(),
       pieceHoverRef = this.boardRuntime.getPieceHover(),

@@ -88,19 +88,19 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   getStaticPiecesCanvas() {
-    return this.args.canvasLayers.getCanvas("pieces");
+    return this.args.canvasLayers.getCanvas("staticPieces");
   }
 
   getDynamicPiecesCanvas() {
     return this.args.canvasLayers.getCanvas("dynamicPieces");
   }
 
-  getOverlaycanvas() {
-    return this.args.canvasLayers.getCanvas("overlay");
+  getUnderlaycanvas() {
+    return this.args.canvasLayers.getCanvas("underlay");
   }
 
-  getOverlayUpcanvas() {
-    return this.args.canvasLayers.getCanvas("overlayUp");
+  getOverlaycanvas() {
+    return this.args.canvasLayers.getCanvas("overlay");
   }
 
   getInternalRefVal(key: TPieceId) {
@@ -241,7 +241,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     //if (Utils.isRenderer2D(this.renderer)) this.renderer.resetStaticPieces();
     this.initInternalRef();
     this.renderPieces();
-    this.renderer.renderDownOverlay();
+    this.renderUnderlayAndOverlay();
   }
 
   updateBoard(piece: TPieceBoard, enemie?: TPieceId) {
@@ -294,6 +294,12 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     }
     this.renderer.renderStaticPieces();
     this.renderer.renderDynamicPieces();
+  }
+
+  renderUnderlayAndOverlay() {
+    if (this.destroyed) return;
+    this.renderer.renderUnderlay();
+    this.renderer.renderOverlay();
   }
 
   clearAnimation() {
@@ -428,7 +434,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
               w: squareSize,
               h: squareSize,
             },
-            "pieces"
+            "staticPieces"
           );
 
         this.renderer.deleteStaticPiece(piece.id);

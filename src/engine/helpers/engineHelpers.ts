@@ -192,7 +192,7 @@ class EngineHelpers {
         piece: this.boardRuntime.getInternalRefVal(piece.id),
       });
       this.boardRuntime.renderPieces();
-      this.boardRuntime.renderer.renderDownOverlay();
+      this.boardRuntime.renderUnderlayAndOverlay();
     }
     return true;
   }

@@ -4,9 +4,9 @@ import { TBoard } from "../types/board";
 const Board: React.FC<TBoard> = ({
   boardRuntime,
   boardRef,
-  piecesRef,
+  staticPiecesRef,
   overlayRef,
-  overlayUpRef,
+  underlayRef,
   dynamicPiecesRef,
   size,
 }) => {
@@ -43,9 +43,9 @@ const Board: React.FC<TBoard> = ({
       boardRuntime.current?.destroy();
       boardRuntime.current = null;
       boardRef.current = null;
-      piecesRef.current = null;
+      staticPiecesRef.current = null;
       overlayRef.current = null;
-      overlayUpRef.current = null;
+      underlayRef.current = null;
       dynamicPiecesRef.current = null;
     };
   }, [boardRuntime]);
@@ -55,9 +55,9 @@ const Board: React.FC<TBoard> = ({
       boardRuntime.current?.destroy();
       boardRuntime.current = null;
       boardRef.current = null;
-      piecesRef.current = null;
+      staticPiecesRef.current = null;
       overlayRef.current = null;
-      overlayUpRef.current = null;
+      underlayRef.current = null;
       dynamicPiecesRef.current = null;
     });
   }
@@ -84,7 +84,7 @@ const Board: React.FC<TBoard> = ({
         }}
       />
       <canvas
-        ref={piecesRef}
+        ref={staticPiecesRef}
         width={size}
         height={size}
         style={{
@@ -113,7 +113,7 @@ const Board: React.FC<TBoard> = ({
         height={size}
       />
       <canvas
-        ref={overlayUpRef}
+        ref={underlayRef}
         width={size}
         height={size}
         style={{

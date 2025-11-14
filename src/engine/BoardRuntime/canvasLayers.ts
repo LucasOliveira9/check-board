@@ -1,24 +1,24 @@
 import { TCanvasLayer } from "../../types/draw";
 
 class CanvasLayers {
-  private piecesCanvas: React.RefObject<HTMLCanvasElement | null>;
+  private staticPiecesCanvas: React.RefObject<HTMLCanvasElement | null>;
   private boardCanvas: React.RefObject<HTMLCanvasElement | null>;
   private overlayCanvas: React.RefObject<HTMLCanvasElement | null>;
-  private overlayUpCanvas: React.RefObject<HTMLCanvasElement | null>;
+  private underlayCanvas: React.RefObject<HTMLCanvasElement | null>;
   private dynamicPiecesCanvas: React.RefObject<HTMLCanvasElement | null>;
-  private piecesCtx: CanvasRenderingContext2D | null = null;
+
+  private staticPiecesCtx: CanvasRenderingContext2D | null = null;
   private boardCtx: CanvasRenderingContext2D | null = null;
   private overlayCtx: CanvasRenderingContext2D | null = null;
-  private overlayUpCtx: CanvasRenderingContext2D | null = null;
+  private underlayCtx: CanvasRenderingContext2D | null = null;
   private dynamicPiecesCtx: CanvasRenderingContext2D | null = null;
 
   private overlayOffscreen!: OffscreenCanvas;
-  private overlayUpOffscreen!: OffscreenCanvas;
+  private underlayOffscreen!: OffscreenCanvas;
   private dynamicPiecesOffscreen!: OffscreenCanvas;
 
   private overlayOffscreenCtx: OffscreenCanvasRenderingContext2D | null = null;
-  private overlayUpOffscreenCtx: OffscreenCanvasRenderingContext2D | null =
-    null;
+  private underlayOffscreenCtx: OffscreenCanvasRenderingContext2D | null = null;
   private dynamicPiecesOffscreenCtx: OffscreenCanvasRenderingContext2D | null =
     null;
   private size: number;
@@ -28,14 +28,14 @@ class CanvasLayers {
     board: React.RefObject<HTMLCanvasElement | null>,
     pieces: React.RefObject<HTMLCanvasElement | null>,
     overlay: React.RefObject<HTMLCanvasElement | null>,
-    overlayUpCanvas: React.RefObject<HTMLCanvasElement | null>,
+    underlayCanvas: React.RefObject<HTMLCanvasElement | null>,
     dynamicPiecesCanvas: React.RefObject<HTMLCanvasElement | null>,
     size: number
   ) {
-    this.piecesCanvas = pieces;
+    this.staticPiecesCanvas = pieces;
     this.boardCanvas = board;
     this.overlayCanvas = overlay;
-    this.overlayUpCanvas = overlayUpCanvas;
+    this.underlayCanvas = underlayCanvas;
     this.dynamicPiecesCanvas = dynamicPiecesCanvas;
     this.size = size;
     this.setContext();
@@ -100,11 +100,11 @@ class CanvasLayers {
     if (typeof OffscreenCanvas === undefined) return;
     try {
       this.overlayOffscreen = new OffscreenCanvas(this.size, this.size);
-      this.overlayUpOffscreen = new OffscreenCanvas(this.size, this.size);
+      this.underlayOffscreen = new OffscreenCanvas(this.size, this.size);
       this.dynamicPiecesOffscreen = new OffscreenCanvas(this.size, this.size);
 
       this.overlayOffscreenCtx = this.overlayOffscreen.getContext("2d");
-      this.overlayUpOffscreenCtx = this.overlayUpOffscreen.getContext("2d");
+      this.underlayOffscreenCtx = this.underlayOffscreen.getContext("2d");
       this.dynamicPiecesOffscreenCtx =
         this.dynamicPiecesOffscreen.getContext("2d");
     } catch {
@@ -115,23 +115,24 @@ class CanvasLayers {
   }
 
   private setContext() {
-    this.piecesCtx = this.piecesCanvas.current?.getContext("2d") ?? null;
+    this.staticPiecesCtx =
+      this.staticPiecesCanvas.current?.getContext("2d") ?? null;
     this.boardCtx = this.boardCanvas.current?.getContext("2d") ?? null;
     this.overlayCtx = this.overlayCanvas.current?.getContext("2d") ?? null;
-    this.overlayUpCtx = this.overlayUpCanvas.current?.getContext("2d") ?? null;
+    this.underlayCtx = this.underlayCanvas.current?.getContext("2d") ?? null;
     this.dynamicPiecesCtx =
       this.dynamicPiecesCanvas.current?.getContext("2d") ?? null;
   }
 
   blitOffscreenToMain() {
     const overlay = this.overlayCtx;
-    const overlayUp = this.overlayUpCtx;
+    const underlay = this.underlayCtx;
     const dynamic = this.dynamicPiecesCtx;
 
     if (overlay && this.overlayOffscreen)
       overlay.drawImage(this.overlayOffscreen, 0, 0);
-    if (overlayUp && this.overlayUpOffscreen)
-      overlayUp.drawImage(this.overlayUpOffscreen, 0, 0);
+    if (underlay && this.underlayOffscreen)
+      underlay.drawImage(this.underlayOffscreen, 0, 0);
     if (dynamic && this.dynamicPiecesOffscreen)
       dynamic.drawImage(this.dynamicPiecesOffscreen, 0, 0);
   }
@@ -140,7 +141,7 @@ class CanvasLayers {
     this.size = size;
     [
       this.overlayOffscreen,
-      this.overlayUpOffscreen,
+      this.underlayOffscreen,
       this.dynamicPiecesOffscreen,
     ].forEach((c) => {
       if (c) {
@@ -152,10 +153,10 @@ class CanvasLayers {
 
   clearAllRect() {
     [
-      this.piecesCtx,
+      this.staticPiecesCtx,
       this.boardCtx,
       this.overlayCtx,
-      this.overlayUpCtx,
+      this.underlayCtx,
       this.dynamicPiecesCtx,
     ].forEach((ctx) => ctx?.clearRect(0, 0, this.size, this.size));
   }
@@ -164,8 +165,8 @@ class CanvasLayers {
     const canvases = [
       this.boardCanvas,
       this.overlayCanvas,
-      this.piecesCanvas,
-      this.overlayUpCanvas,
+      this.staticPiecesCanvas,
+      this.underlayCanvas,
       this.dynamicPiecesCanvas,
     ];
     canvases.forEach((ref) => {
@@ -180,8 +181,8 @@ class CanvasLayers {
 
     this.boardCtx = null;
     this.overlayCtx = null;
-    this.piecesCtx = null;
-    this.overlayUpCtx = null;
+    this.staticPiecesCtx = null;
+    this.underlayCtx = null;
     this.dynamicPiecesCtx = null;
   }
 }

@@ -63,7 +63,7 @@ class BoardEvents {
         startY: offsetY,
       });
     }
-    this.boardRuntime.renderer.renderDownOverlay();
+    this.boardRuntime.renderUnderlayAndOverlay();
   }
 
   onPointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
@@ -95,7 +95,7 @@ class BoardEvents {
         }
         this.boardRuntime.setPieceHover(null);
         toRender && this.boardRuntime.renderPieces();
-        this.boardRuntime.getCanvasLayers().setCanvasStyle("pieces", {
+        this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
           cursor: "default",
         });
         return;
@@ -121,7 +121,7 @@ class BoardEvents {
           );
           this.boardRuntime.renderPieces();
         }
-        this.boardRuntime.getCanvasLayers().setCanvasStyle("pieces", {
+        this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
           cursor: "grab",
         });
       }
@@ -146,7 +146,7 @@ class BoardEvents {
           const piece = this.boardRuntime.getInternalRefVal(selected.id);
           const half = squareSize / 2;
           if (piece && !selected.isDragging) {
-            this.boardRuntime.getCanvasLayers().setCanvasStyle("pieces", {
+            this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
               cursor: "grabbing",
             });
 
@@ -211,7 +211,7 @@ class BoardEvents {
     if (from !== null) {
       move = this.boardRuntime.helpers.move(from.notation, to.notation, piece);
     }
-    this.boardRuntime.getCanvasLayers().setCanvasStyle("pieces", {
+    this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
       cursor: "default",
     });
 
@@ -229,7 +229,7 @@ class BoardEvents {
         this.boardRuntime.renderPieces();
       }
 
-      this.boardRuntime.renderer.renderDownOverlay();
+      this.boardRuntime.renderUnderlayAndOverlay();
 
       if (selected) {
         this.boardRuntime.setSelected({

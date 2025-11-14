@@ -9,10 +9,10 @@ import {
 
 interface IRenderer {
   renderStaticPieces(): void;
-  renderDownOverlay(): void;
+  renderUnderlay(): void;
   renderBoard(): void;
   renderDynamicPieces(): void;
-  renderUpOverlay(): void;
+  renderOverlay(): void;
   addDynamicPiece(id: TPieceId, piece: TPieceInternalRef): void;
   addStaticPiece(id: TPieceId, piece: TPieceInternalRef): void;
   deleteStaticPiece(id: TPieceId): void;

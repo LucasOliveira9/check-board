@@ -17,7 +17,7 @@ class Iterators {
     const { squareSize, x, y } = args;
     //canvas && (canvas.style.zIndex = "3");
     //const canvas = getCanvas;
-    const ctx = this.boardRuntime.getCanvasLayers().getContext("overlay");
+    const ctx = this.boardRuntime.getCanvasLayers().getContext("underlay");
     if (!ctx) return;
     const SELECT_COLOR = "#ffc400ff";
     const SELECT_GLOW = "rgba(255, 196, 0, 0.75)";
@@ -48,7 +48,7 @@ class Iterators {
 
     Utils.isRenderer2D(this.boardRuntime.renderer) &&
       this.boardRuntime.renderer.addEvent("select", {
-        canvas: "overlay",
+        canvas: "underlay",
         coords: [
           {
             x: clearX - pad,
