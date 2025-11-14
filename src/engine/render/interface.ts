@@ -38,11 +38,11 @@ interface IRenderer2D extends IRenderer {
   addToClear(coords: TCanvasCoords, canvas: TCanvasLayer): void;
   addEvent(
     key: TEvents,
-    opts: { canvas: TCanvasLayer; coords: TCanvasCoords[] }
+    opts: { canvas: TCanvasLayer; coords: TCanvasCoords }
   ): void;
   addAnimation(
     key: string,
-    opts: { canvas: TCanvasLayer; coords: TCanvasCoords[] }
+    opts: { canvas: TCanvasLayer; coords: TCanvasCoords }
   ): void;
   clearEvent(key: TEvents): void;
   clearAnimation(key: string): void;

@@ -47,15 +47,22 @@ class Renderer2D implements IRenderer2D {
 
   private animationMap: Record<
     string,
-    { canvas: TCanvasLayer; coords: TCanvasCoords[] }
+    { canvas: TCanvasLayer; coords: TCanvasCoords }[]
   > = {};
 
   private eventsMap: Record<
     TEvents,
-    { canvas: TCanvasLayer; coords: TCanvasCoords[] }
-  > = {} as Record<TEvents, { canvas: TCanvasLayer; coords: TCanvasCoords[] }>;
+    { canvas: TCanvasLayer; coords: TCanvasCoords }[]
+  > = {} as Record<TEvents, { canvas: TCanvasLayer; coords: TCanvasCoords }[]>;
 
   constructor(protected boardRuntime: BoardRuntime) {}
+
+  destroy(): void {
+    for (const key of Object.getOwnPropertyNames(this)) {
+      (this as any)[key] = null;
+    }
+  }
+
   renderDynamicPieces(): void {
     const boardRuntime = this.boardRuntime,
       canvasLayers = boardRuntime.getCanvasLayers(),
@@ -79,11 +86,7 @@ class Renderer2D implements IRenderer2D {
     if (!animationRef && animation.length)
       boardRuntime.setAnimationRef(requestAnimationFrame(render));
   }
-  destroy(): void {
-    for (const key of Object.getOwnPropertyNames(this)) {
-      (this as any)[key] = null;
-    }
-  }
+
   renderStaticPieces(): void {
     const boardRuntime = this.boardRuntime,
       canvasLayers = boardRuntime.getCanvasLayers();
@@ -152,25 +155,25 @@ class Renderer2D implements IRenderer2D {
 
   addEvent(
     key: TEvents,
-    opts: { canvas: TCanvasLayer; coords: TCanvasCoords[] }
+    opts: { canvas: TCanvasLayer; coords: TCanvasCoords }
   ) {
-    if (!this.eventsMap[key]) this.eventsMap[key] = opts;
-    else this.eventsMap[key].coords.push(...opts.coords);
+    if (!this.eventsMap[key]) this.eventsMap[key] = [];
+    else this.eventsMap[key].push(opts);
   }
 
   addAnimation(
     key: string,
-    opts: { canvas: TCanvasLayer; coords: TCanvasCoords[] }
+    opts: { canvas: TCanvasLayer; coords: TCanvasCoords }
   ) {
-    if (!this.animationMap[key]) this.animationMap[key] = opts;
-    else this.animationMap[key].coords.push(...opts.coords);
+    if (!this.animationMap[key]) this.animationMap[key] = [];
+    this.animationMap[key].push(opts);
   }
 
   clearEvent(key: TEvents) {
     const curr = this.eventsMap[key];
     if (!curr) return;
 
-    for (const coords of curr.coords) this.addToClear(coords, curr.canvas);
+    for (const obj of curr) this.addToClear(obj.coords, obj.canvas);
     delete this.eventsMap[key];
   }
 
@@ -178,7 +181,7 @@ class Renderer2D implements IRenderer2D {
     const curr = this.animationMap[key];
     if (!curr) return;
 
-    for (const coords of curr.coords) this.addToClear(coords, curr.canvas);
+    for (const obj of curr) this.addToClear(obj.coords, obj.canvas);
     delete this.animationMap[key];
   }
 

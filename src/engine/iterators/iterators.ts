@@ -18,6 +18,7 @@ class Iterators {
     //canvas && (canvas.style.zIndex = "3");
     //const canvas = getCanvas;
     const ctx = this.boardRuntime.getCanvasLayers().getContext("underlay");
+
     if (!ctx) return;
     const SELECT_COLOR = "#ffc400ff";
     const SELECT_GLOW = "rgba(255, 196, 0, 0.75)";
@@ -49,14 +50,12 @@ class Iterators {
     Utils.isRenderer2D(this.boardRuntime.renderer) &&
       this.boardRuntime.renderer.addEvent("onPointerSelect", {
         canvas: "underlay",
-        coords: [
-          {
-            x: clearX - pad,
-            y: clearY - pad,
-            w: clearW + pad * 2,
-            h: clearH + pad * 2,
-          },
-        ],
+        coords: {
+          x: clearX - pad,
+          y: clearY - pad,
+          w: clearW + pad * 2,
+          h: clearH + pad * 2,
+        },
       });
   }
 
