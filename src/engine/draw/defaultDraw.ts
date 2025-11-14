@@ -225,7 +225,6 @@ class DefaultDraw {
     if (image && image.complete && image.naturalWidth > 0) {
       ctx.drawImage(image, piece.x, piece.y, squareSize, squareSize);
     }
-    (ctx as any) = null;
   }
 
   private DrawTextPiece(
