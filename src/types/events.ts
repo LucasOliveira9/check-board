@@ -43,7 +43,6 @@ type TBoardEventContextExtras = {
   draw?: (opts: {
     onDraw: (ctx: TSafeCtx) => void;
     layer: TCanvasLayer;
-    event: TEvents;
   }) => void;
 };
 

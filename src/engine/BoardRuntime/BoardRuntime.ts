@@ -194,15 +194,12 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         getAnimation: () => this.getReadonlyAnimation(),
         getDraw:
           () =>
-          (opts: {
-            onDraw: (ctx: TSafeCtx) => void;
-            layer: TCanvasLayer;
-            event: TEvents;
-          }) => {
-            const { onDraw, layer, event } = opts;
-            const context = this.getCanvasLayers().getContext(layer);
-            if (!context) return;
-            const ctx_ = Utils.createSafeCtx(context);
+          (opts: { onDraw: (ctx: TSafeCtx) => void; layer: TCanvasLayer }) => {
+            const { onDraw, layer } = opts;
+            const context_ = this.getCanvasLayers().getContext(layer);
+            const event = (context as any).__event;
+            if (!context_) return;
+            const ctx_ = Utils.createSafeCtx(context_);
             onDraw(ctx_);
             this.handleDrawResult(event, ctx_, layer);
             ctx_.__clearRegions();
