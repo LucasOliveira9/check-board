@@ -10,6 +10,7 @@ import {
 } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 import { IRenderer, IRenderer2D } from "./interface";
+import { TEvents } from "../../types/events";
 
 class Renderer2D implements IRenderer2D {
   protected staticPieces: Record<TPieceId, TPieceInternalRef> = {} as Record<
@@ -50,9 +51,9 @@ class Renderer2D implements IRenderer2D {
   > = {};
 
   private eventsMap: Record<
-    string,
+    TEvents,
     { canvas: TCanvasLayer; coords: TCanvasCoords[] }
-  > = {};
+  > = {} as Record<TEvents, { canvas: TCanvasLayer; coords: TCanvasCoords[] }>;
 
   constructor(protected boardRuntime: BoardRuntime) {}
   renderDynamicPieces(): void {
@@ -153,7 +154,7 @@ class Renderer2D implements IRenderer2D {
   }
 
   addEvent(
-    key: string,
+    key: TEvents,
     opts: { canvas: TCanvasLayer; coords: TCanvasCoords[] }
   ) {
     if (!this.eventsMap[key]) this.eventsMap[key] = opts;
@@ -168,7 +169,7 @@ class Renderer2D implements IRenderer2D {
     else this.animationMap[key].coords.push(...opts.coords);
   }
 
-  clearEvent(key: string) {
+  clearEvent(key: TEvents) {
     const curr = this.eventsMap[key];
     if (!curr) return;
 

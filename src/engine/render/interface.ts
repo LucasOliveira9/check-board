@@ -1,3 +1,4 @@
+import { TEvents } from "src/types/events";
 import { TCanvasCoords, TCanvasLayer, TRender } from "../../types/draw";
 import {
   TPieceBoard,
@@ -36,14 +37,14 @@ interface IRenderer2D extends IRenderer {
   addPosition(id: TPieceId, coords: TPieceCoords, canvas: TCanvasLayer): void;
   addToClear(coords: TCanvasCoords, canvas: TCanvasLayer): void;
   addEvent(
-    key: string,
+    key: TEvents,
     opts: { canvas: TCanvasLayer; coords: TCanvasCoords[] }
   ): void;
   addAnimation(
     key: string,
     opts: { canvas: TCanvasLayer; coords: TCanvasCoords[] }
   ): void;
-  clearEvent(key: string): void;
+  clearEvent(key: TEvents): void;
   clearAnimation(key: string): void;
   getToClear(canvas: TCanvasLayer): TCanvasCoords[];
   resetToClear(canvas: TCanvasLayer): void;

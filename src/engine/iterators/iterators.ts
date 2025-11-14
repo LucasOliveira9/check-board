@@ -47,7 +47,7 @@ class Iterators {
     const pad = ctx.lineWidth ?? 2;
 
     Utils.isRenderer2D(this.boardRuntime.renderer) &&
-      this.boardRuntime.renderer.addEvent("select", {
+      this.boardRuntime.renderer.addEvent("onPointerSelect", {
         canvas: "underlay",
         coords: [
           {

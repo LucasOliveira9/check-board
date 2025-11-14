@@ -262,7 +262,8 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   setSelected(selected: TSelected | null) {
-    Utils.isRenderer2D(this.renderer) && this.renderer.clearEvent("select");
+    Utils.isRenderer2D(this.renderer) &&
+      this.renderer.clearEvent("onPointerSelect");
     this.selected = selected;
   }
 
@@ -334,25 +335,9 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     layer: TCanvasLayer
   ) {
     if (!Utils.isRenderer2D(this.renderer)) return;
-
     const regions = ctx_.__drawRegions;
     if (!regions.length) return;
-    //const bounds = Utils.mergeDrawRegions(regions); // calcula bounding box total
-    for (const coords of regions) {
-      switch (event) {
-        case "onPointerHover":
-          this.renderer.addToClear(coords, layer);
-          break;
-        case "onPointerSelect":
-          this.renderer.addToClear(coords, layer);
-          break;
-        /*case "onDanger":
-      this.renderer.addDangerToClear(bounds);
-      break;*/
-        default:
-          break;
-      }
-    }
+    for (const coords of regions) this.renderer.addToClear(coords, layer);
   }
 
   updateBoardState(from: TNotation, to: TNotation, piece: TPieceBoard) {
