@@ -18,6 +18,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     TPieceId,
     TPieceInternalRef
   >;
+  private internalRefClone: Record<TPieceId, TPieceInternalRef> | null = null;
   protected selected: TSelected | null = null;
   protected pieceHover: TPieceId | null = null;
   protected animation: TAnimation = [];
@@ -365,7 +366,9 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   initInternalRef(internal?: boolean) {
-    const lastInternalRef = structuredClone(this.internalRef);
+    if (!this.internalRefClone)
+      this.internalRefClone = structuredClone(this.internalRef);
+    const lastInternalRef = this.internalRefClone;
     if (!internal)
       this.setInternalRefObj({} as Record<TPieceId, TPieceInternalRef>);
     const squareSize = this.args.size / 8;
@@ -429,6 +432,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         this.renderer.addStaticPiece(piece.id, ref);
       }
     }
+    this.internalRefClone = null;
   }
 }
 

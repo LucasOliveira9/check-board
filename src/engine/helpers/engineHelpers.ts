@@ -173,7 +173,8 @@ class EngineHelpers {
         return true;
       } else {
         const selected = this.boardRuntime.getSelected();
-        selected && ((piece_.x = selected.x), (piece_.y = selected.y));
+        selected && ((piece_.x = selected.x), (piece_.y = selected.y)),
+          (piece_.square = piece.square);
         this.boardRuntime.setSelected(null);
         this.boardRuntime.setBoard(this.boardRuntime.getBoard());
         return false;
