@@ -215,9 +215,35 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
           };
 
           drawFn.batch = (
-            optsArr: { onDraw: (ctx: TSafeCtx) => void; layer: TCanvasLayer }[]
+            optsArr: {
+              onDraw: (ctx: TSafeCtx) => void;
+              layer: TCanvasLayer;
+            }[]
           ) => {
-            for (const opts of optsArr) drawFn(opts);
+            const layers: Record<
+              TCanvasLayer,
+              { fn: (ctx: TSafeCtx) => void; index: number }[]
+            > = {} as Record<
+              TCanvasLayer,
+              { fn: (ctx: TSafeCtx) => void; index: number }[]
+            >;
+
+            let i = 0;
+            for (const { layer, onDraw } of optsArr) {
+              if (!layers[layer]) {
+                layers[layer] = [];
+              }
+              layers[layer].push({ fn: onDraw, index: i++ });
+            }
+            const ordered = Object.values(layers)
+              .flat()
+              .sort((a, b) => a.index - b.index);
+            for (const { fn, index } of ordered) {
+              const layer = optsArr[index].layer;
+              drawFn.group(layer, (ctx, g) => {
+                g.draw(fn);
+              });
+            }
           };
 
           drawFn.group = (
@@ -231,11 +257,9 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
             if (!context_) return;
 
             const ctx_ = Utils.createSafeCtx(context_);
-
             const g = {
               draw: (onDraw: (ctx: TSafeCtx) => void) => onDraw(ctx_),
             };
-
             fn(ctx_, g);
 
             this.handleDrawResult(event, ctx_, layer);
@@ -299,9 +323,17 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   setSelected(selected: TSelected | null) {
+    if (selected === null && this.selected === null) {
+      this.selected = selected;
+      return;
+    } else if (selected?.id === this.selected?.id) {
+      this.selected = selected;
+      return;
+    }
     Utils.isRenderer2D(this.renderer) &&
       this.renderer.clearEvent("onPointerSelect");
     this.selected = selected;
+    this.renderUnderlayAndOverlay();
   }
 
   setPieceHover(piece: TPieceId | null) {
@@ -373,6 +405,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   ) {
     if (!Utils.isRenderer2D(this.renderer)) return;
     const regions = ctx_.__drawRegions;
+    console.log(regions);
     if (!regions.length) return;
     for (const coords of regions) this.renderer.addToClear(coords, layer);
   }

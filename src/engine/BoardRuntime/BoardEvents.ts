@@ -64,7 +64,7 @@ class BoardEvents {
         startY: offsetY,
       });
     }
-    this.boardRuntime.renderUnderlayAndOverlay();
+    //this.boardRuntime.renderUnderlayAndOverlay();
   }
 
   onPointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
@@ -231,7 +231,7 @@ class BoardEvents {
         this.boardRuntime.renderPieces();
       }
 
-      this.boardRuntime.renderUnderlayAndOverlay();
+      //this.boardRuntime.renderUnderlayAndOverlay();
 
       if (selected) {
         this.boardRuntime.setSelected({
