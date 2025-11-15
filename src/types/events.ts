@@ -40,13 +40,27 @@ type TBoardEventContextExtras = {
   lightTile?: string;
   darkTile?: string;
   animation?: TDeepReadonly<TAnimation>;
-  draw?: (
-    opts:
-      | {
-          onDraw: (ctx: TSafeCtx) => void;
-          layer: TCanvasLayer;
-        }[]
-      | { onDraw: (ctx: TSafeCtx) => void; layer: TCanvasLayer }
+  draw?: TDrawFunction;
+};
+
+type TDrawFunction = {
+  (opts: { onDraw: (ctx: TSafeCtx) => void; layer: TCanvasLayer }): void;
+
+  batch: (
+    opts: {
+      onDraw: (ctx: TSafeCtx) => void;
+      layer: TCanvasLayer;
+    }[]
+  ) => void;
+
+  group: (
+    layer: TCanvasLayer,
+    fn: (
+      ctx: TSafeCtx,
+      g: {
+        draw: (onDraw: (ctx: TSafeCtx) => void) => void;
+      }
+    ) => void
   ) => void;
 };
 
@@ -123,4 +137,5 @@ export type {
   TAnimation,
   TGetterBoardEventContext,
   TEvents,
+  TDrawFunction,
 };

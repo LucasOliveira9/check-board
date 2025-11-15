@@ -1,6 +1,11 @@
 import Draw from "../draw/draw";
 import { TBoardRuntime, TSelected } from "../../types/board";
-import { TAnimation, TBoardEventContext, TEvents } from "../../types/events";
+import {
+  TAnimation,
+  TBoardEventContext,
+  TDrawFunction,
+  TEvents,
+} from "../../types/events";
 import { TPieceBoard, TPieceId, TPieceInternalRef } from "../../types/piece";
 import BoardEvents from "./BoardEvents";
 import EngineHelpers from "../helpers/engineHelpers";
@@ -9,8 +14,8 @@ import { IRenderer } from "../render/interface";
 import Renderer2D from "../render/renderer2D";
 import Renderer3D from "../render/renderer3D";
 import Utils from "../../utils/utils";
-import { TCanvasLayer, TDrawRegion } from "src/types/draw";
-import { TSafeCtx } from "src/types/draw";
+import { TCanvasLayer, TDrawRegion } from "../../types/draw";
+import { TSafeCtx } from "../../types/draw";
 
 class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected drawRef = 0;
@@ -192,29 +197,52 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         getLightTile: () => this.getLightTile(),
         getDarkTile: () => this.getDarkTile(),
         getAnimation: () => this.getReadonlyAnimation(),
-        getDraw:
-          () =>
-          (
-            opts:
-              | { onDraw: (ctx: TSafeCtx) => void; layer: TCanvasLayer }[]
-              | { onDraw: (ctx: TSafeCtx) => void; layer: TCanvasLayer }
+        getDraw: () => {
+          const event = (context as any).__event;
+
+          const drawFn = (opts: {
+            onDraw: (ctx: TSafeCtx) => void;
+            layer: TCanvasLayer;
+          }) => {
+            const { onDraw, layer } = opts;
+            const context_ = this.getCanvasLayers().getContext(layer);
+            if (!context_) return;
+
+            const ctx_ = Utils.createSafeCtx(context_);
+            onDraw(ctx_);
+            this.handleDrawResult(event, ctx_, layer);
+            ctx_.__clearRegions();
+          };
+
+          drawFn.batch = (
+            optsArr: { onDraw: (ctx: TSafeCtx) => void; layer: TCanvasLayer }[]
           ) => {
-            const drawDepend = Array.isArray(opts) ? opts : [opts];
-            const event = (context as any).__event;
+            for (const opts of optsArr) drawFn(opts);
+          };
 
-            for (const currDraw of drawDepend) {
-              const { onDraw, layer } = currDraw;
+          drawFn.group = (
+            layer: TCanvasLayer,
+            fn: (
+              ctx: TSafeCtx,
+              g: { draw: (onDraw: (ctx: TSafeCtx) => void) => void }
+            ) => void
+          ) => {
+            const context_ = this.getCanvasLayers().getContext(layer);
+            if (!context_) return;
 
-              const context_ = this.getCanvasLayers().getContext(layer);
-              if (!context_) continue;
+            const ctx_ = Utils.createSafeCtx(context_);
 
-              const ctx_ = Utils.createSafeCtx(context_);
-              onDraw(ctx_);
+            const g = {
+              draw: (onDraw: (ctx: TSafeCtx) => void) => onDraw(ctx_),
+            };
 
-              this.handleDrawResult(event, ctx_, layer);
-              ctx_.__clearRegions();
-            }
-          },
+            fn(ctx_, g);
+
+            this.handleDrawResult(event, ctx_, layer);
+            ctx_.__clearRegions();
+          };
+          return drawFn as TDrawFunction;
+        },
       },
       { cache }
     );

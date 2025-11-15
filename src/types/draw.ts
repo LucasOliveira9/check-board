@@ -36,10 +36,6 @@ type TRender = {
   y: number;
 };
 
-type TDraw = {
-  layer: TCanvasLayer;
-};
-
 type TSafeCtx = Omit<
   CanvasRenderingContext2D,
   | "clearRect"
