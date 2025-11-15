@@ -112,6 +112,10 @@ class Renderer2D implements IRenderer2D {
     boardRuntime.draw.overlay();
   }
 
+  renderClientOverlayEvents() {
+    this.boardRuntime.draw.clientOverlayEvents();
+  }
+
   renderBoard(): void {
     const boardRuntime = this.boardRuntime,
       canvasLayers = boardRuntime.getCanvasLayers();

@@ -177,8 +177,7 @@ class Draw {
       renderer.resetToClear("underlay");
     }
 
-    //ctx?.clearRect(0, 0, size, size);
-    if (selectedRef?.id && ctx) {
+    if (selectedRef?.id && ctx && !events?.onPointerSelect) {
       const sqr = internalRef[selectedRef.id]
         ? Utils.squareToCoords(selectedRef.square, squareSize, isBlackView)
         : null;
@@ -193,31 +192,16 @@ class Draw {
           internalRef
         )?.piece;
 
-        const context = this.boardRuntime.getContext(true, {
-          squareSize,
+        this.iterator.defaultOnSelect({
+          ctx,
           x,
           y,
           size,
-          piece: piece_,
-          square: selectedRef.square,
+          squareSize,
+          getPiece: piece_,
+          getPiecesImage: piecesImage,
+          getSquare: selectedRef.square,
         });
-
-        events?.onPointerSelect
-          ? this.boardRuntime.helpers.triggerEvent(
-              events,
-              "onPointerSelect",
-              injection ? injection(context) : context
-            )
-          : this.iterator.defaultOnSelect({
-              ctx,
-              x,
-              y,
-              size,
-              squareSize,
-              getPiece: piece_,
-              getPiecesImage: piecesImage,
-              getSquare: selectedRef.square,
-            });
       }
     }
   }
@@ -240,9 +224,18 @@ class Draw {
       for (const coords of toClear) renderer.clearRect(coords, "overlay");
       renderer.resetToClear("overlay");
     }
+  }
 
-    //ctx?.clearRect(0, 0, size, size);
-    if (selectedRef?.id && ctx) {
+  clientOverlayEvents() {
+    const selectedRef = this.boardRuntime.getSelected(),
+      internalRef = this.boardRuntime.getInternalRefObj(),
+      isBlackView = this.boardRuntime.getIsBlackView(),
+      size = this.boardRuntime.getSize(),
+      squareSize = size / 8,
+      events = this.boardRuntime.getEvents(),
+      injection = this.boardRuntime.getInjection();
+
+    if (selectedRef?.id && events?.onPointerSelect) {
       const sqr = internalRef[selectedRef.id]
         ? Utils.squareToCoords(selectedRef.square, squareSize, isBlackView)
         : null;
@@ -266,22 +259,11 @@ class Draw {
           square: selectedRef.square,
         });
 
-        events?.onPointerSelect
-          ? this.boardRuntime.helpers.triggerEvent(
-              events,
-              "onPointerSelect",
-              injection ? injection(context) : context
-            )
-          : this.iterator.defaultOnSelect({
-              ctx,
-              x,
-              y,
-              size,
-              squareSize,
-              getPiece: piece_,
-              getPiecesImage: piecesImage,
-              getSquare: selectedRef.square,
-            });
+        this.boardRuntime.helpers.triggerEvent(
+          events,
+          "onPointerSelect",
+          injection ? injection(context) : context
+        );
       }
     }
   }

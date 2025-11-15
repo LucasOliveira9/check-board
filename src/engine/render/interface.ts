@@ -14,6 +14,7 @@ interface IRenderer {
   renderBoard(): void;
   renderDynamicPieces(): void;
   renderOverlay(): void;
+  renderClientOverlayEvents(): void;
   addDynamicPiece(id: TPieceId, piece: TPieceInternalRef): void;
   addStaticPiece(id: TPieceId, piece: TPieceInternalRef): void;
   deleteStaticPiece(id: TPieceId): void;

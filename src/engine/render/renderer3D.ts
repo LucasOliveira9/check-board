@@ -47,6 +47,10 @@ class Renderer3D implements IRenderer {
     throw new Error("Method not implemented.");
   }
 
+  renderClientOverlayEvents(): void {
+    throw new Error("Method not implemented.");
+  }
+
   clear(): void {
     throw new Error("Method not implemented.");
   }

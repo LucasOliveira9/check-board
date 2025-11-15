@@ -370,6 +370,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     if (this.destroyed) return;
     this.renderer.renderUnderlay();
     this.renderer.renderOverlay();
+    this.renderer.renderClientOverlayEvents();
   }
 
   clearAnimation() {
