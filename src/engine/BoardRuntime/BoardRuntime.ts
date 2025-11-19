@@ -6,7 +6,12 @@ import {
   TDrawFunction,
   TEvents,
 } from "../../types/events";
-import { TPieceBoard, TPieceId, TPieceInternalRef } from "../../types/piece";
+import {
+  TPiece,
+  TPieceBoard,
+  TPieceId,
+  TPieceInternalRef,
+} from "../../types/piece";
 import BoardEvents from "./BoardEvents";
 import EngineHelpers from "../helpers/engineHelpers";
 import { TFile, TNotation, TRank, TSquare } from "../../types/square";
@@ -33,6 +38,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected animationDuration: number = 400;
   protected piecesToRender: { piece: TPieceInternalRef; id: TPieceId }[] = [];
   protected isMoving: boolean = false;
+  protected board: TPieceBoard[] = [];
   public boardEvents: BoardEvents = new BoardEvents(this);
   public draw: Draw = new Draw(this);
   public helpers: EngineHelpers = new EngineHelpers(this);
@@ -42,6 +48,11 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     Object.assign(this, args);
     this.renderer =
       this.args.mode === "2d" ? new Renderer2D(this) : new Renderer3D(this);
+    if (Utils.validateFen(args.board)) this.board = Utils.parseFen(args.board);
+    else
+      this.board = Utils.parseFen(
+        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+      );
     this.init();
   }
 
@@ -134,7 +145,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   getBoard() {
-    return this.args.board;
+    return this.board;
   }
 
   getMove() {
@@ -291,26 +302,31 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.animationDuration = time;
   }
 
-  setBoard(board: TPieceBoard[] | undefined) {
-    board && (this.args.board = structuredClone(board));
+  setBoardByFen(board: string) {
+    if (!Utils.validateFen(board).status) return;
+    this.board = Utils.parseFen(board);
+    this.refreshCanvas();
+  }
+
+  setBoard(board: TPieceBoard[]) {
+    board && (this.board = structuredClone(board));
     this.refreshCanvas();
   }
 
   refreshCanvas() {
     this.helpers.pieceHelper.clearCache();
     this.clearAnimation();
-    //if (Utils.isRenderer2D(this.renderer)) this.renderer.resetStaticPieces();
     this.initInternalRef();
     this.renderPieces();
     this.renderUnderlayAndOverlay();
   }
 
   updateBoard(piece: TPieceBoard, enemie?: TPieceId) {
-    for (let i = this.args.board.length - 1; i >= 0; i--) {
-      const b = this.args.board[i];
+    for (let i = this.board.length - 1; i >= 0; i--) {
+      const b = this.board[i];
 
       if (b.id === piece.id) b.square = piece.square;
-      else if (b.id === enemie) this.args.board.splice(i, 1);
+      else if (b.id === enemie) this.board.splice(i, 1);
     }
   }
 
@@ -448,9 +464,9 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     const squareSize = this.args.size / 8;
 
     if (Utils.isRenderer2D(this.renderer))
-      this.renderer.clearStaticPieces(this.args.board);
+      this.renderer.clearStaticPieces(this.board);
 
-    for (const piece of this.args.board) {
+    for (const piece of this.board) {
       const lastExisting = this.args.defaultAnimation
         ? lastInternalRef[piece.id as TPieceId]
         : null;

@@ -31,7 +31,7 @@ interface TBoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   darkTile?: string;
   lightTile?: string;
   pieceConfig: TPieceConfig;
-  board: TPieceBoard[];
+  board: string;
   events?: TBoardEvents;
   injection?: TBoardInjection<T>;
   pieceStyle?: TPieceImage;
@@ -59,7 +59,7 @@ type TPieceConfig<T = unknown> =
 type TConfig<T extends TBoardEventContext = TBoardEventContext> = {
   isBlackView: boolean;
   size: number;
-  board: TPieceBoard[];
+  board: string;
   pieceConfig: TPieceConfig;
   lightTile?: string;
   darkTile?: string;

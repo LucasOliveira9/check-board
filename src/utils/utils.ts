@@ -2,6 +2,8 @@ import { TDrawRegion, TSafeCtx } from "../types/draw";
 import { IRenderer, IRenderer2D } from "../engine/render/interface";
 import { TSquare, TFile, TRank, TNotation } from "../types/square";
 import { TDeepReadonly } from "../types/utils";
+import BoardRuntime from "../engine/BoardRuntime/BoardRuntime";
+import { TPiece, TPieceBoard, TPieceId, TPieceType } from "../types/piece";
 
 class Utils {
   static files = "abcdefgh";
@@ -90,6 +92,118 @@ class Utils {
 
   static isRenderer2D(r: IRenderer): r is IRenderer2D {
     return "addToClear" in r;
+  }
+
+  static parseFen(fen: string) {
+    fen = fen.trim();
+    const board: TPieceBoard[] = [];
+    const isValidFen = this.validateFen(fen);
+    if (!isValidFen.status) return board;
+    const ranks = fen.split("/");
+    const isDigit = /^[1-8]$/;
+    const isWhite = /^[PNBRQK]$/;
+    const files = "abcdefgh";
+    const ids = {
+      p: 1,
+      n: 1,
+      b: 1,
+      r: 1,
+      q: 1,
+      k: 1,
+      P: 1,
+      N: 1,
+      B: 1,
+      R: 1,
+      Q: 1,
+      K: 1,
+    };
+
+    let rankNumber = 8;
+
+    for (const rank of ranks) {
+      let fileIndex = 0;
+      for (const ch of rank) {
+        if (isDigit.test(ch)) {
+          fileIndex += Number(ch);
+          continue;
+        }
+
+        const isWhitePiece = isWhite.test(ch);
+        const file_ = files[fileIndex] as TFile;
+        const rank_ = rankNumber as TRank;
+        const id = `${isWhitePiece ? "w" : "b"}${ch.toUpperCase()}${ids[
+          ch as keyof typeof ids
+        ]++}` as TPieceId;
+        const piece: TPieceBoard = {
+          square: {
+            file: file_,
+            rank: rank_,
+            notation: `${file_}${rank_}`,
+          },
+          type: `${isWhitePiece ? "w" : "b"}${ch.toUpperCase()}` as TPiece,
+          id,
+        };
+        board.push(piece);
+        fileIndex++;
+      }
+      rankNumber--;
+    }
+    return board;
+  }
+
+  static parseBoard(board: TPieceBoard[]) {
+    const files = "abcdefgh";
+
+    const map: Record<string, TPieceBoard | undefined> = {};
+    for (const piece of board) map[piece.square.notation] = piece;
+
+    let fen = "";
+    for (let rank = 8; rank >= 1; rank--) {
+      let empty = 0;
+      for (const file of files) {
+        const sq = `${file}${rank}`;
+        const piece = map[sq];
+
+        if (piece) {
+          if (empty > 0) {
+            fen += empty;
+            empty = 0;
+          }
+          const isWhite = piece.type.startsWith("w");
+          const ch = isWhite ? piece.type[1] : piece.type[1].toLowerCase();
+
+          fen += ch;
+        } else empty++;
+      }
+      if (empty > 0) fen += empty;
+      if (rank !== 1) fen += "/";
+    }
+    return fen;
+  }
+
+  static validateFen(fen: string) {
+    fen = fen.trim();
+    if (!/^(?:[pnbrqkPNBRQK1-8]+\/){7}[pnbrqkPNBRQK1-8]+$/.test(fen))
+      return { status: false, error: "Invalid format or characters" };
+
+    const ranks = fen.split("/");
+    if (ranks.length !== 8)
+      return { status: false, error: "Must contain exactly 8 ranks" };
+
+    const isDigit = /^[1-8]$/;
+    const isPiece = /^[pnbrqkPNBRQK]$/;
+
+    for (const rank of ranks) {
+      let count = 0;
+      for (const ch of rank) {
+        if (isDigit.test(ch)) count += Number(ch);
+        else if (isPiece.test(ch)) count += 1;
+        else return { status: false, error: `Invalid char '${ch}'` };
+      }
+      if (count !== 8)
+        return { status: false, error: `Rank '${rank}' does not sum to 8` };
+    }
+    return { status: true };
   }
 
   static createSafeCtx(ctx: CanvasRenderingContext2D) {

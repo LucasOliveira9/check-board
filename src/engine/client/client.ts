@@ -27,12 +27,12 @@ class Client {
     return this.getRuntime()?.getReadonlyInternalRef();
   }
 
-  public setBoard(board: TPieceBoard[]) {
-    this.getRuntime()?.setBoard(board);
+  public setBoard(board: string) {
+    this.getRuntime()?.setBoardByFen(board);
   }
 
-  public getBoard(): readonly TPieceBoard[] {
-    return this.getRuntime().getReadonlyBoard();
+  public getBoard(): string {
+    return Utils.parseBoard(this.getRuntime().getBoard());
   }
 
   public flip() {

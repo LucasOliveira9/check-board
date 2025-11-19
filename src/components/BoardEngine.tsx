@@ -6,6 +6,7 @@ import BoardRuntime from "../engine/BoardRuntime/BoardRuntime";
 import Client from "../engine/client/client";
 import React from "react";
 import { BoardHandled } from "../engine/client/interface";
+import Utils from "../utils/utils";
 
 const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
   ({ config, onMove, onUpdate }, ref) => {
@@ -19,17 +20,6 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
     const boardRuntime = useRef<BoardRuntime>(null);
     const clientRef = useRef<Client>(null);
 
-    /*useEffect(() => {
-      if (!boardRuntime.current) return;
-      boardRuntime.current.setSelected(null);
-      boardRuntime.current.setBoard(board);
-    }, [board]);
-
-    useEffect(() => {
-      if (!boardRuntime.current) return;
-      boardRuntime.current.setBlackView(isBlackView);
-    }, [isBlackView]);*/
-
     useEffect(() => {
       if (boardRuntime.current) {
         boardRuntime.current.destroy();
@@ -39,7 +29,6 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
         ...config,
         onMove,
         onUpdate,
-        board: structuredClone(config.board),
         canvasLayers: new CanvasLayers(
           boardCanvasRef,
           staticPiecesCanvasRef,
