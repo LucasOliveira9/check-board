@@ -180,6 +180,22 @@ class DefaultDraw {
             squareSize * this.scale,
             squareSize * this.scale
           );
+
+          if (
+            Utils.isRenderer2D(this.boardRuntime.renderer) &&
+            id === selectedRef?.id &&
+            selectedRef.isDragging
+          ) {
+            this.boardRuntime.renderer.addToClear(
+              {
+                x: piece.x - (squareSize * (this.scale - 1)) / 2,
+                y: piece.y - (squareSize * (this.scale - 1)) / 2,
+                w: squareSize * this.scale,
+                h: squareSize * this.scale,
+              },
+              "dynamicPieces"
+            );
+          }
         }
       } else if (typeof image === "string") {
         const image_ = image.length > 1 ? image[0] : image;
@@ -201,6 +217,22 @@ class DefaultDraw {
           piece.y + squareSize / 2
         );
         ctx.restore();
+
+        /*if (
+          Utils.isRenderer2D(this.boardRuntime.renderer) &&
+          id === selectedRef?.id &&
+          selectedRef.isDragging
+        ) {
+          this.boardRuntime.renderer.addToClear(
+            {
+              x: piece.x - (squareSize * (this.scale - 1)) / 2,
+              y: piece.y - (squareSize * (this.scale - 1)) / 2,
+              w: squareSize * this.scale,
+              h: squareSize * this.scale,
+            },
+            "dynamicPieces"
+          );
+        }*/
       }
       ctx.restore();
     }

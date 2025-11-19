@@ -337,7 +337,11 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   setPieceHover(piece: TPieceId | null) {
+    if (this.pieceHover === null && piece === null) return;
+    else if (this.pieceHover === piece) return;
     this.pieceHover = piece;
+    this.renderPieces();
+    this.renderer.renderClientOverlayEvents();
   }
 
   setBlackView(b: boolean) {
@@ -406,7 +410,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   ) {
     if (!Utils.isRenderer2D(this.renderer)) return;
     const regions = ctx_.__drawRegions;
-    console.log(regions);
+
     if (!regions.length) return;
     for (const coords of regions) this.renderer.addToClear(coords, layer);
   }

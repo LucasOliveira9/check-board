@@ -161,7 +161,7 @@ class Renderer2D implements IRenderer2D {
     opts: { canvas: TCanvasLayer; coords: TCanvasCoords }
   ) {
     if (!this.eventsMap[key]) this.eventsMap[key] = [];
-    else this.eventsMap[key].push(opts);
+    this.eventsMap[key].push(opts);
   }
 
   addAnimation(

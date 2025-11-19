@@ -118,8 +118,13 @@ class Draw {
       this.defaultDraw.drawDynamicPieces(time || 0);
     }
 
-    // draw hover piece
-    if (pieceHoverRef && !selectedRef?.isDragging && ctxDynamicPieces) {
+    // draw default hover piece
+    if (
+      pieceHoverRef &&
+      !selectedRef?.isDragging &&
+      ctxDynamicPieces &&
+      !events?.onPointerHover
+    ) {
       const piece = internalRef[pieceHoverRef];
       const canvas = this.boardRuntime
         .getCanvasLayers()
@@ -127,32 +132,17 @@ class Draw {
         ? this.boardRuntime.getCanvasLayers().getCanvas("dynamicPieces").current
         : undefined;
       if (piece && !piece.anim) {
-        const context = this.boardRuntime.getContext(true, {
+        this.iterator.defaultOnHover({
+          ctx: ctxDynamicPieces,
+          size,
           squareSize,
           x: piece.x,
           y: piece.y,
-          size,
+          canvas: canvas ? canvas : undefined,
           piece: piece,
           square: piece.square,
+          piecesImage: piecesImage,
         });
-
-        events?.onPointerHover
-          ? this.boardRuntime.helpers.triggerEvent(
-              events,
-              "onPointerHover",
-              injection ? injection(context) : context
-            )
-          : this.iterator.defaultOnHover({
-              ctx: ctxDynamicPieces,
-              size,
-              squareSize,
-              x: piece.x,
-              y: piece.y,
-              canvas: canvas ? canvas : undefined,
-              piece: piece,
-              square: piece.square,
-              piecesImage: piecesImage,
-            });
       }
     }
     this.boardRuntime.updateAnimation();
@@ -233,7 +223,8 @@ class Draw {
       size = this.boardRuntime.getSize(),
       squareSize = size / 8,
       events = this.boardRuntime.getEvents(),
-      injection = this.boardRuntime.getInjection();
+      injection = this.boardRuntime.getInjection(),
+      pieceHoverRef = this.boardRuntime.getPieceHover();
 
     if (selectedRef?.id && events?.onPointerSelect) {
       const sqr = internalRef[selectedRef.id]
@@ -262,6 +253,27 @@ class Draw {
         this.boardRuntime.helpers.triggerEvent(
           events,
           "onPointerSelect",
+          injection ? injection(context) : context
+        );
+      }
+    }
+
+    // Hover
+    if (pieceHoverRef && !selectedRef?.isDragging && events?.onPointerHover) {
+      const piece = internalRef[pieceHoverRef];
+      if (piece && !piece.anim) {
+        const context = this.boardRuntime.getContext(true, {
+          squareSize,
+          x: piece.x,
+          y: piece.y,
+          size,
+          piece: piece,
+          square: piece.square,
+        });
+
+        this.boardRuntime.helpers.triggerEvent(
+          events,
+          "onPointerHover",
           injection ? injection(context) : context
         );
       }

@@ -11,13 +11,18 @@ import { TFile, TNotation, TRank, TSquare } from "../../types/square";
 import { TPieceBoard, TPieceInternalRef } from "../../types/piece";
 import Utils from "../../utils/utils";
 import { TCanvasCoords } from "../../types/draw";
+import PointerEventsHelpers from "./pointerEventsHelpers";
 
 class EngineHelpers {
+  public pointerEventsHelper: PointerEventsHelpers;
   public pieceHelper: PieceHelpers = new PieceHelpers();
-  constructor(protected boardRuntime: BoardRuntime) {}
+  constructor(protected boardRuntime: BoardRuntime) {
+    this.pointerEventsHelper = new PointerEventsHelpers(this.boardRuntime);
+  }
 
   destroy() {
     this.pieceHelper.destroy();
+    this.pointerEventsHelper.destroy();
     for (const key of Object.getOwnPropertyNames(this)) {
       (this as any)[key] = null;
     }
@@ -100,68 +105,8 @@ class EngineHelpers {
     return res;
   }
 
-  detectMove(e: React.PointerEvent<HTMLCanvasElement>) {
-    const { offsetX, offsetY } = Utils.getCanvasCoords(e);
-    const selected = this.boardRuntime.getSelected();
-    const squareSize = this.boardRuntime.getSize() / 8,
-      isBlackView = this.boardRuntime.getIsBlackView();
-    const piece = selected && this.boardRuntime.getInternalRefVal(selected.id);
-
-    const sqr = Utils.coordsToSquare(offsetX, offsetY, squareSize, isBlackView);
-    const coords = Utils.squareToCoords(sqr, squareSize, isBlackView);
-    if (selected && selected.isDragging) {
-      if (Utils.isRenderer2D(this.boardRuntime.renderer) && piece) {
-        this.boardRuntime.renderer.clearRect(
-          { x: piece.x, y: piece.y, w: squareSize, h: squareSize },
-          "dynamicPieces"
-        );
-      }
-      if (piece && sqr && coords) {
-        const { x, y } = coords;
-        piece.square = sqr;
-        piece.x = x;
-        piece.y = y;
-      }
-    }
-
-    const square = Utils.coordsToSquare(
-      offsetX,
-      offsetY,
-      squareSize,
-      isBlackView
-    );
-
-    if (selected && square?.notation === selected.square.notation) {
-      selected &&
-        this.boardRuntime.setSelected({
-          ...selected,
-          isDragging: false,
-          startX: null,
-          startY: null,
-        });
-
-      return { from: null, to: null, piece: null };
-    } else if (!selected || !square || !piece) {
-      selected &&
-        this.boardRuntime.setSelected({
-          ...selected,
-          isDragging: false,
-          startX: null,
-          startY: null,
-        });
-
-      return { from: null, to: null, piece: null };
-    }
-    const piece_ = this.boardRuntime
-      .getBoard()
-      .find((curr) => curr.id === selected.id);
-    if (piece_) {
-      return { from: selected.square, to: square, piece: piece_ };
-    }
-    return { from: null, to: null, piece: null };
-  }
-
   move(from: TNotation, to: TNotation, piece: TPieceBoard) {
+    if (from === to) return false;
     const piece_ = this.boardRuntime.getInternalRefVal(piece.id);
     // IMPLEMENTAR LÓGICA DO CLIENT MOVE
     const moveCallback = this.boardRuntime.getMove();
@@ -170,13 +115,14 @@ class EngineHelpers {
       if (move) {
         this.boardRuntime.setSelected(null);
         this.boardRuntime.updateBoardState(from, to, piece);
+        this.boardRuntime.renderPieces();
         return true;
       } else {
         const selected = this.boardRuntime.getSelected();
         selected && ((piece_.x = selected.x), (piece_.y = selected.y)),
           (piece_.square = piece.square);
         this.boardRuntime.setSelected(null);
-        this.boardRuntime.setBoard(this.boardRuntime.getBoard());
+        //this.boardRuntime.setBoard(this.boardRuntime.getBoard());
         return false;
       }
     } else {
