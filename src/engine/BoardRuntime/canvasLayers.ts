@@ -1,4 +1,5 @@
-import { TCanvasLayer } from "../../types/draw";
+import Utils from "../../utils/utils";
+import { TCanvasLayer, TDrawRegion, TSafeCtx } from "../../types/draw";
 
 class CanvasLayers {
   private staticPiecesCanvas: React.RefObject<HTMLCanvasElement | null>;
@@ -7,11 +8,50 @@ class CanvasLayers {
   private underlayCanvas: React.RefObject<HTMLCanvasElement | null>;
   private dynamicPiecesCanvas: React.RefObject<HTMLCanvasElement | null>;
 
-  private staticPiecesCtx: CanvasRenderingContext2D | null = null;
-  private boardCtx: CanvasRenderingContext2D | null = null;
-  private overlayCtx: CanvasRenderingContext2D | null = null;
-  private underlayCtx: CanvasRenderingContext2D | null = null;
-  private dynamicPiecesCtx: CanvasRenderingContext2D | null = null;
+  private staticPiecesCtx:
+    | (CanvasRenderingContext2D & {
+        __drawRegions: TDrawRegion[];
+        __clearRegions: () => void;
+      })
+    | null = null;
+  private boardCtx:
+    | (CanvasRenderingContext2D & {
+        __drawRegions: TDrawRegion[];
+        __clearRegions: () => void;
+      })
+    | null = null;
+  private overlayCtx:
+    | (CanvasRenderingContext2D & {
+        __drawRegions: TDrawRegion[];
+        __clearRegions: () => void;
+      })
+    | null = null;
+  private underlayCtx:
+    | (CanvasRenderingContext2D & {
+        __drawRegions: TDrawRegion[];
+        __clearRegions: () => void;
+      })
+    | null = null;
+  private dynamicPiecesCtx:
+    | (CanvasRenderingContext2D & {
+        __drawRegions: TDrawRegion[];
+        __clearRegions: () => void;
+      })
+    | null = null;
+
+  private clientStaticPiecesCtx: TSafeCtx | null = null;
+  private clientBoardCtx: TSafeCtx | null = null;
+  private clientOverlayCtx: TSafeCtx | null = null;
+  private clientUnderlayCtx: TSafeCtx | null = null;
+  private clientDynamicPiecesCtx: TSafeCtx | null = null;
+
+  private clientCtxMap = {
+    staticPieces: this.clientStaticPiecesCtx,
+    board: this.clientBoardCtx,
+    overlay: this.clientOverlayCtx,
+    underlay: this.clientUnderlayCtx,
+    dynamicPieces: this.clientDynamicPiecesCtx,
+  };
 
   private overlayOffscreen!: OffscreenCanvas;
   private underlayOffscreen!: OffscreenCanvas;
@@ -51,9 +91,12 @@ class CanvasLayers {
 
   getContext(canvas: TCanvasLayer) {
     if (this[`${canvas}Ctx`] === null && this[`${canvas}Canvas`].current)
-      this[`${canvas}Ctx`] =
-        this[`${canvas}Canvas`].current?.getContext("2d") || null;
+      this.setContext();
     return this[`${canvas}Ctx`];
+  }
+
+  getClientContext(canvas: TCanvasLayer) {
+    return this.clientCtxMap[canvas];
   }
 
   getCanvas(canvas: TCanvasLayer) {
@@ -122,13 +165,45 @@ class CanvasLayers {
   }
 
   private setContext() {
-    this.staticPiecesCtx =
-      this.staticPiecesCanvas.current?.getContext("2d") ?? null;
-    this.boardCtx = this.boardCanvas.current?.getContext("2d") ?? null;
-    this.overlayCtx = this.overlayCanvas.current?.getContext("2d") ?? null;
-    this.underlayCtx = this.underlayCanvas.current?.getContext("2d") ?? null;
-    this.dynamicPiecesCtx =
-      this.dynamicPiecesCanvas.current?.getContext("2d") ?? null;
+    const staticPiecesCtx = this.staticPiecesCanvas.current?.getContext("2d");
+    const boardCtx = this.boardCanvas.current?.getContext("2d");
+    const overlayCtx = this.overlayCanvas.current?.getContext("2d");
+    const underlayCtx = this.underlayCanvas.current?.getContext("2d");
+    const dynamicPiecesCtx = this.dynamicPiecesCanvas.current?.getContext("2d");
+    // base ctx
+    this.staticPiecesCtx = staticPiecesCtx
+      ? Utils.createBaseCtx(staticPiecesCtx)
+      : null;
+    this.boardCtx = boardCtx ? Utils.createBaseCtx(boardCtx) : null;
+    this.overlayCtx = overlayCtx ? Utils.createBaseCtx(overlayCtx) : null;
+    this.underlayCtx = underlayCtx ? Utils.createBaseCtx(underlayCtx) : null;
+    this.dynamicPiecesCtx = dynamicPiecesCtx
+      ? Utils.createBaseCtx(dynamicPiecesCtx)
+      : null;
+    // client ctx
+    this.clientStaticPiecesCtx = this.staticPiecesCtx
+      ? Utils.createSafeCtx(this.staticPiecesCtx)
+      : null;
+    this.clientBoardCtx = this.boardCtx
+      ? Utils.createSafeCtx(this.boardCtx)
+      : null;
+    this.clientOverlayCtx = this.overlayCtx
+      ? Utils.createSafeCtx(this.overlayCtx)
+      : null;
+    this.clientUnderlayCtx = this.underlayCtx
+      ? Utils.createSafeCtx(this.underlayCtx)
+      : null;
+    this.clientDynamicPiecesCtx = this.dynamicPiecesCtx
+      ? Utils.createSafeCtx(this.dynamicPiecesCtx)
+      : null;
+
+    this.clientCtxMap = {
+      staticPieces: this.clientStaticPiecesCtx,
+      board: this.clientBoardCtx,
+      overlay: this.clientOverlayCtx,
+      underlay: this.clientUnderlayCtx,
+      dynamicPieces: this.clientDynamicPiecesCtx,
+    };
   }
 
   setQuality() {

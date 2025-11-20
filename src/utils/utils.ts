@@ -96,7 +96,10 @@ class Utils {
 
   static parseFen(fen: string) {
     fen = fen.trim();
-    const board: TPieceBoard[] = [];
+    const board: Record<TNotation, TPieceBoard> = {} as Record<
+      TNotation,
+      TPieceBoard
+    >;
     const isValidFen = this.validateFen(fen);
     if (!isValidFen.status) return board;
     const ranks = fen.split("/");
@@ -143,7 +146,7 @@ class Utils {
           type: `${isWhitePiece ? "w" : "b"}${ch.toUpperCase()}` as TPiece,
           id,
         };
-        board.push(piece);
+        board[`${file_}${rank_}`] = piece;
         fileIndex++;
       }
       rankNumber--;
@@ -151,18 +154,15 @@ class Utils {
     return board;
   }
 
-  static parseBoard(board: TPieceBoard[]) {
+  static parseBoard(board: Record<TNotation, TPieceBoard>) {
     const files = "abcdefgh";
-
-    const map: Record<string, TPieceBoard | undefined> = {};
-    for (const piece of board) map[piece.square.notation] = piece;
 
     let fen = "";
     for (let rank = 8; rank >= 1; rank--) {
       let empty = 0;
       for (const file of files) {
-        const sq = `${file}${rank}`;
-        const piece = map[sq];
+        const sq = `${file}${rank}` as TNotation;
+        const piece = board[sq];
 
         if (piece) {
           if (empty > 0) {
@@ -206,33 +206,29 @@ class Utils {
     return { status: true };
   }
 
-  static createSafeCtx(ctx: CanvasRenderingContext2D) {
-    const forbiddenMethods = new Set([
-      "clearRect",
-      "reset",
-      "resetTransform",
-      "restore",
-      "save",
-      "scale",
-      "rotate",
-      "translate",
-      "transform",
-      "setTransform",
-      "clip",
-      "arcTo",
-    ]);
-
-    const forbiddenProps = new Set([
-      "canvas",
-      "filter",
-      "globalAlpha",
-      "globalCompositeOperation",
-    ]);
-
+  static createBaseCtx(ctx: CanvasRenderingContext2D) {
     const cache = new Map<PropertyKey, any>();
     let currentPath: { x: number; y: number }[] = [];
     const recordedRegions: TDrawRegion[] = [];
 
+    // ---- NOVO: expansão automática pelo shadow ----
+    function expandForShadow(x: number, y: number, w: number, h: number) {
+      const blur = ctx.shadowBlur || 0;
+      const ox = ctx.shadowOffsetX || 0;
+      const oy = ctx.shadowOffsetY || 0;
+
+      const padX = Math.abs(ox) + blur;
+      const padY = Math.abs(oy) + blur;
+
+      return {
+        x: x - padX,
+        y: y - padY,
+        w: w + padX * 2,
+        h: h + padY * 2,
+      };
+    }
+
+    // ---- MODIFICADO: utiliza expandForShadow() ----
     function recordRegion(
       type: string,
       x: number,
@@ -242,7 +238,16 @@ class Utils {
     ) {
       if (!Number.isFinite(x) || !Number.isFinite(y) || w <= 0 || h <= 0)
         return;
-      recordedRegions.push({ x, y, w, h, type });
+
+      const s = expandForShadow(x, y, w, h);
+
+      recordedRegions.push({
+        x: s.x,
+        y: s.y,
+        w: s.w,
+        h: s.h,
+        type,
+      });
     }
 
     function sampleQuadratic(p0: any, p1: any, p2: any, step = 0.05) {
@@ -281,18 +286,11 @@ class Utils {
       return match ? parseFloat(match[1]) : 16;
     }
 
-    const safeCtx = new Proxy(ctx, {
-      get(target, prop: string, receiver) {
+    const baseCtx = new Proxy(ctx, {
+      get(target, prop: string) {
         if (cache.has(prop)) return cache.get(prop);
+        const value = (target as any)[prop];
 
-        if (forbiddenMethods.has(prop)) {
-          const blocked = () =>
-            console.warn(`⚠️ [SafeCtx] Access to ${prop}() is restricted.`);
-          cache.set(prop, blocked);
-          return blocked;
-        }
-
-        const value = Reflect.get(target, prop, receiver);
         if (typeof value !== "function") {
           cache.set(prop, value);
           return value;
@@ -390,6 +388,7 @@ class Utils {
                   const maxX = Math.max(...xs);
                   const maxY = Math.max(...ys);
                   const pad = Math.max((ctx.lineWidth ?? 1) * 0.75, 1);
+
                   recordRegion(
                     prop,
                     minX - pad,
@@ -420,10 +419,7 @@ class Utils {
                 )
                   break;
 
-                // Extrai o tamanho da fonte atual (ex: "20px monospace" → 20)
                 const fontSize = getFontSize(ctx);
-
-                // Mede o texto com base na fonte atual
                 const metrics = ctx.measureText(text);
                 const ascent =
                   metrics.actualBoundingBoxAscent || fontSize * 0.8;
@@ -431,16 +427,13 @@ class Utils {
                   metrics.actualBoundingBoxDescent || fontSize * 0.2;
                 const width = metrics.width || text.length * fontSize * 0.5;
 
-                // Padding assimétrico
-                const padTop = fontSize * 0.35; // um pouco maior no topo
-                const padBottom = fontSize * 0.15; // menor embaixo
-                const padSides = fontSize * 0.2; // menor nas laterais
+                const padTop = fontSize * 0.35;
+                const padBottom = fontSize * 0.15;
+                const padSides = fontSize * 0.2;
 
-                // Base inicial do bounding box
                 let leftX = x;
                 let topY = y - ascent;
 
-                // Ajuste horizontal conforme textAlign
                 switch (ctx.textAlign) {
                   case "center":
                     leftX = x - width / 2;
@@ -449,10 +442,8 @@ class Utils {
                   case "end":
                     leftX = x - width;
                     break;
-                  // left/start = default
                 }
 
-                // Ajuste vertical conforme baseline
                 switch (ctx.textBaseline) {
                   case "top":
                     topY = y;
@@ -466,20 +457,12 @@ class Utils {
                   case "alphabetic":
                   default:
                     topY = y - ascent;
-                    break;
                 }
 
-                // Dimensões finais
                 const rectX = leftX - padSides;
                 const rectY = topY - padTop;
                 const rectW = width + padSides * 2;
                 const rectH = ascent + descent + padTop + padBottom;
-
-                // Debug visual opcional (ver bordas)
-                /*ctx.save();
-                ctx.strokeStyle = "rgba(255,0,0,0.4)";
-                ctx.strokeRect(rectX, rectY, rectW, rectH);
-                ctx.restore();*/
 
                 recordRegion(prop, rectX, rectY, rectW, rectH);
                 break;
@@ -511,6 +494,7 @@ class Utils {
                 }
 
                 const pad = Math.max((ctx.lineWidth ?? 1) * 0.75, 1);
+
                 recordRegion(
                   "drawImage",
                   dx - pad,
@@ -525,12 +509,69 @@ class Utils {
             console.warn(`[SafeCtx:${prop}]`, err);
           }
 
-          return value.apply(ctx, args);
+          return value.apply(target, args);
         };
 
-        const bound = wrapped.bind(ctx);
+        const bound = wrapped.bind(target);
         cache.set(prop, bound);
         return bound;
+      },
+
+      set(target, prop, value) {
+        (target as any)[prop] = value;
+        return true;
+      },
+    });
+
+    (baseCtx as any).__drawRegions = recordedRegions;
+    (baseCtx as any).__currentPath = currentPath;
+    (baseCtx as any).__clearRegions = () => (recordedRegions.length = 0);
+
+    return baseCtx as CanvasRenderingContext2D & {
+      __drawRegions: TDrawRegion[];
+      __clearRegions: () => void;
+    };
+  }
+
+  static createSafeCtx(ctx: CanvasRenderingContext2D) {
+    const forbiddenMethods = new Set([
+      "clearRect",
+      "reset",
+      "resetTransform",
+      "restore",
+      "save",
+      "scale",
+      "rotate",
+      "translate",
+      "transform",
+      "setTransform",
+      "clip",
+      "arcTo",
+    ]);
+
+    const forbiddenProps = new Set([
+      "canvas",
+      "filter",
+      "globalAlpha",
+      "globalCompositeOperation",
+    ]);
+
+    const cache = new Map<PropertyKey, any>();
+
+    const safeCtx = new Proxy(ctx, {
+      get(target, prop: string, receiver) {
+        if (cache.has(prop)) return cache.get(prop);
+
+        if (forbiddenMethods.has(prop)) {
+          const blocked = () =>
+            console.warn(`⚠️ [SafeCtx] Access to ${prop}() is restricted.`);
+          cache.set(prop, blocked);
+          return blocked;
+        }
+
+        const value = (target as any)[prop];
+        cache.set(prop, value);
+        return value;
       },
 
       set(target, prop, value) {
@@ -545,14 +586,7 @@ class Utils {
       },
     });
 
-    (safeCtx as any).__drawRegions = recordedRegions;
-    (safeCtx as any).__currentPath = currentPath;
-    (safeCtx as any).__clearRegions = () => (recordedRegions.length = 0);
-
-    return safeCtx as CanvasRenderingContext2D & {
-      __drawRegions: TDrawRegion[];
-      __clearRegions: () => void;
-    };
+    return safeCtx as TSafeCtx;
   }
 }
 

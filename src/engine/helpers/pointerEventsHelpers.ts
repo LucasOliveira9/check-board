@@ -64,9 +64,7 @@ class PointerEventsHelpers {
 
       return { from: null, to: null, piece: null };
     }
-    const piece_ = this.boardRuntime
-      .getBoard()
-      .find((curr) => curr.id === selected.id);
+    const piece_ = this.boardRuntime.getBoard()[selected.square.notation];
     if (piece_) {
       return { from: selected.square, to: square, piece: piece_ };
     }

@@ -114,32 +114,19 @@ class EngineHelpers {
       const move = moveCallback({ from, to, piece });
       if (move) {
         this.boardRuntime.setSelected(null);
-        this.boardRuntime.updateBoardState(from, to, piece);
-        this.boardRuntime.renderPieces();
+        this.boardRuntime.updateBoardState(from, to);
         return true;
       } else {
         const selected = this.boardRuntime.getSelected();
         selected && ((piece_.x = selected.x), (piece_.y = selected.y)),
           (piece_.square = piece.square);
         this.boardRuntime.setSelected(null);
-        //this.boardRuntime.setBoard(this.boardRuntime.getBoard());
         return false;
       }
     } else {
       // DEFAULT
-      piece.square = {
-        file: to.charAt(0) as TFile,
-        rank: parseInt(to.charAt(1), 10) as TRank,
-        notation: to,
-      };
       this.boardRuntime.setSelected(null);
-      this.boardRuntime.initInternalRef(true);
-      this.boardRuntime.helpers.pieceHelper.updateCache(from, to, {
-        id: piece?.id,
-        piece: this.boardRuntime.getInternalRefVal(piece.id),
-      });
-      this.boardRuntime.renderPieces();
-      //this.boardRuntime.renderUnderlayAndOverlay();
+      this.boardRuntime.updateBoardState(from, to);
     }
     return true;
   }

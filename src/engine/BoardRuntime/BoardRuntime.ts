@@ -28,7 +28,6 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     TPieceId,
     TPieceInternalRef
   >;
-  private internalRefClone: Record<TPieceId, TPieceInternalRef> | null = null;
   protected selected: TSelected | null = null;
   protected pieceHover: TPieceId | null = null;
   protected animation: TAnimation = [];
@@ -38,7 +37,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected animationDuration: number = 400;
   protected piecesToRender: { piece: TPieceInternalRef; id: TPieceId }[] = [];
   protected isMoving: boolean = false;
-  protected board: TPieceBoard[] = [];
+  protected board: Record<TNotation, TPieceBoard>;
   public boardEvents: BoardEvents = new BoardEvents(this);
   public draw: Draw = new Draw(this);
   public helpers: EngineHelpers = new EngineHelpers(this);
@@ -192,6 +191,10 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     return Utils.deepFreeze(this.getBoard());
   }
 
+  getDefaultAnimation() {
+    return this.args.defaultAnimation;
+  }
+
   getContext(cache: boolean, args: TBoardEventContext) {
     const { squareSize, size, x, y, piece, square } = args;
 
@@ -216,13 +219,15 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
             layer: TCanvasLayer;
           }) => {
             const { onDraw, layer } = opts;
-            const context_ = this.getCanvasLayers().getContext(layer);
-            if (!context_) return;
-
-            const ctx_ = Utils.createSafeCtx(context_);
+            const ctx_ = this.getCanvasLayers().getClientContext(layer);
+            if (!ctx_) return;
             onDraw(ctx_);
-            this.handleDrawResult(event, ctx_, layer);
-            ctx_.__clearRegions();
+            const clearCtx = ctx_ as TSafeCtx & {
+              __drawRegions: TDrawRegion[];
+              __clearRegions: () => void;
+            };
+            this.handleDrawResult(event, clearCtx, layer);
+            clearCtx.__clearRegions();
           };
 
           drawFn.batch = (
@@ -264,17 +269,19 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
               g: { draw: (onDraw: (ctx: TSafeCtx) => void) => void }
             ) => void
           ) => {
-            const context_ = this.getCanvasLayers().getContext(layer);
-            if (!context_) return;
+            const ctx_ = this.getCanvasLayers().getClientContext(layer);
+            if (!ctx_) return;
 
-            const ctx_ = Utils.createSafeCtx(context_);
             const g = {
               draw: (onDraw: (ctx: TSafeCtx) => void) => onDraw(ctx_),
             };
             fn(ctx_, g);
-
-            this.handleDrawResult(event, ctx_, layer);
-            ctx_.__clearRegions();
+            const clearCtx = ctx_ as TSafeCtx & {
+              __drawRegions: TDrawRegion[];
+              __clearRegions: () => void;
+            };
+            this.handleDrawResult(event, clearCtx, layer);
+            clearCtx.__clearRegions();
           };
           return drawFn as TDrawFunction;
         },
@@ -308,7 +315,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.refreshCanvas();
   }
 
-  setBoard(board: TPieceBoard[]) {
+  setBoard(board: Record<TNotation, TPieceBoard>) {
     board && (this.board = structuredClone(board));
     this.refreshCanvas();
   }
@@ -321,13 +328,8 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.renderUnderlayAndOverlay();
   }
 
-  updateBoard(piece: TPieceBoard, enemie?: TPieceId) {
-    for (let i = this.board.length - 1; i >= 0; i--) {
-      const b = this.board[i];
-
-      if (b.id === piece.id) b.square = piece.square;
-      else if (b.id === enemie) this.board.splice(i, 1);
-    }
+  updateBoard(piece: TPieceBoard) {
+    this.board[piece.square.notation] = piece;
   }
 
   setInternalRefVal(key: TPieceId, obj: TPieceInternalRef) {
@@ -431,57 +433,47 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     for (const coords of regions) this.renderer.addToClear(coords, layer);
   }
 
-  updateBoardState(from: TNotation, to: TNotation, piece: TPieceBoard) {
-    const newBoard: TPieceBoard[] = [];
+  updateBoardState(from: TNotation, to: TNotation) {
+    const piece = this.board[from];
+    let enemie = this.board[to];
+    piece.square = {
+      file: to.charAt(0) as TFile,
+      rank: parseInt(to.charAt(1)) as TRank,
+      notation: to,
+    };
 
-    for (const piece of this.getBoard()) {
-      if (piece.square.notation === to) continue;
-      else if (piece.square.notation !== from) {
-        newBoard.push({ ...piece });
-        continue;
-      }
-      newBoard.push({
-        ...piece,
-        square: {
-          file: to.charAt(0) as TFile,
-          rank: parseInt(to.charAt(1)) as TRank,
-          notation: to,
-        },
-      });
-    }
-    this.setBoard(newBoard);
+    this.board[to] = piece;
+    delete this.board[from];
+
+    enemie && this.deleteIntervalRefVal(enemie.id);
+    (enemie as any) = null;
+
+    this.refreshCanvas();
+
     if (this.args.onUpdate) {
       this.args.onUpdate();
     }
   }
 
-  initInternalRef(internal?: boolean) {
-    this.internalRefClone = structuredClone(this.internalRef);
-    const lastInternalRef = this.internalRefClone;
-
-    if (!internal)
-      this.setInternalRefObj({} as Record<TPieceId, TPieceInternalRef>);
+  initInternalRef() {
     const squareSize = this.args.size / 8;
+    const ids = Object.values(this.board);
+    Utils.isRenderer2D(this.renderer) && this.renderer.clearStaticPieces(ids);
 
-    if (Utils.isRenderer2D(this.renderer))
-      this.renderer.clearStaticPieces(this.board);
-
-    for (const piece of this.board) {
-      const lastExisting = this.args.defaultAnimation
-        ? lastInternalRef[piece.id as TPieceId]
-        : null;
-      const existing = internal ? this.internalRef[piece.id as TPieceId] : null;
+    for (const piece of Object.values(this.board)) {
+      const existing = this.internalRef[piece.id];
 
       if (existing && existing.square.notation === piece.square.notation)
         continue;
-      const currInternal = existing ? existing : lastExisting;
+
       const square =
         piece.square &&
         Utils.squareToCoords(piece.square, squareSize, this.args.isBlackView);
 
       if (!square) continue;
-      const startX = currInternal?.x ?? square.x;
-      const startY = currInternal?.y ?? square.y;
+      const startX = square.x;
+      const startY = square.y;
+
       const ref: TPieceInternalRef = {
         square: piece.square,
         type: piece.type,
@@ -490,42 +482,43 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       };
 
       this.setInternalRefVal(piece.id as TPieceId, ref);
-
-      if (
-        currInternal &&
-        piece.square.notation !== currInternal.square.notation
-      ) {
-        if (!this.getEvents()?.onDrawPiece) {
+      if (!existing) {
+        this.renderer.addStaticPiece(piece.id, ref);
+        continue;
+      }
+      if (piece.square.notation !== existing.square.notation) {
+        if (!this.getEvents()?.onDrawPiece && this.args.defaultAnimation) {
           ref.anim = true;
           this.setIsMoving(true);
         }
         this.animation.push({
-          from: { x: startX, y: startY },
+          from: { x: existing.x, y: existing.y },
           to: { x: square.x, y: square.y },
           piece: ref,
           start: performance.now(),
           id: piece.id,
         });
 
-        if (Utils.isRenderer2D(this.renderer))
-          this.renderer.addToClear(
-            {
-              x: startX,
-              y: startY,
-              w: squareSize,
-              h: squareSize,
-            },
-            "staticPieces"
-          );
-
-        this.renderer.deleteStaticPiece(piece.id);
-        this.renderer.addDynamicPiece(piece.id, ref);
-      } else {
-        this.renderer.deleteDynamicPiece(piece.id);
-        this.renderer.addStaticPiece(piece.id, ref);
+        if (this.args.defaultAnimation) {
+          this.renderer.deleteStaticPiece(piece.id);
+          this.renderer.addDynamicPiece(piece.id, ref);
+        } else {
+          this.renderer.deleteStaticPiece(piece.id);
+          this.renderer.addStaticPiece(piece.id, ref);
+        }
       }
     }
-    this.internalRefClone = null;
+    this.deleteInternalRef(ids);
+  }
+
+  private deleteInternalRef(pieces: TPieceBoard[]) {
+    const nextIds = new Set(pieces.map((p) => p.id));
+
+    for (const id in this.internalRef) {
+      if (!nextIds.has(id as TPieceId)) {
+        delete this.internalRef[id as TPieceId];
+      }
+    }
   }
 }
 

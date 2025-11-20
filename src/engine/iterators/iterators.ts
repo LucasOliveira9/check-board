@@ -4,7 +4,7 @@ import { TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 
 class Iterators {
-  private scale = 1.03;
+  private scale = 1.05;
   constructor(protected boardRuntime: BoardRuntime) {}
 
   destroy() {
@@ -22,7 +22,7 @@ class Iterators {
     if (!ctx) return;
     const SELECT_COLOR = "#ffc400ff";
     const SELECT_GLOW = "rgba(255, 196, 0, 0.75)";
-
+    ctx.save();
     ctx.beginPath();
     ctx.arc(
       x + squareSize / 2,
@@ -36,27 +36,8 @@ class Iterators {
     ctx.fillStyle = SELECT_GLOW;
     ctx.stroke();
     ctx.fill();
-
-    const cx = x + squareSize / 2;
-    const cy = y + squareSize / 2;
-    const r = squareSize * 0.35;
-
-    const clearX = cx - r;
-    const clearY = cy - r;
-    const clearW = r * 2;
-    const clearH = r * 2;
-    const pad = ctx.lineWidth ?? 2;
-
-    Utils.isRenderer2D(this.boardRuntime.renderer) &&
-      this.boardRuntime.renderer.addEvent("onPointerSelect", {
-        canvas: "underlay",
-        coords: {
-          x: clearX - pad,
-          y: clearY - pad,
-          w: clearW + pad * 2,
-          h: clearH + pad * 2,
-        },
-      });
+    ctx.restore();
+    this.boardRuntime.handleDrawResult("onPointerSelect", ctx, "underlay");
   }
 
   defaultOnHover<T extends TBoardEventContext = TBoardEventContext>(args: T) {
@@ -66,16 +47,18 @@ class Iterators {
     const image = piecesImage?.[piece.type];
 
     ctx.save();
-    ctx.shadowColor = "rgba(0,0,0,0.3)";
+    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
     ctx.shadowBlur = 10;
-    ctx.shadowOffsetX = 3;
-    ctx.shadowOffsetY = 3;
+    ctx.shadowOffsetX = 5;
+    ctx.shadowOffsetY = 5;
 
     if (image instanceof HTMLImageElement)
       this.drawOnHoverHTML(image, ctx, piece, squareSize);
     else if (typeof image === "string")
       this.drawOnHoverText(image, ctx, piece, squareSize);
     ctx.restore();
+
+    this.boardRuntime.handleDrawResult("onPointerHover", ctx, "dynamicPieces");
 
     if ("clearCache" in args && typeof args["clearCache"] === "function")
       (args as any).clearCache();
@@ -95,16 +78,6 @@ class Iterators {
         squareSize * this.scale,
         squareSize * this.scale
       );
-      Utils.isRenderer2D(this.boardRuntime.renderer) &&
-        this.boardRuntime.renderer.addToClear(
-          {
-            x: piece.x - (squareSize * (this.scale - 1)) / 2,
-            y: piece.y - (squareSize * (this.scale - 1)) / 2,
-            w: squareSize * this.scale,
-            h: squareSize * this.scale,
-          },
-          "dynamicPieces"
-        );
     }
   }
 
@@ -141,17 +114,6 @@ class Iterators {
       fontSize + padding
     );
     ctx.restore();*/
-
-    Utils.isRenderer2D(this.boardRuntime.renderer) &&
-      this.boardRuntime.renderer.addToClear(
-        {
-          x: piece.x + squareSize / 2 - textWidth / 2 - padding / 2,
-          y: piece.y + squareSize / 2 - fontSize / 2 - padding / 2,
-          w: textWidth + padding,
-          h: fontSize + padding,
-        },
-        "dynamicPieces"
-      );
   }
 
   drawOnHoverPath() {}
