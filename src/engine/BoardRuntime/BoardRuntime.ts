@@ -423,14 +423,15 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     event: TEvents,
     ctx_: TSafeCtx & {
       __drawRegions: TDrawRegion[];
+      __clearRegions: () => void;
     },
     layer: TCanvasLayer
   ) {
     if (!Utils.isRenderer2D(this.renderer)) return;
     const regions = ctx_.__drawRegions;
-
     if (!regions.length) return;
     for (const coords of regions) this.renderer.addToClear(coords, layer);
+    ctx_.__clearRegions();
   }
 
   updateBoardState(from: TNotation, to: TNotation) {
