@@ -227,7 +227,6 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
               __clearRegions: () => void;
             };
             this.handleDrawResult(event, clearCtx, layer);
-            clearCtx.__clearRegions();
           };
 
           drawFn.batch = (
@@ -281,7 +280,6 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
               __clearRegions: () => void;
             };
             this.handleDrawResult(event, clearCtx, layer);
-            clearCtx.__clearRegions();
           };
           return drawFn as TDrawFunction;
         },
