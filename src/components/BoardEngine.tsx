@@ -7,6 +7,7 @@ import Client from "../engine/client/client";
 import React from "react";
 import { BoardHandled } from "../engine/client/interface";
 import Utils from "../utils/utils";
+import imperativeHandle from "engine/client/imperativeHandle";
 
 const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
   ({ config, onMove, onUpdate }, ref) => {
@@ -58,36 +59,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
       };
     }, []);
 
-    if (import.meta.hot) {
-      import.meta.hot.dispose(() => {
-        boardRuntime.current?.destroy();
-        boardRuntime.current = null;
-        boardCanvasRef.current = null;
-        staticPiecesCanvasRef.current = null;
-        overlayCanvasRef.current = null;
-        underlayCanvasRef.current = null;
-        dynamicPiecesCanvasRef.current = null;
-      });
-    }
-
-    useImperativeHandle(ref, () => ({
-      loadPosition: (b) => {
-        if (!clientRef.current) return;
-        clientRef.current.setBoard(b);
-      },
-      flip: () => {
-        if (!clientRef.current) return;
-        clientRef.current.flip();
-      },
-      getBoard: () => {
-        if (!clientRef.current) return null;
-        return clientRef.current.getBoard();
-      },
-      getSquareCoords: (notation) => {
-        if (!clientRef.current) return null;
-        return clientRef.current.getSquareCoords(notation);
-      },
-    }));
+    useImperativeHandle(ref, () => imperativeHandle(clientRef));
 
     return (
       <Board

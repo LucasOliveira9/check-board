@@ -1,3 +1,4 @@
+// vite.config.ts
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
@@ -13,10 +14,11 @@ export default defineConfig({
     lib: {
       entry: path.resolve(__dirname, "src/index.ts"),
       name: "CheckBoard",
-      fileName: "check-board",
+      fileName: (format) => `check-board.${format}.js`,
       formats: ["es", "cjs", "umd"],
     },
     rollupOptions: {
+      // tudo que você NÃO quer embutido no bundle
       external: ["react", "react-dom"],
       output: {
         globals: {
@@ -26,10 +28,6 @@ export default defineConfig({
       },
     },
     sourcemap: true,
-    minify: true,
-  },
-  server: {
-    watch: { usePolling: true },
-    hmr: { overlay: false },
+    minify: "esbuild",
   },
 });

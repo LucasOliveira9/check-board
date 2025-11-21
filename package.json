@@ -1,19 +1,28 @@
 {
   "name": "check-board",
   "version": "0.0.1",
-  "private": true,
   "type": "module",
+  "private": false,
   "main": "dist/check-board.cjs.js",
   "module": "dist/check-board.es.js",
+  "unpkg": "dist/check-board.umd.js",
+  "jsdelivr": "dist/check-board.umd.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/check-board.es.js",
+      "require": "./dist/check-board.cjs.js"
+    }
+  },
   "scripts": {
     "dev:demo": "vite --config demo/vite.config.ts",
-    "build": "tsc -b && vite build",
+    "build": "tsc && vite build",
     "preview": "vite preview"
   },
-  "dependencies": {
-    "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+  "peerDependencies": {
+    "react": ">=18",
+    "react-dom": ">=18"
   },
   "devDependencies": {
     "@types/node": "^24.7.0",
