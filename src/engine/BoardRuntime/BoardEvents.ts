@@ -1,7 +1,4 @@
-import { TSquare } from "src/types/square";
-import Utils from "../../utils/utils";
 import BoardRuntime from "./BoardRuntime";
-import { TPieceId } from "src/types/piece";
 
 class BoardEvents {
   constructor(protected boardRuntime: BoardRuntime) {
