@@ -2,7 +2,6 @@ import { TSquare } from "./square";
 
 type TColor = "w" | "b";
 type TPieceUp = "P" | "R" | "N" | "B" | "Q" | "K";
-type TPieceLower = "p" | "r" | "n" | "b" | "q" | "k";
 type TPiece = `${TColor}${TPieceUp}`;
 type TPieceCount =
   | 1

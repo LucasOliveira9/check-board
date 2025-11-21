@@ -1,11 +1,10 @@
-import { TEvents } from "src/types/events";
+import { TEvents } from "../../types/events";
 import { TCanvasCoords, TCanvasLayer, TRender } from "../../types/draw";
 import {
   TPieceBoard,
   TPieceCoords,
   TPieceId,
   TPieceInternalRef,
-  TPieceType,
 } from "../../types/piece";
 
 interface IRenderer {

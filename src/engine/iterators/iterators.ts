@@ -1,4 +1,3 @@
-import Utils from "../../utils/utils";
 import { TBoardEventContext } from "../../types/events";
 import { TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";

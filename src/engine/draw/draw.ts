@@ -1,8 +1,7 @@
-import { TPieceInternalRef, TPieceType } from "src/types/piece";
+import { TPieceType } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 import Iterators from "../iterators/iterators";
 import DefaultDraw from "./defaultDraw";
-import { TRender } from "../../types/draw";
 import Utils from "../../utils/utils";
 
 class Draw {

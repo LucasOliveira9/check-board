@@ -1,5 +1,5 @@
 import { TNotation } from "../../types/square";
-import { TPieceBoard, TPieceId, TPieceInternalRef } from "../../types/piece";
+import { TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 import Utils from "../../utils/utils";
 

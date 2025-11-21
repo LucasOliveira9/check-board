@@ -1,5 +1,4 @@
-import { TNotation } from "src/types/square";
-import { TPieceBoard } from "../../types/piece";
+import { TNotation } from "../../types/square";
 
 interface BoardHandled {
   loadPosition(b: string): void;

@@ -2,8 +2,7 @@ import { TDrawRegion, TSafeCtx } from "../types/draw";
 import { IRenderer, IRenderer2D } from "../engine/render/interface";
 import { TSquare, TFile, TRank, TNotation } from "../types/square";
 import { TDeepReadonly } from "../types/utils";
-import BoardRuntime from "../engine/BoardRuntime/BoardRuntime";
-import { TPiece, TPieceBoard, TPieceId, TPieceType } from "../types/piece";
+import { TPiece, TPieceBoard, TPieceId } from "../types/piece";
 
 class Utils {
   static files = "abcdefgh";

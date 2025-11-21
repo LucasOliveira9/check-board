@@ -1,15 +1,13 @@
 import Utils from "../../utils/utils";
 import { TCanvasCoords, TCanvasLayer, TRender } from "../../types/draw";
 import {
-  TPiece,
   TPieceBoard,
   TPieceCoords,
   TPieceId,
   TPieceInternalRef,
-  TPieceType,
 } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
-import { IRenderer, IRenderer2D } from "./interface";
+import { IRenderer2D } from "./interface";
 import { TEvents } from "../../types/events";
 
 class Renderer2D implements IRenderer2D {

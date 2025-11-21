@@ -1,14 +1,7 @@
 import CanvasLayers from "../engine/BoardRuntime/canvasLayers";
 import BoardRuntime from "../engine/BoardRuntime/BoardRuntime";
-import { TBoardEvent, TBoardEventContext, TBoardEvents, TMove } from "./events";
-import {
-  TPiece,
-  TPieceBoard,
-  TPieceDisplay,
-  TPieceId,
-  TPieceImage,
-  TPieceInternalRef,
-} from "./piece";
+import { TBoardEventContext, TBoardEvents, TMove } from "./events";
+import { TPieceId, TPieceImage } from "./piece";
 import { TSquare } from "./square";
 
 type TBoardInjection<T extends TBoardEventContext> = (

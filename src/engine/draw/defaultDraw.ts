@@ -1,6 +1,5 @@
 import { TPieceId, TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
-import { TRender } from "../../types/draw";
 import Utils from "../../utils/utils";
 
 class DefaultDraw {

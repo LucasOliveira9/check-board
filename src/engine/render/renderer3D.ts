@@ -1,4 +1,4 @@
-import { TPieceId, TPieceInternalRef } from "src/types/piece";
+import { TPieceId, TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 import { IRenderer } from "./interface";
 

@@ -1,6 +1,6 @@
-import { TBoard, TBoardInjection, TSelected } from "./board";
+import { TBoardInjection, TSelected } from "./board";
 import { TBoardEventContext, TBoardEvents } from "./events";
-import { TPieceBoard, TPieceId, TPieceImage, TPieceInternalRef } from "./piece";
+import { TPieceId, TPieceImage, TPieceInternalRef } from "./piece";
 
 type TDrawBoard = {
   canvas: HTMLCanvasElement;

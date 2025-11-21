@@ -1,15 +1,9 @@
 import { TEventName, TLazyReturn, TResolvers } from "../../types/helpers";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 import PieceHelpers from "./pieceHelpers";
-import {
-  TBoardEventContext,
-  TBoardEventContextExtras,
-  TBoardEventExtras,
-  TBoardEvents,
-} from "../../types/events";
-import { TFile, TNotation, TRank, TSquare } from "../../types/square";
-import { TPieceBoard, TPieceInternalRef } from "../../types/piece";
-import Utils from "../../utils/utils";
+import { TBoardEventContext, TBoardEvents } from "../../types/events";
+import { TNotation } from "../../types/square";
+import { TPieceBoard } from "../../types/piece";
 import { TCanvasCoords } from "../../types/draw";
 import PointerEventsHelpers from "./pointerEventsHelpers";
 
