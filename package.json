@@ -3,18 +3,20 @@
   "version": "0.0.1",
   "type": "module",
   "private": false,
-  "main": "dist/check-board.cjs.js",
-  "module": "dist/check-board.es.js",
-  "unpkg": "dist/check-board.umd.js",
-  "jsdelivr": "dist/check-board.umd.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/check-board.cjs.js",
+  "module": "./dist/check-board.es.js",
+  "unpkg": "./dist/check-board.umd.js",
+  "jsdelivr": "./dist/check-board.umd.js",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/index.d.ts",
       "import": "./dist/check-board.es.js",
       "require": "./dist/check-board.cjs.js"
     }
   },
+  "files": [
+    "dist/**/*"
+  ],
   "scripts": {
     "dev:demo": "vite --config demo/vite.config.ts",
     "build": "tsc && vite build",
@@ -30,6 +32,7 @@
     "@types/react-dom": "^19.2.1",
     "@vitejs/plugin-react": "^5.0.4",
     "typescript": "~5.9.3",
-    "vite": "^7.1.7"
+    "vite": "^7.1.7",
+    "vite-plugin-static-copy": "^3.1.4"
   }
 }

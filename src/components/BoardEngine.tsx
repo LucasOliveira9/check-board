@@ -6,7 +6,7 @@ import BoardRuntime from "../engine/BoardRuntime/BoardRuntime";
 import Client from "../engine/client/client";
 import React from "react";
 import { BoardHandled } from "../engine/client/interface";
-import imperativeHandle from "engine/client/imperativeHandle";
+import imperativeHandle from "../engine/client/imperativeHandle";
 
 const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
   ({ config, onMove, onUpdate }, ref) => {

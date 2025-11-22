@@ -1,0 +1,12 @@
+export { default as wP } from "./WhitePawn.svg";
+export { default as wB } from "./WhiteBishop.svg";
+export { default as wN } from "./WhiteKnight.svg";
+export { default as wR } from "./WhiteRook.svg";
+export { default as wQ } from "./WhiteQueen.svg";
+export { default as wK } from "./WhiteKing.svg";
+export { default as bP } from "./BlackPawn.svg";
+export { default as bB } from "./BlackBishop.svg";
+export { default as bN } from "./BlackKnight.svg";
+export { default as bR } from "./BlackRook.svg";
+export { default as bQ } from "./BlackQueen.svg";
+export { default as bK } from "./BlackKing.svg";

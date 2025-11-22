@@ -8,21 +8,21 @@ import {
 import { TNotation } from "../../types/square";
 import Utils from "../../utils/utils";
 import { TCache } from "../../types/helpers";
-
+import * as assets from "../../assets";
 class PieceHelpers {
   private imagesSrc = {
-    wP: "assets/WhitePawn.svg",
-    wB: "assets/WhiteBishop.svg",
-    wN: "assets/WhiteKnight.svg",
-    wR: "assets/WhiteRook.svg",
-    wQ: "assets/WhiteQueen.svg",
-    wK: "assets/WhiteKing.svg",
-    bP: "assets/BlackPawn.svg",
-    bB: "assets/BlackBishop.svg",
-    bN: "assets/BlackKnight.svg",
-    bR: "assets/BlackRook.svg",
-    bQ: "assets/BlackQueen.svg",
-    bK: "assets/BlackKing.svg",
+    wP: assets.wP,
+    wB: assets.wB,
+    wN: assets.wN,
+    wR: assets.wR,
+    wQ: assets.wQ,
+    wK: assets.wK,
+    bP: assets.bP,
+    bB: assets.bB,
+    bN: assets.bN,
+    bR: assets.bR,
+    bQ: assets.bQ,
+    bK: assets.bK,
   };
   private cache: TCache = new Map();
 
@@ -105,8 +105,9 @@ class PieceHelpers {
     },
     image: (() => {
       const loadImage = (src: string) => {
+        const img = new URL(src, import.meta.url).href;
         const image = new Image();
-        image.src = src;
+        image.src = img;
         return image;
       };
       return {
