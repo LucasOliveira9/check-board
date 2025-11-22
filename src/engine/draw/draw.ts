@@ -7,8 +7,13 @@ import Utils from "../../utils/utils";
 class Draw {
   defaultDraw;
   protected iterator;
-  protected pointerSelected = false;
-  protected pointerHover = false;
+  protected interaction = {
+    hover: true,
+    selection: true,
+    dragging: true,
+    highlight: true,
+    animation: true,
+  };
   constructor(protected boardRuntime: BoardRuntime) {
     this.defaultDraw = new DefaultDraw(boardRuntime);
     this.iterator = new Iterators(boardRuntime);
@@ -125,7 +130,7 @@ class Draw {
       !selectedRef?.isDragging &&
       ctxDynamicPieces &&
       !events?.onPointerHover &&
-      !this.pointerHover
+      this.interaction.hover
     ) {
       const piece = internalRef[pieceHoverRef];
       const canvas = this.boardRuntime
@@ -173,7 +178,7 @@ class Draw {
       selectedRef?.id &&
       ctx &&
       !events?.onPointerSelect &&
-      !this.pointerSelected
+      this.interaction.selection
     ) {
       const sqr = internalRef[selectedRef.id]
         ? Utils.squareToCoords(selectedRef.square, squareSize, isBlackView)
@@ -233,7 +238,11 @@ class Draw {
       injection = this.boardRuntime.getInjection(),
       pieceHoverRef = this.boardRuntime.getPieceHover();
 
-    if (selectedRef?.id && events?.onPointerSelect && !this.pointerSelected) {
+    if (
+      selectedRef?.id &&
+      events?.onPointerSelect &&
+      this.interaction.selection
+    ) {
       const sqr = internalRef[selectedRef.id]
         ? Utils.squareToCoords(selectedRef.square, squareSize, isBlackView)
         : null;
@@ -270,7 +279,7 @@ class Draw {
       pieceHoverRef &&
       !selectedRef?.isDragging &&
       events?.onPointerHover &&
-      !this.pointerHover
+      this.interaction.hover
     ) {
       const piece = internalRef[pieceHoverRef];
       if (piece && !piece.anim) {
@@ -292,20 +301,20 @@ class Draw {
     }
   }
   // control hover and selected
-  setIsSelected(b: boolean) {
-    this.pointerSelected = b;
+  isSelectionEnabled() {
+    return this.interaction.selection;
   }
 
-  setIsHovered(b: boolean) {
-    this.pointerHover = b;
+  isHoverEnabled() {
+    return this.interaction.hover;
   }
 
-  getIsSelected() {
-    return this.pointerSelected;
+  setHoverEnabled(b: boolean) {
+    return (this.interaction.hover = b);
   }
 
-  getIsHovered() {
-    return this.pointerHover;
+  setSelectionEnabled(b: boolean) {
+    return (this.interaction.selection = b);
   }
 }
 
