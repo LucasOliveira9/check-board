@@ -346,18 +346,22 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       this.selected = selected;
       return;
     }
+    this.draw.setIsSelected(false);
     Utils.isRenderer2D(this.renderer) &&
       this.renderer.clearEvent("onPointerSelect");
     this.selected = selected;
     this.renderUnderlayAndOverlay();
+    this.draw.setIsSelected(true);
   }
 
   setPieceHover(piece: TPieceId | null) {
     if (this.pieceHover === null && piece === null) return;
     else if (this.pieceHover === piece) return;
+    this.draw.setIsHovered(false);
     this.pieceHover = piece;
     this.renderPieces();
     this.renderer.renderClientOverlayEvents();
+    this.draw.setIsHovered(true);
   }
 
   setBlackView(b: boolean) {

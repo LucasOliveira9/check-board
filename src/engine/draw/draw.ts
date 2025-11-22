@@ -7,6 +7,8 @@ import Utils from "../../utils/utils";
 class Draw {
   defaultDraw;
   protected iterator;
+  protected pointerSelected = false;
+  protected pointerHover = false;
   constructor(protected boardRuntime: BoardRuntime) {
     this.defaultDraw = new DefaultDraw(boardRuntime);
     this.iterator = new Iterators(boardRuntime);
@@ -122,7 +124,8 @@ class Draw {
       pieceHoverRef &&
       !selectedRef?.isDragging &&
       ctxDynamicPieces &&
-      !events?.onPointerHover
+      !events?.onPointerHover &&
+      !this.pointerHover
     ) {
       const piece = internalRef[pieceHoverRef];
       const canvas = this.boardRuntime
@@ -166,7 +169,12 @@ class Draw {
       renderer.resetToClear("underlay");
     }
 
-    if (selectedRef?.id && ctx && !events?.onPointerSelect) {
+    if (
+      selectedRef?.id &&
+      ctx &&
+      !events?.onPointerSelect &&
+      !this.pointerSelected
+    ) {
       const sqr = internalRef[selectedRef.id]
         ? Utils.squareToCoords(selectedRef.square, squareSize, isBlackView)
         : null;
@@ -225,7 +233,7 @@ class Draw {
       injection = this.boardRuntime.getInjection(),
       pieceHoverRef = this.boardRuntime.getPieceHover();
 
-    if (selectedRef?.id && events?.onPointerSelect) {
+    if (selectedRef?.id && events?.onPointerSelect && !this.pointerSelected) {
       const sqr = internalRef[selectedRef.id]
         ? Utils.squareToCoords(selectedRef.square, squareSize, isBlackView)
         : null;
@@ -258,7 +266,12 @@ class Draw {
     }
 
     // Hover
-    if (pieceHoverRef && !selectedRef?.isDragging && events?.onPointerHover) {
+    if (
+      pieceHoverRef &&
+      !selectedRef?.isDragging &&
+      events?.onPointerHover &&
+      !this.pointerHover
+    ) {
       const piece = internalRef[pieceHoverRef];
       if (piece && !piece.anim) {
         const context = this.boardRuntime.getContext(true, {
@@ -277,6 +290,22 @@ class Draw {
         );
       }
     }
+  }
+  // control hover and selected
+  setIsSelected(b: boolean) {
+    this.pointerSelected = b;
+  }
+
+  setIsHovered(b: boolean) {
+    this.pointerHover = b;
+  }
+
+  getIsSelected() {
+    return this.pointerSelected;
+  }
+
+  getIsHovered() {
+    return this.pointerHover;
   }
 }
 
