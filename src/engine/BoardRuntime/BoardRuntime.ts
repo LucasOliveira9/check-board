@@ -41,18 +41,19 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   public boardEvents: BoardEvents = new BoardEvents(this);
   public draw: Draw = new Draw(this);
   public helpers: EngineHelpers = new EngineHelpers(this);
-  public renderer!: IRenderer;
+  public renderer: IRenderer;
 
   constructor(protected args: TBoardRuntime<T>) {
     Object.assign(this, args);
+
     this.renderer =
-      this.args.mode === "2d" ? new Renderer2D(this) : new Renderer3D(this);
+      args.mode === "2d" ? new Renderer2D(this) : new Renderer3D(this);
+
     if (Utils.validateFen(args.board)) this.board = Utils.parseFen(args.board);
     else
       this.board = Utils.parseFen(
         "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
       );
-    this.init();
   }
 
   destroy() {
@@ -386,6 +387,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       await this.helpers.pieceHelper.preloadImages(this.args.pieceStyle);
       this.isImagesLoaded = true;
     }
+
     this.renderer.renderStaticPieces();
     this.renderer.renderDynamicPieces();
   }
@@ -407,11 +409,12 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.animation.length <= 0 && this.setIsMoving(false);
   }
 
-  init() {
+  async init() {
     this.initPieceImages();
     this.initInternalRef();
     this.renderer.renderBoard();
-    this.renderPieces();
+    await new Promise(requestAnimationFrame);
+    await this.renderPieces();
   }
 
   initPieceImages() {

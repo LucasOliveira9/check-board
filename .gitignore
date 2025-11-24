@@ -33,6 +33,8 @@ Thumbs.db
 
 # Demo folder (se você não quer versionar a demo)
 demo/
+*.tgz
+
 
 # Optional: environment files
 .env

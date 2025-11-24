@@ -11,51 +11,55 @@ import imperativeHandle from "../engine/client/imperativeHandle";
 const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
   ({ config, onMove, onUpdate }, ref) => {
     const { pieceConfig, size } = config;
+
     const boardCanvasRef = useRef<HTMLCanvasElement>(null);
     const staticPiecesCanvasRef = useRef<HTMLCanvasElement>(null);
     const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
     const underlayCanvasRef = useRef<HTMLCanvasElement>(null);
     const dynamicPiecesCanvasRef = useRef<HTMLCanvasElement>(null);
-    //
-    const boardRuntime = useRef<BoardRuntime>(null);
-    const clientRef = useRef<Client>(null);
+
+    const boardRuntime = useRef<BoardRuntime | null>(null);
+    const clientRef = useRef<Client | null>(null);
 
     useEffect(() => {
-      if (boardRuntime.current) {
-        boardRuntime.current.destroy();
-        boardRuntime.current = null;
-      }
-      const args: TBoardRuntime = {
-        ...config,
-        onMove,
-        onUpdate,
-        canvasLayers: new CanvasLayers(
-          boardCanvasRef,
-          staticPiecesCanvasRef,
-          underlayCanvasRef,
-          overlayCanvasRef,
-          dynamicPiecesCanvasRef,
-          size
-        ),
-        pieceStyle: pieceConfig.piecesImage,
-        mode: "2d",
-      };
-      const boardRuntime_ = new BoardRuntime(args);
-      boardRuntime.current = boardRuntime_;
-      const client_ = new Client(boardRuntime_);
-      clientRef.current = client_;
+      if (
+        boardCanvasRef.current &&
+        staticPiecesCanvasRef.current &&
+        overlayCanvasRef.current &&
+        underlayCanvasRef.current &&
+        dynamicPiecesCanvasRef.current
+      ) {
+        const args: TBoardRuntime = {
+          ...config,
+          onMove,
+          onUpdate,
+          canvasLayers: new CanvasLayers(
+            boardCanvasRef,
+            staticPiecesCanvasRef,
+            underlayCanvasRef,
+            overlayCanvasRef,
+            dynamicPiecesCanvasRef,
+            size
+          ),
+          pieceStyle: pieceConfig.piecesImage,
+          mode: "2d",
+        };
 
-      return () => {
-        boardRuntime_.destroy();
-        boardRuntime.current = null;
-        client_.destroy();
-        clientRef.current = null;
-        boardCanvasRef.current = null;
-        staticPiecesCanvasRef.current = null;
-        overlayCanvasRef.current = null;
-        underlayCanvasRef.current = null;
-        dynamicPiecesCanvasRef.current = null;
-      };
+        const runtime = new BoardRuntime(args);
+        boardRuntime.current = runtime;
+
+        runtime.init();
+
+        const c = new Client(runtime);
+        clientRef.current = c;
+
+        return () => {
+          runtime.destroy();
+          c.destroy();
+          boardRuntime.current = null;
+          clientRef.current = null;
+        };
+      }
     }, []);
 
     useImperativeHandle(ref, () => imperativeHandle(clientRef));
@@ -73,5 +77,4 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
     );
   }
 );
-
 export default BoardEngine;

@@ -48,7 +48,7 @@ const Board: React.FC<TBoard> = ({
       underlayRef.current = null;
       dynamicPiecesRef.current = null;
     };
-  }, [boardRuntime]);
+  }, []);
 
   return (
     <div
