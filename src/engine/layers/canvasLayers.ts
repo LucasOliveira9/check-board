@@ -113,13 +113,7 @@ class CanvasLayers {
     const targetW = size * dpr;
     const targetH = size * dpr;
 
-    if (
-      curr.width === targetW ||
-      curr.height === targetH ||
-      curr.style.width === size + "px" ||
-      curr.style.height === size + "px"
-    )
-      return;
+    if (curr.width === targetW && curr.height === targetH) return;
     curr.width = targetW;
     curr.height = targetH;
     curr.style.width = size + "px";

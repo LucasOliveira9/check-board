@@ -1,10 +1,14 @@
+import LayerManager from "engine/layers/layerManager";
 import { TPieceId, TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 import { IRenderer } from "./interface";
 
 class Renderer3D implements IRenderer {
   constructor(protected boardRuntime: BoardRuntime) {}
-  renderDynamicPieces(): void {
+  getLayerManager(): LayerManager {
+    throw new Error("Method not implemented.");
+  }
+  renderDynamicPieces(): Promise<void> {
     throw new Error("Method not implemented.");
   }
   renderOverlay(): void {

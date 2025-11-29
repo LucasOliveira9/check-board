@@ -6,12 +6,13 @@ import {
   TPieceId,
   TPieceInternalRef,
 } from "../../types/piece";
+import LayerManager from "engine/layers/layerManager";
 
 interface IRenderer {
   renderStaticPieces(): void;
   renderUnderlay(): void;
   renderBoard(): void;
-  renderDynamicPieces(): void;
+  renderDynamicPieces(): Promise<void>;
   renderOverlay(): void;
   renderClientOverlayEvents(): void;
   addDynamicPiece(id: TPieceId, piece: TPieceInternalRef): void;
@@ -20,6 +21,7 @@ interface IRenderer {
   deleteDynamicPiece(id: TPieceId): void;
   getDynamicPieceObj(): Record<TPieceId, TPieceInternalRef>;
   getStaticPieceObj(): Record<TPieceId, TPieceInternalRef>;
+  getLayerManager(): LayerManager;
   clear(): void;
   destroy(): void;
 }

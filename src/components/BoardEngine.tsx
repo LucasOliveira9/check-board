@@ -1,5 +1,5 @@
 import { useRef, useEffect, useImperativeHandle } from "react";
-import CanvasLayers from "../engine/BoardRuntime/canvasLayers";
+import CanvasLayers from "../engine/layers/canvasLayers";
 import { TBoardProps, TBoardRuntime } from "../types/board";
 import Board from "./Board";
 import BoardRuntime from "../engine/BoardRuntime/BoardRuntime";

@@ -12,7 +12,7 @@ class PointerEventsHelpers {
     }
   }
 
-  detectMove(e: React.PointerEvent<HTMLCanvasElement>) {
+  async detectMove(e: React.PointerEvent<HTMLCanvasElement>) {
     const { offsetX, offsetY } = Utils.getCanvasCoords(e);
     const selected = this.boardRuntime.getSelected();
     const squareSize = this.boardRuntime.getSize() / 8,
@@ -22,17 +22,16 @@ class PointerEventsHelpers {
     const sqr = Utils.coordsToSquare(offsetX, offsetY, squareSize, isBlackView);
     const coords = Utils.squareToCoords(sqr, squareSize, isBlackView);
     if (selected && selected.isDragging) {
-      if (Utils.isRenderer2D(this.boardRuntime.renderer) && piece) {
-        this.boardRuntime.renderer.clearRect(
-          { x: piece.x, y: piece.y, w: squareSize, h: squareSize },
-          "dynamicPieces"
-        );
-      }
       if (piece && sqr && coords) {
         const { x, y } = coords;
         piece.square = sqr;
         piece.x = x;
         piece.y = y;
+      }
+      if (piece) {
+        await this.boardRuntime.renderer
+          .getLayerManager()
+          .togglePieceLayer("dynamicPieces", "staticPieces", selected.id);
       }
     }
 
@@ -71,17 +70,17 @@ class PointerEventsHelpers {
     return { from: null, to: null, piece: null };
   }
 
-  handlePieceHover(e: React.PointerEvent<HTMLCanvasElement>) {
+  async handlePieceHover(e: React.PointerEvent<HTMLCanvasElement>) {
     const { offsetX, offsetY } = Utils.getCanvasCoords(e);
     const selected = this.boardRuntime.getSelected();
     const squareSize = this.boardRuntime.getSize() / 8;
 
     if (
       (selected && selected?.isDragging) ||
-      (selected && this.boardRuntime.getIsMoving())
+      this.boardRuntime.getIsMoving() ||
+      e.button !== -1
     ) {
-      Utils.isRenderer2D(this.boardRuntime.renderer) &&
-        this.boardRuntime.setPieceHover(null);
+      await this.boardRuntime.setPieceHover(null);
       return;
     }
 
@@ -94,44 +93,20 @@ class PointerEventsHelpers {
     );
 
     if (!searchPiece) {
-      const toRender = this.boardRuntime.getPieceHover();
-
-      if (toRender) {
-        this.boardRuntime.renderer.addStaticPiece(
-          toRender,
-          this.boardRuntime.getInternalRefVal(toRender)
-        );
-        this.boardRuntime.renderer.deleteDynamicPiece(toRender);
-      }
-      this.boardRuntime.setPieceHover(null);
+      await this.boardRuntime.setPieceHover(null);
       this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
         cursor: "default",
       });
       return;
     }
-    const currHover = this.boardRuntime.getPieceHover();
 
-    if (currHover === searchPiece.id) return;
-    else if (currHover) {
-      this.boardRuntime.renderer.addStaticPiece(
-        currHover,
-        this.boardRuntime.getInternalRefVal(currHover)
-      );
-      this.boardRuntime.renderer.deleteDynamicPiece(currHover);
-    }
-    this.boardRuntime.renderer.addDynamicPiece(
-      searchPiece.id,
-      this.boardRuntime.getInternalRefVal(searchPiece.id)
-    );
-    this.boardRuntime.renderer.deleteStaticPiece(searchPiece.id);
-
-    this.boardRuntime.setPieceHover(searchPiece.id);
+    await this.boardRuntime.setPieceHover(searchPiece.id);
     this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
       cursor: "grab",
     });
   }
 
-  handleGrab(e: React.PointerEvent<HTMLCanvasElement>) {
+  async handleGrab(e: React.PointerEvent<HTMLCanvasElement>) {
     const { offsetX, offsetY } = Utils.getCanvasCoords(e);
     const squareSize = this.boardRuntime.getSize() / 8;
     const selected = this.boardRuntime.getSelected();
@@ -141,7 +116,7 @@ class PointerEventsHelpers {
       selected?.startY === null
     )
       return;
-
+    await this.boardRuntime.setPieceHover(null);
     const dx = offsetX - selected.startX;
     const dy = offsetY - selected.startY;
     if (Math.sqrt(dx * dx + dy * dy) > 3 /*&& !promotionRef.current.isProm*/) {
@@ -154,24 +129,16 @@ class PointerEventsHelpers {
           });
 
           selected.isDragging = true;
-          this.boardRuntime.renderer.deleteStaticPiece(selected.id);
-          this.boardRuntime.renderer.addDynamicPiece(selected.id, piece);
+
+          await this.boardRuntime.renderer
+            .getLayerManager()
+            .togglePieceLayer("staticPieces", "dynamicPieces", selected.id);
+
           piece.x = offsetX - half;
           piece.y = offsetY - half;
-          this.boardRuntime.setPieceHover(null);
           return;
         }
 
-        if (Utils.isRenderer2D(this.boardRuntime.renderer)) {
-          this.boardRuntime.renderer.addPosition(
-            selected.id,
-            {
-              x: piece.x,
-              y: piece.y,
-            },
-            "dynamicPieces"
-          );
-        }
         const clampX = offsetX - half;
         const clampY = offsetY - half;
 
@@ -184,14 +151,24 @@ class PointerEventsHelpers {
           Math.min(clampY, this.boardRuntime.getSize() - squareSize)
         );
 
-        this.boardRuntime.renderPieces();
+        this.boardRuntime.renderer
+          .getLayerManager()
+          .getLayer("dynamicPieces")
+          .addCoords(selected.id, {
+            x: piece.x,
+            y: piece.y,
+            w: squareSize,
+            h: squareSize,
+          });
+
+        await this.boardRuntime.renderPieces();
       }
     }
   }
 
-  handlePointerUp(e: React.PointerEvent<HTMLCanvasElement>) {
+  async handlePointerUp(e: React.PointerEvent<HTMLCanvasElement>) {
     const { from, to, piece } =
-      this.boardRuntime.helpers.pointerEventsHelper.detectMove(e);
+      await this.boardRuntime.helpers.pointerEventsHelper.detectMove(e);
     let move = false;
     let selected = this.boardRuntime.getSelected();
     const squareSize = this.boardRuntime.getSize() / 8;
@@ -204,26 +181,27 @@ class PointerEventsHelpers {
     });
 
     if (!move) {
-      const id =
-        selected?.isDragging && selected?.id
-          ? selected.id
-          : this.boardRuntime.getPieceHover();
-      if (id) {
-        this.boardRuntime.renderer.addStaticPiece(
-          id,
-          this.boardRuntime.getInternalRefVal(id)
-        );
-        this.boardRuntime.renderer.deleteDynamicPiece(id);
-      }
+      const id = selected?.isDragging && selected?.id ? selected.id : null;
+      if (id)
+        this.boardRuntime.renderer
+          .getLayerManager()
+          .togglePieceLayer("dynamicPieces", "staticPieces", id);
     }
-    this.boardRuntime.setPieceHover(null);
+    await this.boardRuntime.setPieceHover(null);
   }
 
-  handlePointerLeave() {
+  async handlePointerLeave() {
     const selected = this.boardRuntime.getSelected();
-    const isDragging = selected?.isDragging;
-    const toRender = this.boardRuntime.getPieceHover() || isDragging;
-    const squareSize = this.boardRuntime.getSize() / 8;
+
+    const piece =
+      selected && this.boardRuntime.getInternalRefVal(selected.id as TPieceId);
+    piece && ((piece.x = selected.x), (piece.y = selected.y));
+    if (selected && selected.isDragging && piece) {
+      await this.boardRuntime.renderer
+        .getLayerManager()
+        .togglePieceLayer("dynamicPieces", "staticPieces", selected.id);
+    }
+
     selected &&
       this.boardRuntime.setSelected({
         ...selected,
@@ -232,39 +210,10 @@ class PointerEventsHelpers {
         startY: null,
       });
 
-    const piece =
-      selected && this.boardRuntime.getInternalRefVal(selected.id as TPieceId);
-    if (
-      selected &&
-      selected.isDragging &&
-      piece &&
-      Utils.isRenderer2D(this.boardRuntime.renderer)
-    ) {
-      this.boardRuntime.renderer.clearRect(
-        { x: piece.x, y: piece.y, w: squareSize, h: squareSize },
-        "dynamicPieces"
-      );
-    }
-    piece && ((piece.x = selected.x), (piece.y = selected.y));
-
-    const id = selected?.isDragging
-      ? selected.id
-      : this.boardRuntime.getPieceHover();
-    if (toRender) {
-      if (id) {
-        Utils.isRenderer2D(this.boardRuntime.renderer) &&
-          this.boardRuntime.renderer.deleteDynamicPiece(id);
-        this.boardRuntime.renderer.addStaticPiece(
-          id,
-          this.boardRuntime.getInternalRefVal(id)
-        );
-      }
-    }
-    this.boardRuntime.setPieceHover(null);
-    isDragging && this.boardRuntime.renderPieces();
+    await this.boardRuntime.setPieceHover(null);
   }
 
-  handleClick(e: React.PointerEvent<HTMLCanvasElement>) {
+  async handleClick(e: React.PointerEvent<HTMLCanvasElement>) {
     const { offsetX, offsetY } = Utils.getCanvasCoords(e);
     const squareSize = this.boardRuntime.getSize() / 8;
     const selected = this.boardRuntime.getSelected();
@@ -286,7 +235,7 @@ class PointerEventsHelpers {
       this.boardRuntime.getInternalRefObj()
     );
     if (piece_) {
-      const move = this.moveOnClick(e, selected);
+      const move = await this.moveOnClick(e, selected);
       !move &&
         this.boardRuntime.setSelected({
           id: piece_.id,
@@ -297,16 +246,16 @@ class PointerEventsHelpers {
           startX: offsetX,
           startY: offsetY,
         });
-    } else this.moveOnClick(e, selected);
+    } else await this.moveOnClick(e, selected);
   }
 
-  moveOnClick(
+  async moveOnClick(
     e: React.PointerEvent<HTMLCanvasElement>,
     selected: TSelected | null
   ) {
     if (selected) {
       const { from, to, piece } =
-        this.boardRuntime.helpers.pointerEventsHelper.detectMove(e);
+        await this.boardRuntime.helpers.pointerEventsHelper.detectMove(e);
       if (from !== null) {
         const move = this.boardRuntime.helpers.move(
           from.notation,

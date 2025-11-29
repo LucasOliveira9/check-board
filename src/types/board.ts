@@ -1,4 +1,4 @@
-import CanvasLayers from "../engine/BoardRuntime/canvasLayers";
+import CanvasLayers from "../engine/layers/canvasLayers";
 import BoardRuntime from "../engine/BoardRuntime/BoardRuntime";
 import { TBoardEventContext, TBoardEvents, TMove } from "./events";
 import { TPieceId, TPieceImage } from "./piece";

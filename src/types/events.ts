@@ -39,7 +39,7 @@ type TBoardEventContextExtras = {
   isBlackView?: boolean;
   lightTile?: string;
   darkTile?: string;
-  animation?: TDeepReadonly<TAnimation>;
+  animation?: TDeepReadonly<TAnimation[]>;
   draw?: TDrawFunction;
 };
 
@@ -70,7 +70,7 @@ type TAnimation = {
   piece: TPieceInternalRef;
   start: number;
   id: TPieceId;
-}[];
+};
 
 type TMove = {
   from: TNotation;
