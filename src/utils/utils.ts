@@ -386,7 +386,7 @@ class Utils {
                   const minY = Math.min(...ys);
                   const maxX = Math.max(...xs);
                   const maxY = Math.max(...ys);
-                  const pad = Math.max((ctx.lineWidth ?? 1) * 0.75, 1);
+                  const pad = Math.max((ctx.lineWidth ?? 1) * 0.95, 1);
 
                   recordRegion(
                     prop,
