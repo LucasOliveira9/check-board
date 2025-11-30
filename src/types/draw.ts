@@ -23,12 +23,21 @@ type TDrawPieces<T extends TBoardEventContext = TBoardEventContext> = {
 };
 
 type TCanvasCoords = { x: number; y: number; w: number; h: number };
-type TCanvasLayer =
-  | "board"
-  | "staticPieces"
-  | "overlay"
-  | "underlay"
-  | "dynamicPieces";
+const CANVAS_LAYERS = {
+  board: { name: "board", client: false },
+  staticPieces: { name: "staticPieces", client: false },
+  overlay: { name: "overlay", client: true },
+  underlay: { name: "underlay", client: true },
+  dynamicPieces: { name: "dynamicPieces", client: false },
+} as const;
+
+type TCanvasLayer = keyof typeof CANVAS_LAYERS;
+
+type TCanvasLayerClient = {
+  [K in TCanvasLayer]: (typeof CANVAS_LAYERS)[K]["client"] extends true
+    ? K
+    : never;
+}[TCanvasLayer];
 
 type TRender = {
   piece: TPieceInternalRef;
@@ -66,4 +75,5 @@ export type {
   TCanvasLayer,
   TSafeCtx,
   TDrawRegion,
+  TCanvasLayerClient,
 };
