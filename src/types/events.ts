@@ -1,5 +1,5 @@
 import { TSelected } from "./board";
-import { TCanvasLayer, TSafeCtx } from "./draw";
+import { TCanvasLayer, TCanvasLayerClient, TSafeCtx } from "./draw";
 import { TPieceBoard, TPieceId, TPieceImage, TPieceInternalRef } from "./piece";
 import { TNotation, TSquare } from "./square";
 import { TDeepReadonly } from "./utils";
@@ -44,17 +44,17 @@ type TBoardEventContextExtras = {
 };
 
 type TDrawFunction = {
-  (opts: { onDraw: (ctx: TSafeCtx) => void; layer: TCanvasLayer }): void;
+  (opts: { onDraw: (ctx: TSafeCtx) => void; layer: TCanvasLayerClient }): void;
 
   batch: (
     opts: {
       onDraw: (ctx: TSafeCtx) => void;
-      layer: TCanvasLayer;
+      layer: TCanvasLayerClient;
     }[]
   ) => void;
 
   group: (
-    layer: TCanvasLayer,
+    layer: TCanvasLayerClient,
     fn: (
       ctx: TSafeCtx,
       g: {

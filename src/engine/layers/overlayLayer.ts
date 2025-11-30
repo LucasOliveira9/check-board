@@ -11,12 +11,7 @@ class OverlayLayer extends BaseLayer {
     return;
   }
 
-  draw(
-    ctx: CanvasRenderingContext2D & {
-      __drawRegions: TDrawRegion[];
-      __clearRegions: () => void;
-    }
-  ): void {
+  draw(): void {
     return;
   }
 }

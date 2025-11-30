@@ -28,12 +28,19 @@ abstract class BaseLayer implements ICanvasLayer {
   protected animationGen = 0;
   protected animationRef: number | null = null;
   protected animation: TAnimation[] = [];
+  protected ctx:
+    | (CanvasRenderingContext2D & {
+        __drawRegions: TDrawRegion[];
+        __clearRegions: () => void;
+      })
+    | null = null;
 
   private destroyed = false;
 
   constructor(name: TCanvasLayer, boardRuntime: BoardRuntime) {
     this.name = name;
     this.boardRuntime = boardRuntime;
+    this.ctx = boardRuntime.getCanvasLayers().getContext(name);
   }
 
   destroy() {
@@ -51,28 +58,18 @@ abstract class BaseLayer implements ICanvasLayer {
   clearPieces?(board: TPieceBoard[]): void {
     throw new Error("Method not implemented.");
   }
-  clear(
-    ctx: CanvasRenderingContext2D & {
-      __drawRegions: TDrawRegion[];
-      __clearRegions: () => void;
-    }
-  ): void {
+  clear(): void {
     const canvasLayers = this.boardRuntime.getCanvasLayers();
     const dpr = canvasLayers.getDpr();
     for (const c of this.clearQueue) {
-      ctx?.save();
-      ctx?.setTransform(1, 0, 0, 1, 0, 0);
-      ctx?.clearRect(c.x * dpr, c.y * dpr, c.w * dpr, c.h * dpr);
-      ctx?.restore();
+      this.ctx?.save();
+      this.ctx?.setTransform(1, 0, 0, 1, 0, 0);
+      this.ctx?.clearRect(c.x * dpr, c.y * dpr, c.w * dpr, c.h * dpr);
+      this.ctx?.restore();
     }
     this.clearQueue.length = 0;
   }
-  draw(
-    ctx: CanvasRenderingContext2D & {
-      __drawRegions: TDrawRegion[];
-      __clearRegions: () => void;
-    }
-  ): void {
+  draw(): void {
     throw new Error("Method not implemented.");
   }
   addPiece?(pieceId: TPieceId, ref: TPieceInternalRef): void {
@@ -128,8 +125,12 @@ abstract class BaseLayer implements ICanvasLayer {
     this.eventsMap[event].push(...coords);
   }
 
-  removeEvent(event: TEvents) {
+  removeEvent(event: TEvents, forceClear?: boolean) {
+    const hasEvent = this.eventsMap[event];
+    if (!hasEvent) return;
+    for (const e of hasEvent) this.addClearCoords(e);
     delete this.eventsMap[event];
+    forceClear && this.clear();
   }
 
   hasPiece(pieceId: TPieceId) {
@@ -238,8 +239,8 @@ abstract class BaseLayer implements ICanvasLayer {
   ) {
     this.updateClear();
     this.update?.(delta);
-    this.clear(ctx);
-    this.draw(ctx);
+    this.clear();
+    this.draw();
     this.postRender?.();
   }
 }

@@ -1,4 +1,4 @@
-import { TCanvasCoords, TCanvasLayer, TPieceId } from "types";
+import { TCanvasCoords, TCanvasLayer, TEvents, TPieceId } from "types";
 import BaseLayer from "./baseLayer";
 import BoardLayer from "./boardLayer";
 import BoardRuntime from "engine/BoardRuntime/BoardRuntime";
@@ -53,6 +53,11 @@ class LayerManager {
 
   removeFromAllLayers(pieceId: TPieceId) {
     for (const layer of Object.values(this.layers)) layer.removeAll?.(pieceId);
+  }
+
+  removeEvent(event: TEvents, forceClear?: boolean) {
+    for (const layer of Object.values(this.layers))
+      layer.removeEvent(event, forceClear);
   }
 
   async togglePieceLayer(

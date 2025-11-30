@@ -9,12 +9,8 @@ class BoardLayer extends BaseLayer {
   update(delta: number): void {
     return;
   }
-  draw(
-    ctx: CanvasRenderingContext2D & {
-      __drawRegions: TDrawRegion[];
-      __clearRegions: () => void;
-    }
-  ): void {
+  draw(): void {
+    const ctx = this.ctx;
     if (!ctx) return;
 
     const size = this.boardRuntime.getSize(),

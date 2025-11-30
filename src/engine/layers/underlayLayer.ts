@@ -12,24 +12,20 @@ class UnderlayLayer extends BaseLayer {
     return;
   }
 
-  draw(
-    ctx: CanvasRenderingContext2D & {
-      __drawRegions: TDrawRegion[];
-      __clearRegions: () => void;
-    }
-  ): void {
+  draw(): void {
     const isBlackView = this.boardRuntime.getIsBlackView(),
       size = this.boardRuntime.getSize(),
       piecesImage = this.boardRuntime.getPieceStyle(),
       internalRef = this.boardRuntime.getInternalRefObj(),
       selectedRef = this.boardRuntime.getSelected(),
-      events = this.boardRuntime.getEvents();
+      events = this.boardRuntime.getEvents(),
+      injection = this.boardRuntime.getInjection(),
+      ctx = this.ctx;
     const squareSize = size / 8;
 
     if (
       selectedRef?.id &&
       ctx &&
-      !events?.onPointerSelect &&
       this.boardRuntime.renderer.getLayerManager().getEventEnabled().selection
     ) {
       const sqr = internalRef[selectedRef.id]
@@ -46,6 +42,23 @@ class UnderlayLayer extends BaseLayer {
           internalRef
         )?.piece;
 
+        if (events?.onPointerSelect) {
+          const context = this.boardRuntime.getContext(true, {
+            squareSize,
+            x: x,
+            y: y,
+            size,
+            piece: piece_,
+            square: selectedRef.square,
+          });
+
+          this.boardRuntime.helpers.triggerEvent(
+            events,
+            "onPointerSelect",
+            injection ? injection(context) : context
+          );
+          return;
+        }
         this.boardRuntime.renderer
           .getLayerManager()
           .getIterator()

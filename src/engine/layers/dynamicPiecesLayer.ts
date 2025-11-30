@@ -1,6 +1,6 @@
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 import BaseLayer from "./baseLayer";
-import { TDrawRegion, TPieceId, TPieceInternalRef } from "types";
+import { TDrawRegion, TEvents, TPieceId, TPieceInternalRef } from "types";
 import Utils from "../../utils/utils";
 
 class DynamicPiecesLayer extends BaseLayer {
@@ -8,6 +8,10 @@ class DynamicPiecesLayer extends BaseLayer {
   private toggleCanvas: TPieceId[] = [];
   constructor(boardRuntime: BoardRuntime) {
     super("dynamicPieces", boardRuntime);
+  }
+
+  updateClear(): void {
+    for (const e of Object.keys(this.eventsMap)) this.removeEvent(e as TEvents);
   }
 
   update(delta: number) {
@@ -51,17 +55,13 @@ class DynamicPiecesLayer extends BaseLayer {
     }
   }
 
-  async draw(
-    ctx: CanvasRenderingContext2D & {
-      __drawRegions: TDrawRegion[];
-      __clearRegions: () => void;
-    }
-  ) {
+  async draw() {
     const piecesImage = this.boardRuntime.getPieceStyle(),
       toRender = this.getToRender(),
       pieceHoverRef = this.boardRuntime.getPieceHover(),
       squareSize = this.boardRuntime.getSize() / 8,
-      selected = this.boardRuntime.getSelected();
+      selected = this.boardRuntime.getSelected(),
+      ctx = this.ctx;
 
     if (!piecesImage || !toRender || !toRender.length) return;
     if (
@@ -154,7 +154,6 @@ class DynamicPiecesLayer extends BaseLayer {
     if (
       pieceHoverRef &&
       !selectedRef?.isDragging &&
-      !events?.onPointerHover &&
       this.boardRuntime.renderer.getLayerManager().getEventEnabled().hover
     ) {
       const piece = internalRef[pieceHoverRef];

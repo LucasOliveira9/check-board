@@ -16,16 +16,12 @@ class StaticPiecesLayer extends BaseLayer {
     return;
   }
 
-  draw(
-    ctx: CanvasRenderingContext2D & {
-      __drawRegions: TDrawRegion[];
-      __clearRegions: () => void;
-    }
-  ): void {
+  draw(): void {
     const toRender = this.getToRender();
     const piecesImage = this.boardRuntime.getPieceStyle(),
       pieceHoverRef = this.boardRuntime.getPieceHover(),
-      squareSize = this.boardRuntime.getSize() / 8;
+      squareSize = this.boardRuntime.getSize() / 8,
+      ctx = this.ctx;
 
     if (!piecesImage || !toRender || !toRender.length) return;
     if (

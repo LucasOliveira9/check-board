@@ -320,6 +320,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
   async refreshCanvas() {
     this.helpers.pieceHelper.clearCache();
+    this.selected = null;
     //this.clearAnimation();
     await this.initInternalRef();
     await this.renderPieces();
@@ -346,9 +347,9 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       this.selected = selected;
       return;
     }
-    this.renderer.getLayerManager().setSelectionEnabled(true);
-    Utils.isRenderer2D(this.renderer) &&
-      this.renderer.clearEvent("onPointerSelect");
+    const layerManager = this.renderer.getLayerManager();
+    layerManager.setSelectionEnabled(true);
+    layerManager.removeEvent("onPointerSelect", true);
     this.selected = selected;
     this.renderUnderlayAndOverlay();
     this.renderer.getLayerManager().setSelectionEnabled(false);
@@ -356,26 +357,37 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
   async setPieceHover(piece: TPieceId | null) {
     const lastHover = this.getPieceHover();
+    const layerManager = this.renderer.getLayerManager();
     if (lastHover === null && piece === null) return;
     else if (lastHover === piece) return;
     this.renderer.getLayerManager().setHoverEnabled(true);
+    layerManager.removeEvent("onPointerHover", true);
     this.pieceHover = piece;
     if (piece === null && lastHover !== null) {
-      await this.renderer
-        .getLayerManager()
-        .togglePieceLayer("dynamicPieces", "staticPieces", lastHover);
+      await layerManager.togglePieceLayer(
+        "dynamicPieces",
+        "staticPieces",
+        lastHover
+      );
     } else if (lastHover === null && piece !== null) {
-      await this.renderer
-        .getLayerManager()
-        .togglePieceLayer("staticPieces", "dynamicPieces", piece);
+      await layerManager.togglePieceLayer(
+        "staticPieces",
+        "dynamicPieces",
+        piece
+      );
     } else if (lastHover !== null && piece !== null) {
-      await this.renderer
-        .getLayerManager()
-        .togglePieceLayer("dynamicPieces", "staticPieces", lastHover);
-      await this.renderer
-        .getLayerManager()
-        .togglePieceLayer("staticPieces", "dynamicPieces", piece);
+      await layerManager.togglePieceLayer(
+        "dynamicPieces",
+        "staticPieces",
+        lastHover
+      );
+      await layerManager.togglePieceLayer(
+        "staticPieces",
+        "dynamicPieces",
+        piece
+      );
     }
+
     this.renderer.renderClientOverlayEvents();
     this.renderer.getLayerManager().setHoverEnabled(false);
   }
@@ -449,7 +461,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
           .addCoords(record, coords);
       }
       if (event)
-        this.renderer.getLayerManager().getLayer(layer).addClearCoords(coords);
+        this.renderer.getLayerManager().getLayer(layer).addEvent(event, coords);
     }
 
     ctx_.__clearRegions();
