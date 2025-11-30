@@ -36,7 +36,9 @@ class Iterators {
     ctx.stroke();
     ctx.fill();
     ctx.restore();
-    this.boardRuntime.handleDrawResult(ctx, "underlay", "onPointerSelect");
+    this.boardRuntime.renderer
+      .getLayerManager()
+      .applyDrawResult(ctx, "underlay", "onPointerSelect");
   }
 
   defaultOnHover<T extends TBoardEventContext = TBoardEventContext>(args: T) {
@@ -57,7 +59,9 @@ class Iterators {
       this.drawOnHoverText(image, ctx, piece, squareSize);
     ctx.restore();
 
-    this.boardRuntime.handleDrawResult(ctx, "dynamicPieces", "onPointerHover");
+    this.boardRuntime.renderer
+      .getLayerManager()
+      .applyDrawResult(ctx, "dynamicPieces", "onPointerHover");
 
     if ("clearCache" in args && typeof args["clearCache"] === "function")
       (args as any).clearCache();

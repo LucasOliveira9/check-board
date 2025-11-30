@@ -44,7 +44,9 @@ class StaticPiecesLayer extends BaseLayer {
           this.DrawTextPiece(image, ctx, piece, squareSize);
       }
       ctx.restore();
-      this.boardRuntime.handleDrawResult(ctx, "staticPieces", undefined, id);
+      this.boardRuntime.renderer
+        .getLayerManager()
+        .applyDrawResult(ctx, "staticPieces", undefined, id);
     }
 
     this.clearRenderMap();

@@ -227,7 +227,9 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
               __drawRegions: TDrawRegion[];
               __clearRegions: () => void;
             };
-            this.handleDrawResult(clearCtx, layer, event);
+            this.renderer
+              .getLayerManager()
+              .applyDrawResult(clearCtx, layer, event);
           };
 
           drawFn.batch = (
@@ -280,7 +282,9 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
               __drawRegions: TDrawRegion[];
               __clearRegions: () => void;
             };
-            this.handleDrawResult(clearCtx, layer, event);
+            this.renderer
+              .getLayerManager()
+              .applyDrawResult(clearCtx, layer, event);
           };
           return drawFn as TDrawFunction;
         },
@@ -439,32 +443,6 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       this.args.pieceStyle =
         this.helpers.pieceHelper.getPieceImages[this.args.pieceConfig?.type];
     }
-  }
-
-  handleDrawResult(
-    ctx_: TSafeCtx & {
-      __drawRegions: TDrawRegion[];
-      __clearRegions: () => void;
-    },
-    layer: TCanvasLayer,
-    event?: TEvents,
-    record?: TPieceId
-  ) {
-    const regions = ctx_.__drawRegions;
-    if (!regions.length) return;
-
-    for (const coords of regions) {
-      if (record) {
-        this.renderer
-          .getLayerManager()
-          .getLayer(layer)
-          .addCoords(record, coords);
-      }
-      if (event)
-        this.renderer.getLayerManager().getLayer(layer).addEvent(event, coords);
-    }
-
-    ctx_.__clearRegions();
   }
 
   updateBoardState(from: TNotation, to: TNotation) {

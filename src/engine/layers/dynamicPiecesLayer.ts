@@ -112,14 +112,13 @@ class DynamicPiecesLayer extends BaseLayer {
 
       ctx.restore();
       if (selected?.isDragging && selected.id === id)
-        this.boardRuntime.handleDrawResult(
-          ctx,
-          "dynamicPieces",
-          "onPointerDrag",
-          id
-        );
+        this.boardRuntime.renderer
+          .getLayerManager()
+          .applyDrawResult(ctx, "dynamicPieces", "onPointerDrag", id);
       else
-        this.boardRuntime.handleDrawResult(ctx, "dynamicPieces", undefined, id);
+        this.boardRuntime.renderer
+          .getLayerManager()
+          .applyDrawResult(ctx, "dynamicPieces", undefined, id);
     }
 
     for (const pieceId of this.toggleCanvas) {

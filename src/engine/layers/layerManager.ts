@@ -1,4 +1,11 @@
-import { TCanvasCoords, TCanvasLayer, TEvents, TPieceId } from "types";
+import {
+  TCanvasCoords,
+  TCanvasLayer,
+  TDrawRegion,
+  TEvents,
+  TPieceId,
+  TSafeCtx,
+} from "types";
 import BaseLayer from "./baseLayer";
 import BoardLayer from "./boardLayer";
 import BoardRuntime from "engine/BoardRuntime/BoardRuntime";
@@ -100,6 +107,28 @@ class LayerManager {
     toLayer.addAll?.(pieceId, piece, newCoords);
     if (noRender) return;
     await this.boardRuntime.renderPieces();
+  }
+
+  applyDrawResult(
+    ctx_: TSafeCtx & {
+      __drawRegions: TDrawRegion[];
+      __clearRegions: () => void;
+    },
+    layer: TCanvasLayer,
+    event?: TEvents,
+    record?: TPieceId
+  ) {
+    const regions = ctx_.__drawRegions;
+    if (!regions.length) return;
+
+    for (const coords of regions) {
+      if (record) {
+        this.getLayer(layer).addCoords(record, coords);
+      }
+      if (event) this.getLayer(layer).addEvent(event, coords);
+    }
+
+    ctx_.__clearRegions();
   }
 
   getEventEnabled() {
