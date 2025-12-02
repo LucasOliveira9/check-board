@@ -63,7 +63,10 @@ class StaticPiecesLayer extends BaseLayer {
     }
 
     for (const [id, piece] of this.pieces) {
-      if (!newPieces.has(id)) {
+      if (
+        !newPieces.has(id) &&
+        !this.boardRuntime.renderer.getLayerManager().isDelayedPieceClear(id)
+      ) {
         const coords: TCanvasCoords = {
           x: piece.x,
           y: piece.y,

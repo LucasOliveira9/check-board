@@ -78,17 +78,20 @@ type TMove = {
   piece: TPieceBoard;
 };
 
-type TEvents =
-  | "onPointerSelect"
-  | "onPointerHover"
-  | "onPointerDragStart"
-  | "onPointerDrag"
-  | "onPointerDrop"
-  | "onAnimationFrame"
-  | "onDrawPiece"
-  | "onDrawBoard"
-  | "onDrawOverlay"
-  | "onDrawUnderlay";
+const EVENTS = {
+  onPointerSelect: "onPointerSelect",
+  onPointerHover: "onPointerHover",
+  onPointerDragStart: "onPointerDragStart",
+  onPointerDrag: "onPointerDrag",
+  onPointerDrop: "onPointerDrop",
+  onAnimationFrame: "onAnimationFrame",
+  onDrawPiece: "onDrawPiece",
+  onDrawBoard: "onDrawBoard",
+  onDrawOverlay: "onDrawOverlay",
+  onDrawUnderlay: "onDrawUnderlay",
+} as const;
+
+type TEvents = keyof typeof EVENTS;
 
 type TBoardEventContext = TBoardEventContextBase &
   Partial<TBoardEventContextExtras>;
@@ -139,3 +142,5 @@ export type {
   TEvents,
   TDrawFunction,
 };
+
+export { EVENTS };

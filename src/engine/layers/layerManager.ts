@@ -1,11 +1,14 @@
 import {
+  TBoardEventContext,
   TCanvasCoords,
   TCanvasLayer,
   TDrawRegion,
   TEvents,
+  TGetterBoardEventContext,
   TPieceId,
   TSafeCtx,
 } from "types";
+import { EVENTS } from "../../types/events";
 import BaseLayer from "./baseLayer";
 import BoardLayer from "./boardLayer";
 import BoardRuntime from "engine/BoardRuntime/BoardRuntime";
@@ -14,18 +17,27 @@ import StaticPiecesLayer from "./staticPieces";
 import DynamicPiecesLayer from "./dynamicPiecesLayer";
 import OverlayLayer from "./overlayLayer";
 import Iterators from "../iterators/iterators";
+import Events from "./events";
 
 class LayerManager {
   private layers: Record<TCanvasLayer, BaseLayer>;
   private iterator: Iterators;
-  private interaction = {
-    hover: true,
-    selection: true,
-    dragging: true,
-    highlight: true,
-    animation: true,
+  private events: Events;
+  private interaction: Record<TEvents, boolean> = {
+    onPointerSelect: true,
+    onPointerHover: true,
+    onPointerDragStart: true,
+    onPointerDrag: true,
+    onPointerDrop: true,
+    onAnimationFrame: true,
+    onDrawPiece: true,
+    onDrawBoard: true,
+    onDrawOverlay: true,
+    onDrawUnderlay: true,
   };
   private boardRuntime: BoardRuntime;
+  private drawList: Set<TEvents> = new Set();
+  private delayedPieceClear: Map<TPieceId, TPieceId> = new Map();
 
   constructor(boardRuntime: BoardRuntime) {
     this.boardRuntime = boardRuntime;
@@ -38,6 +50,7 @@ class LayerManager {
     };
 
     this.iterator = new Iterators(boardRuntime);
+    this.events = new Events(boardRuntime);
   }
 
   getLayer(layer: TCanvasLayer) {
@@ -62,9 +75,8 @@ class LayerManager {
     for (const layer of Object.values(this.layers)) layer.removeAll?.(pieceId);
   }
 
-  removeEvent(event: TEvents, forceClear?: boolean) {
-    for (const layer of Object.values(this.layers))
-      layer.removeEvent(event, forceClear);
+  removeEvent(event: TEvents) {
+    for (const layer of Object.values(this.layers)) layer.removeEvent(event);
   }
 
   async togglePieceLayer(
@@ -106,7 +118,7 @@ class LayerManager {
     fromLayer.removeAll?.(pieceId);
     toLayer.addAll?.(pieceId, piece, newCoords);
     if (noRender) return;
-    await this.boardRuntime.renderPieces();
+    await this.boardRuntime.renderer.render(false);
   }
 
   applyDrawResult(
@@ -131,28 +143,85 @@ class LayerManager {
     ctx_.__clearRegions();
   }
 
+  drawEvent(event: TEvents) {
+    this.removeEvent(event);
+    this.addDraw(event);
+  }
+
+  addDraw(event: TEvents) {
+    this.drawList.add(event);
+  }
+
+  removeDraw(event: TEvents) {
+    this.drawList.delete(event);
+  }
+
   getEventEnabled() {
     return this.interaction;
   }
 
   isSelectionEnabled() {
-    return this.interaction.selection;
+    return this.interaction.onPointerSelect;
   }
 
   isHoverEnabled() {
-    return this.interaction.hover;
+    return this.interaction.onPointerHover;
   }
 
   setHoverEnabled(b: boolean) {
-    return (this.interaction.hover = b);
+    return (this.interaction.onPointerHover = b);
   }
 
   setSelectionEnabled(b: boolean) {
-    return (this.interaction.selection = b);
+    return (this.interaction.onPointerSelect = b);
   }
 
   resetAllLayers() {
     for (const layer of Object.values(this.layers)) layer.resetLayer();
+  }
+
+  renderEvents() {
+    for (const event of this.drawList.values()) {
+      this.interaction[event] = true;
+      this.events.run(event);
+      this.interaction[event] = false;
+    }
+    this.drawList.clear();
+  }
+
+  addDelayedPieceClear(owner: TPieceId, target: TPieceId) {
+    this.delayedPieceClear.set(owner, target);
+  }
+
+  getDelayedPieceClear(pieceId: TPieceId) {
+    return this.delayedPieceClear.get(pieceId);
+  }
+
+  deleteDelayedPieceClear(pieceId: TPieceId) {
+    this.delayedPieceClear.delete(pieceId);
+  }
+
+  resetDelayedPieceClear() {
+    this.delayedPieceClear.clear();
+  }
+
+  isDelayedPieceClear(pieceId: TPieceId) {
+    return Array.from(this.delayedPieceClear.values()).includes(pieceId);
+  }
+
+  clearDelayedPiece(pieceId: TPieceId, layer: TCanvasLayer) {
+    const delayed = this.getDelayedPieceClear(pieceId);
+    if (delayed) {
+      const layer_ = this.getLayer(layer);
+      const coords = layer_.getCoords(delayed);
+      if (coords) {
+        layer_.addClearCoords(coords);
+        layer_.removeAll?.(delayed);
+        layer_.clear();
+      }
+
+      this.deleteDelayedPieceClear(pieceId);
+    }
   }
 }
 

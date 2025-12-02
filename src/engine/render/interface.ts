@@ -9,12 +9,7 @@ import {
 import LayerManager from "engine/layers/layerManager";
 
 interface IRenderer {
-  renderStaticPieces(): void;
-  renderUnderlay(): void;
-  renderBoard(): void;
-  renderDynamicPieces(): Promise<void>;
-  renderOverlay(): void;
-  renderClientOverlayEvents(): void;
+  render(init: boolean): Promise<void>;
   addDynamicPiece(id: TPieceId, piece: TPieceInternalRef): void;
   addStaticPiece(id: TPieceId, piece: TPieceInternalRef): void;
   deleteStaticPiece(id: TPieceId): void;

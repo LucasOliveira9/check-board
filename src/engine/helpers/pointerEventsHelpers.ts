@@ -18,9 +18,9 @@ class PointerEventsHelpers {
     const squareSize = this.boardRuntime.getSize() / 8,
       isBlackView = this.boardRuntime.getIsBlackView();
     const piece = selected && this.boardRuntime.getInternalRefVal(selected.id);
-
     const sqr = Utils.coordsToSquare(offsetX, offsetY, squareSize, isBlackView);
     const coords = Utils.squareToCoords(sqr, squareSize, isBlackView);
+    await this.boardRuntime.setPieceHover(null);
     if (selected && selected.isDragging) {
       if (piece && sqr && coords) {
         const { x, y } = coords;
@@ -161,7 +161,7 @@ class PointerEventsHelpers {
             h: squareSize,
           });
 
-        await this.boardRuntime.renderPieces();
+        await this.boardRuntime.renderer.render(false);
       }
     }
   }
@@ -174,7 +174,12 @@ class PointerEventsHelpers {
     const squareSize = this.boardRuntime.getSize() / 8;
 
     if (from !== null) {
-      move = this.boardRuntime.helpers.move(from.notation, to.notation, piece);
+      move = this.boardRuntime.helpers.move(
+        from.notation,
+        to.notation,
+        piece,
+        false
+      );
     }
     this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
       cursor: "default",
@@ -260,7 +265,8 @@ class PointerEventsHelpers {
         const move = this.boardRuntime.helpers.move(
           from.notation,
           to.notation,
-          piece
+          piece,
+          true
         );
         if (move) return true;
       }

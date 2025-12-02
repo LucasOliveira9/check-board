@@ -35,6 +35,7 @@ abstract class BaseLayer implements ICanvasLayer {
       })
     | null = null;
 
+  protected delayedPieceClear: Map<TPieceId, TPieceId> = new Map();
   private destroyed = false;
 
   constructor(name: TCanvasLayer, boardRuntime: BoardRuntime) {
@@ -61,14 +62,16 @@ abstract class BaseLayer implements ICanvasLayer {
   clear(): void {
     const canvasLayers = this.boardRuntime.getCanvasLayers();
     const dpr = canvasLayers.getDpr();
+
     for (const c of this.clearQueue) {
       this.ctx?.save();
       this.ctx?.setTransform(1, 0, 0, 1, 0, 0);
       this.ctx?.clearRect(c.x * dpr, c.y * dpr, c.w * dpr, c.h * dpr);
       this.ctx?.restore();
     }
-    this.clearQueue.length = 0;
+    this.resetClearCoords();
   }
+
   draw(): void {
     throw new Error("Method not implemented.");
   }
@@ -125,12 +128,40 @@ abstract class BaseLayer implements ICanvasLayer {
     this.eventsMap[event].push(...coords);
   }
 
-  removeEvent(event: TEvents, forceClear?: boolean) {
+  removeEvent(event: TEvents) {
     const hasEvent = this.eventsMap[event];
     if (!hasEvent) return;
-    for (const e of hasEvent) this.addClearCoords(e);
+    const regions: TCanvasCoords[] = [];
+    for (const e of hasEvent) {
+      this.addClearCoords(e);
+      regions.push(e);
+    }
     delete this.eventsMap[event];
-    forceClear && this.clear();
+    const layerManager = this.boardRuntime.renderer.getLayerManager();
+    for (const [e, coords] of Object.entries(this.eventsMap)) {
+      for (const c of coords) {
+        for (const r of regions) {
+          if (this.intersects(c, r)) {
+            layerManager.addDraw(e as TEvents);
+            layerManager.removeEvent(e as TEvents);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  private intersects(a: TCanvasCoords, b: TCanvasCoords) {
+    return !(
+      a.x + a.w < b.x ||
+      b.x + b.w < a.x ||
+      a.y + a.h < b.y ||
+      b.y + b.h < a.y
+    );
+  }
+
+  getCtx() {
+    return this.ctx;
   }
 
   hasPiece(pieceId: TPieceId) {
@@ -230,13 +261,12 @@ abstract class BaseLayer implements ICanvasLayer {
     this.animation.length <= 0 && this.boardRuntime.setIsMoving(false);
   }
 
-  render(
-    ctx: CanvasRenderingContext2D & {
-      __drawRegions: TDrawRegion[];
-      __clearRegions: () => void;
-    },
-    delta: number
-  ) {
+  getEvents(event?: TEvents) {
+    if (event) return this.eventsMap[event];
+    return this.eventsMap;
+  }
+
+  render(delta: number) {
     this.updateClear();
     this.update?.(delta);
     this.clear();

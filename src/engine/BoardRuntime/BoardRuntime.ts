@@ -313,22 +313,21 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     await this.setPieceHover(null);
     this.setIsMoving(true);
     this.board = Utils.parseFen(board);
-    await this.refreshCanvas();
+    await this.refreshCanvas(false);
     this.setIsMoving(false);
   }
 
   async setBoard(board: Record<TNotation, TPieceBoard>) {
     board && (this.board = structuredClone(board));
-    await this.refreshCanvas();
+    await this.refreshCanvas(false);
   }
 
-  async refreshCanvas() {
+  async refreshCanvas(init: boolean) {
     this.helpers.pieceHelper.clearCache();
     this.selected = null;
     //this.clearAnimation();
     await this.initInternalRef();
-    await this.renderPieces();
-    this.renderUnderlayAndOverlay();
+    await this.renderer.render(init);
   }
 
   updateBoard(piece: TPieceBoard) {
@@ -343,7 +342,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.internalRef = internalRef;
   }
 
-  setSelected(selected: TSelected | null) {
+  async setSelected(selected: TSelected | null) {
     if (selected === null && this.selected === null) {
       this.selected = selected;
       return;
@@ -353,20 +352,22 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     }
     const layerManager = this.renderer.getLayerManager();
     layerManager.setSelectionEnabled(true);
-    layerManager.removeEvent("onPointerSelect", true);
     this.selected = selected;
-    this.renderUnderlayAndOverlay();
+    layerManager.drawEvent("onPointerSelect");
+    await this.renderer.render(false);
     this.renderer.getLayerManager().setSelectionEnabled(false);
   }
 
   async setPieceHover(piece: TPieceId | null) {
     const lastHover = this.getPieceHover();
     const layerManager = this.renderer.getLayerManager();
+
     if (lastHover === null && piece === null) return;
     else if (lastHover === piece) return;
     this.renderer.getLayerManager().setHoverEnabled(true);
-    layerManager.removeEvent("onPointerHover", true);
     this.pieceHover = piece;
+    layerManager.drawEvent("onPointerHover");
+
     if (piece === null && lastHover !== null) {
       await layerManager.togglePieceLayer(
         "dynamicPieces",
@@ -392,7 +393,6 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       );
     }
 
-    this.renderer.renderClientOverlayEvents();
     this.renderer.getLayerManager().setHoverEnabled(false);
   }
 
@@ -403,49 +403,38 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     // this.clearAnimation();
     this.getCanvasLayers().clearAllRect();
     this.renderer.getLayerManager().resetAllLayers();
-    this.renderer.renderBoard();
-    this.refreshCanvas();
+    this.refreshCanvas(true);
   }
 
   deleteIntervalRefVal(key: TPieceId) {
     delete this.internalRef[key];
   }
 
-  async renderPieces() {
+  async loadImages() {
     if (this.destroyed) return;
 
     if (!this.isImagesLoaded && this.args.pieceStyle) {
       await this.helpers.pieceHelper.preloadImages(this.args.pieceStyle);
       this.isImagesLoaded = true;
     }
-
-    this.renderer.renderStaticPieces();
-    await this.renderer.renderDynamicPieces();
-  }
-
-  renderUnderlayAndOverlay() {
-    if (this.destroyed) return;
-    this.renderer.renderUnderlay();
-    this.renderer.renderOverlay();
-    this.renderer.renderClientOverlayEvents();
   }
 
   async init() {
-    this.initPieceImages();
-    await this.initInternalRef();
     await new Promise(requestAnimationFrame);
-    this.renderer.renderBoard();
-    await this.renderPieces();
+    await this.initPieceImages();
+    await this.initInternalRef();
+    await this.renderer.render(true);
   }
 
-  initPieceImages() {
+  async initPieceImages() {
     if (!this.args.pieceStyle) {
       this.args.pieceStyle =
         this.helpers.pieceHelper.getPieceImages[this.args.pieceConfig?.type];
     }
+    await this.loadImages();
   }
 
-  updateBoardState(from: TNotation, to: TNotation) {
+  updateBoardState(from: TNotation, to: TNotation, delay: boolean) {
     const piece = this.board[from];
     let enemie = this.board[to];
     piece.square = {
@@ -457,10 +446,25 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.board[to] = piece;
     delete this.board[from];
 
-    enemie && this.deleteIntervalRefVal(enemie.id);
+    this.helpers.pieceHelper.updateCache(from, to, {
+      id: piece.id,
+      piece: this.getInternalRefVal(piece.id),
+    });
+
+    if (enemie) {
+      if (delay && this.getDefaultAnimation()) {
+        const layerManager = this.renderer.getLayerManager();
+        layerManager.addDelayedPieceClear(piece.id, enemie.id);
+      }
+
+      //const coords = layer.getCoords(enemie.id);
+      //coords && layer.addClearCoords(coords);
+
+      this.deleteIntervalRefVal(enemie.id);
+    }
     (enemie as any) = null;
 
-    this.refreshCanvas();
+    this.refreshCanvas(false);
 
     if (this.args.onUpdate) {
       this.args.onUpdate();
@@ -470,6 +474,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   async initInternalRef() {
     const squareSize = this.args.size / 8;
     const ids = Object.values(this.board);
+    const layerManager = this.renderer.getLayerManager();
     this.renderer.getLayerManager().getLayer("staticPieces").clearPieces?.(ids);
 
     for (const piece of Object.values(this.board)) {
@@ -501,10 +506,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
       this.setInternalRefVal(piece.id as TPieceId, ref);
       if (!existing) {
-        this.renderer
-          .getLayerManager()
-          .getLayer("staticPieces")
-          .addAll?.(piece.id, ref, coords);
+        layerManager.getLayer("staticPieces").addAll?.(piece.id, ref, coords);
         continue;
       }
       if (piece.square.notation !== existing.square.notation) {
@@ -512,25 +514,26 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
           ref.anim = true;
           this.setIsMoving(true);
         }
-        this.renderer
-          .getLayerManager()
-          .getLayer("dynamicPieces")
-          .addAnimation({
-            from: { x: existing.x, y: existing.y },
-            to: { x: square.x, y: square.y },
-            piece: ref,
-            start: performance.now(),
-            id: piece.id,
-          });
+        layerManager.getLayer("dynamicPieces").addAnimation({
+          from: { x: existing.x, y: existing.y },
+          to: { x: square.x, y: square.y },
+          piece: ref,
+          start: performance.now(),
+          id: piece.id,
+        });
 
         if (this.args.defaultAnimation)
-          await this.renderer
-            .getLayerManager()
-            .togglePieceLayer("staticPieces", "dynamicPieces", piece.id, true);
-        else
-          await this.renderer
-            .getLayerManager()
-            .togglePieceLayer("staticPieces", "staticPieces", piece.id, true);
+          await layerManager.togglePieceLayer(
+            "staticPieces",
+            "dynamicPieces",
+            piece.id,
+            true
+          );
+        else {
+          const layer = layerManager.getLayer("staticPieces");
+          layer.removeAll?.(piece.id);
+          layer.addAll?.(piece.id, ref, coords);
+        }
       }
     }
     this.deleteInternalRef(ids);

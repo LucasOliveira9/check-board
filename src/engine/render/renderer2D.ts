@@ -65,8 +65,16 @@ class Renderer2D implements IRenderer2D {
       (this as any)[key] = null;
     }
   }
+  async render(init: boolean) {
+    if (init) this.renderBoard();
+    this.renderStaticPieces();
+    await this.renderDynamicPieces();
+    this.renderUnderlay();
+    this.renderOverlay();
+    this.layerManager.renderEvents();
+  }
 
-  async renderDynamicPieces() {
+  private async renderDynamicPieces() {
     const boardRuntime = this.boardRuntime;
     const canvasLayers = boardRuntime.getCanvasLayers();
     const canvas = canvasLayers.getCanvas("dynamicPieces").current;
@@ -78,7 +86,7 @@ class Renderer2D implements IRenderer2D {
 
     if (animation.length === 0) {
       layer.clearAnimation();
-      layer.render(ctx, 0);
+      layer.render(0);
       //boardRuntime.draw.pieces("dynamic");
       return;
     }
@@ -112,7 +120,7 @@ class Renderer2D implements IRenderer2D {
           return;
         }
 
-        layer.render(ctx, time);
+        layer.render(time);
         //boardRuntime.draw.pieces("dynamic", time);
         const nextRef = requestAnimationFrame(render);
         layer.setAnimationRef(nextRef);
@@ -122,40 +130,40 @@ class Renderer2D implements IRenderer2D {
     });
   }
 
-  renderStaticPieces(): void {
+  private renderStaticPieces(): void {
     const boardRuntime = this.boardRuntime,
       canvasLayers = boardRuntime.getCanvasLayers();
     const canvas = canvasLayers.getCanvas("staticPieces").current;
     const ctx = canvasLayers.getContext("staticPieces");
     if (canvas === null || !ctx) return;
     const layer = this.layerManager.getLayer("staticPieces");
-    layer.render(ctx, 0);
+    layer.render(0);
   }
-  renderUnderlay(): void {
+  private renderUnderlay(): void {
     const boardRuntime = this.boardRuntime,
       canvasLayers = boardRuntime.getCanvasLayers();
     const ctx = canvasLayers.getContext("underlay");
     const canvas = canvasLayers.getCanvas("underlay").current;
     if (!canvas === null || !ctx) return;
     const layer = this.layerManager.getLayer("underlay");
-    layer.render(ctx, 0);
+    layer.render(0);
   }
 
-  renderOverlay(): void {
+  private renderOverlay(): void {
     const boardRuntime = this.boardRuntime,
       canvasLayers = boardRuntime.getCanvasLayers();
     const canvas = canvasLayers.getCanvas("overlay").current;
     const ctx = canvasLayers.getContext("overlay");
     if (!canvas === null || !ctx) return;
     const layer = this.layerManager.getLayer("overlay");
-    layer.render(ctx, 0);
+    layer.render(0);
   }
 
   /* renderClientOverlayEvents() {
     this.boardRuntime.draw.clientOverlayEvents();
   }*/
 
-  renderBoard(): void {
+  private renderBoard(): void {
     const boardRuntime = this.boardRuntime,
       canvasLayers = boardRuntime.getCanvasLayers();
     if (!canvasLayers) return;
@@ -163,7 +171,7 @@ class Renderer2D implements IRenderer2D {
     const ctx = canvasLayers.getContext("board");
     if (!canvas === null || !ctx) return;
     const layer = this.layerManager.getLayer("board");
-    layer.render(ctx, 0);
+    layer.render(0);
   }
 
   addStaticPiece(id: TPieceId, piece: TPieceInternalRef) {

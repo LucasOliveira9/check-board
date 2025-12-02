@@ -1,9 +1,21 @@
-import { TBoardEventContext } from "../../types/events";
+import { TBoardEventContext, TEvents } from "../../types/events";
 import { TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 
 class Iterators {
   private scale = 1.05;
+  ITERATORS: Record<TEvents, any> = {
+    onPointerSelect: "defaultOnSelect",
+    onPointerHover: "defaultOnHover",
+    onPointerDragStart: null,
+    onPointerDrag: null,
+    onPointerDrop: null,
+    onAnimationFrame: null,
+    onDrawPiece: null,
+    onDrawBoard: null,
+    onDrawOverlay: null,
+    onDrawUnderlay: null,
+  };
   constructor(protected boardRuntime: BoardRuntime) {}
 
   destroy() {

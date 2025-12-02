@@ -5,6 +5,9 @@ import { IRenderer } from "./interface";
 
 class Renderer3D implements IRenderer {
   constructor(protected boardRuntime: BoardRuntime) {}
+  async render(init: boolean): Promise<void> {
+    throw new Error("Method not implemented.");
+  }
   getLayerManager(): LayerManager {
     throw new Error("Method not implemented.");
   }
@@ -40,19 +43,6 @@ class Renderer3D implements IRenderer {
     for (const key of Object.getOwnPropertyNames(this)) {
       (this as any)[key] = null;
     }
-  }
-  renderStaticPieces(): void {
-    throw new Error("Method not implemented.");
-  }
-  renderUnderlay(): void {
-    throw new Error("Method not implemented.");
-  }
-  renderBoard(): void {
-    throw new Error("Method not implemented.");
-  }
-
-  renderClientOverlayEvents(): void {
-    throw new Error("Method not implemented.");
   }
 
   clear(): void {

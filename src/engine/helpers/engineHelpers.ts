@@ -99,7 +99,7 @@ class EngineHelpers {
     return res;
   }
 
-  move(from: TNotation, to: TNotation, piece: TPieceBoard) {
+  move(from: TNotation, to: TNotation, piece: TPieceBoard, click: boolean) {
     if (from === to) return false;
     const piece_ = this.boardRuntime.getInternalRefVal(piece.id);
     // IMPLEMENTAR LÓGICA DO CLIENT MOVE
@@ -108,7 +108,7 @@ class EngineHelpers {
       const move = moveCallback({ from, to, piece });
       if (move) {
         this.boardRuntime.setSelected(null);
-        this.boardRuntime.updateBoardState(from, to);
+        this.boardRuntime.updateBoardState(from, to, click);
         return true;
       } else {
         const selected = this.boardRuntime.getSelected();
@@ -120,7 +120,7 @@ class EngineHelpers {
     } else {
       // DEFAULT
       this.boardRuntime.setSelected(null);
-      this.boardRuntime.updateBoardState(from, to);
+      this.boardRuntime.updateBoardState(from, to, click);
     }
     return true;
   }

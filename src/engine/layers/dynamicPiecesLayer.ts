@@ -11,10 +11,11 @@ class DynamicPiecesLayer extends BaseLayer {
   }
 
   updateClear(): void {
-    for (const e of Object.keys(this.eventsMap)) this.removeEvent(e as TEvents);
+    const CLEAR: TEvents[] = ["onPointerDrag"];
+    for (const e of CLEAR) this.removeEvent(e as TEvents);
   }
 
-  update(delta: number) {
+  private defaultPieceAnimation(delta: number) {
     const animation = this.getAnimation();
     for (let i = 0; i < animation.length; i++) {
       const anim = animation[i];
@@ -55,13 +56,19 @@ class DynamicPiecesLayer extends BaseLayer {
     }
   }
 
+  update(delta: number) {
+    if (this.boardRuntime.getDefaultAnimation())
+      this.defaultPieceAnimation(delta);
+  }
+
   async draw() {
     const piecesImage = this.boardRuntime.getPieceStyle(),
       toRender = this.getToRender(),
       pieceHoverRef = this.boardRuntime.getPieceHover(),
       squareSize = this.boardRuntime.getSize() / 8,
       selected = this.boardRuntime.getSelected(),
-      ctx = this.ctx;
+      ctx = this.ctx,
+      layerManager = this.boardRuntime.renderer.getLayerManager();
 
     if (!piecesImage || !toRender || !toRender.length) return;
     if (
@@ -112,90 +119,23 @@ class DynamicPiecesLayer extends BaseLayer {
 
       ctx.restore();
       if (selected?.isDragging && selected.id === id)
-        this.boardRuntime.renderer
-          .getLayerManager()
-          .applyDrawResult(ctx, "dynamicPieces", "onPointerDrag", id);
-      else
-        this.boardRuntime.renderer
-          .getLayerManager()
-          .applyDrawResult(ctx, "dynamicPieces", undefined, id);
+        layerManager.applyDrawResult(ctx, "dynamicPieces", "onPointerDrag", id);
+      else layerManager.applyDrawResult(ctx, "dynamicPieces", undefined, id);
     }
 
     for (const pieceId of this.toggleCanvas) {
+      layerManager.clearDelayedPiece(pieceId, "staticPieces");
       await this.boardRuntime.renderer
         .getLayerManager()
         .togglePieceLayer("dynamicPieces", "staticPieces", pieceId, true);
     }
-    if (this.toggleCanvas.length > 0) await this.boardRuntime.renderPieces();
+    if (this.toggleCanvas.length > 0)
+      await this.boardRuntime.renderer.render(false);
     this.toggleCanvas.length = 0;
-    this.hover(ctx);
   }
 
   postRender(): void {
     this.updateAnimation();
-  }
-
-  hover(
-    ctx: CanvasRenderingContext2D & {
-      __drawRegions: TDrawRegion[];
-      __clearRegions: () => void;
-    }
-  ) {
-    const size = this.boardRuntime.getSize(),
-      piecesImage = this.boardRuntime.getPieceStyle(),
-      internalRef = this.boardRuntime.getInternalRefObj(),
-      pieceHoverRef = this.boardRuntime.getPieceHover(),
-      selectedRef = this.boardRuntime.getSelected(),
-      events = this.boardRuntime.getEvents(),
-      squareSize = size / 8,
-      injection = this.boardRuntime.getInjection();
-
-    if (
-      pieceHoverRef &&
-      !selectedRef?.isDragging &&
-      this.boardRuntime.renderer.getLayerManager().getEventEnabled().hover
-    ) {
-      const piece = internalRef[pieceHoverRef];
-      const canvas = this.boardRuntime
-        .getCanvasLayers()
-        .getCanvas("dynamicPieces").current
-        ? this.boardRuntime.getCanvasLayers().getCanvas("dynamicPieces").current
-        : undefined;
-      if (piece && !piece.anim) {
-        if (events?.onPointerHover) {
-          const context = this.boardRuntime.getContext(true, {
-            squareSize,
-            x: piece.x,
-            y: piece.y,
-            size,
-            piece: piece,
-            square: piece.square,
-          });
-
-          this.boardRuntime.helpers.triggerEvent(
-            events,
-            "onPointerHover",
-            injection ? injection(context) : context
-          );
-          return;
-        }
-
-        this.boardRuntime.renderer
-          .getLayerManager()
-          .getIterator()
-          .defaultOnHover({
-            ctx,
-            size,
-            squareSize,
-            x: piece.x,
-            y: piece.y,
-            canvas: canvas ? canvas : undefined,
-            piece: piece,
-            square: piece.square,
-            piecesImage: piecesImage,
-          });
-      }
-    }
   }
 }
 
