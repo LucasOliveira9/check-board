@@ -58,6 +58,7 @@ class CanvasLayers {
     this.underlayCanvas = underlayCanvas;
     this.dynamicPiecesCanvas = dynamicPiecesCanvas;
     this.size = size;
+    this.disableTouchAction();
     this.setContext();
     this.setQuality();
   }
@@ -67,6 +68,18 @@ class CanvasLayers {
     for (const key of Object.getOwnPropertyNames(this)) {
       (this as any)[key] = null;
     }
+  }
+
+  private disableTouchAction() {
+    (
+      [
+        "board",
+        "staticPieces",
+        "overlay",
+        "underlay",
+        "dynamicPieces",
+      ] as TCanvasLayer[]
+    ).forEach((key) => this.setCanvasStyle(key, { touchAction: "none" }));
   }
 
   getContext(canvas: TCanvasLayer) {

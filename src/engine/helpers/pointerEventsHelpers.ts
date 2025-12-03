@@ -167,11 +167,17 @@ class PointerEventsHelpers {
   }
 
   async handlePointerUp(e: React.PointerEvent<HTMLCanvasElement>) {
+    const { offsetX, offsetY } = Utils.getCanvasCoords(e);
+    const size = this.boardRuntime.getSize();
+
+    if (offsetX < 0 || offsetY < 0 || offsetX >= size || offsetY >= size) {
+      this.handlePointerLeave(e);
+      return;
+    }
     const { from, to, piece } =
       await this.boardRuntime.helpers.pointerEventsHelper.detectMove(e);
     let move = false;
     let selected = this.boardRuntime.getSelected();
-    const squareSize = this.boardRuntime.getSize() / 8;
 
     if (from !== null) {
       move = this.boardRuntime.helpers.move(
@@ -195,7 +201,7 @@ class PointerEventsHelpers {
     await this.boardRuntime.setPieceHover(null);
   }
 
-  async handlePointerLeave() {
+  async handlePointerLeave(e: React.PointerEvent<HTMLCanvasElement>) {
     const selected = this.boardRuntime.getSelected();
 
     const piece =

@@ -58,9 +58,11 @@ class Utils {
   }
 
   static getCanvasCoords = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    const rect = e.currentTarget.getBoundingClientRect();
+    const rect = (e.target as HTMLCanvasElement).getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
 
-    return { offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top };
+    return { offsetX: x, offsetY: y };
   };
 
   static deepFreeze<T>(obj: T): TDeepReadonly<T> {

@@ -29,7 +29,7 @@ class BoardEvents {
 
   onPointerLeave(e: React.PointerEvent<HTMLCanvasElement>) {
     if (this.boardRuntime.getIsMoving()) return;
-    this.boardRuntime.helpers.pointerEventsHelper.handlePointerLeave();
+    this.boardRuntime.helpers.pointerEventsHelper.handlePointerLeave(e);
   }
 }
 export default BoardEvents;
