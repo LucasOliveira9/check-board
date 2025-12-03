@@ -23,6 +23,7 @@ import {
   TCanvasCoords,
   TCanvasLayer,
   TDrawRegion,
+  THoverConfig,
   TRender,
 } from "../../types/draw";
 import { TSafeCtx } from "../../types/draw";
@@ -40,13 +41,19 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected piecesToRender: { piece: TPieceInternalRef; id: TPieceId }[] = [];
   protected isMoving: boolean = false;
   protected board: Record<TNotation, TPieceBoard>;
+  protected hoverConfig: THoverConfig = {
+    highlight: true,
+    scaling: true,
+    scaleAmount: 1.05,
+  };
+
   public boardEvents: BoardEvents = new BoardEvents(this);
   public helpers: EngineHelpers = new EngineHelpers(this);
   public renderer: IRenderer;
 
   constructor(protected args: TBoardRuntime<T>) {
     Object.assign(this, args);
-
+    if (args.hoverConfig) this.hoverConfig = args.hoverConfig;
     this.renderer =
       args.mode === "2d" ? new Renderer2D(this) : new Renderer3D(this);
 
@@ -299,6 +306,14 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     return this.isMoving;
   }
 
+  getHoverConfig() {
+    return this.hoverConfig;
+  }
+
+  setHoverConfig(config: THoverConfig) {
+    this.hoverConfig = config;
+  }
+
   setIsMoving(b: boolean) {
     this.isMoving = b;
   }
@@ -351,11 +366,9 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       return;
     }
     const layerManager = this.renderer.getLayerManager();
-    layerManager.setSelectionEnabled(true);
     this.selected = selected;
     layerManager.drawEvent("onPointerSelect");
     await this.renderer.render(false);
-    this.renderer.getLayerManager().setSelectionEnabled(false);
   }
 
   async setPieceHover(piece: TPieceId | null) {
@@ -364,36 +377,35 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
     if (lastHover === null && piece === null) return;
     else if (lastHover === piece) return;
-    this.renderer.getLayerManager().setHoverEnabled(true);
     this.pieceHover = piece;
     layerManager.drawEvent("onPointerHover");
 
-    if (piece === null && lastHover !== null) {
-      await layerManager.togglePieceLayer(
-        "dynamicPieces",
-        "staticPieces",
-        lastHover
-      );
-    } else if (lastHover === null && piece !== null) {
-      await layerManager.togglePieceLayer(
-        "staticPieces",
-        "dynamicPieces",
-        piece
-      );
-    } else if (lastHover !== null && piece !== null) {
-      await layerManager.togglePieceLayer(
-        "dynamicPieces",
-        "staticPieces",
-        lastHover
-      );
-      await layerManager.togglePieceLayer(
-        "staticPieces",
-        "dynamicPieces",
-        piece
-      );
-    }
-
-    this.renderer.getLayerManager().setHoverEnabled(false);
+    if (this.hoverConfig.scaling) {
+      if (piece === null && lastHover !== null) {
+        await layerManager.togglePieceLayer(
+          "dynamicPieces",
+          "staticPieces",
+          lastHover
+        );
+      } else if (lastHover === null && piece !== null) {
+        await layerManager.togglePieceLayer(
+          "staticPieces",
+          "dynamicPieces",
+          piece
+        );
+      } else if (lastHover !== null && piece !== null) {
+        await layerManager.togglePieceLayer(
+          "dynamicPieces",
+          "staticPieces",
+          lastHover
+        );
+        await layerManager.togglePieceLayer(
+          "staticPieces",
+          "dynamicPieces",
+          piece
+        );
+      }
+    } else this.renderer.render(false);
   }
 
   setBlackView(b: boolean) {
@@ -456,9 +468,6 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         const layerManager = this.renderer.getLayerManager();
         layerManager.addDelayedPieceClear(piece.id, enemie.id);
       }
-
-      //const coords = layer.getCoords(enemie.id);
-      //coords && layer.addClearCoords(coords);
 
       this.deleteIntervalRefVal(enemie.id);
     }

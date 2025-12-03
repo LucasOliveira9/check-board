@@ -1,9 +1,9 @@
+import { TBaseCtx } from "types";
 import { TBoardEventContext, TEvents } from "../../types/events";
 import { TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
 
 class Iterators {
-  private scale = 1.05;
   ITERATORS: Record<TEvents, any> = {
     onPointerSelect: "defaultOnSelect",
     onPointerHover: "defaultOnHover",
@@ -28,52 +28,106 @@ class Iterators {
     const { squareSize, x, y } = args;
     //canvas && (canvas.style.zIndex = "3");
     //const canvas = getCanvas;
-    const ctx = this.boardRuntime.getCanvasLayers().getContext("underlay");
 
-    if (!ctx) return;
-    const SELECT_COLOR = "#ffc400ff";
-    const SELECT_GLOW = "rgba(255, 196, 0, 0.75)";
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(
-      x + squareSize / 2,
-      y + squareSize / 2,
-      squareSize * 0.35,
-      0,
-      Math.PI * 2
-    );
-    ctx.strokeStyle = SELECT_COLOR;
-    ctx.lineWidth = 3;
-    ctx.fillStyle = SELECT_GLOW;
-    ctx.stroke();
-    ctx.fill();
-    ctx.restore();
+    const drawSelect = (ctx: TBaseCtx) => {
+      const SELECT_COLOR = "#ffc400ff";
+      const SELECT_GLOW = "rgba(255, 196, 0, 0.75)";
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(
+        x + squareSize / 2,
+        y + squareSize / 2,
+        squareSize * 0.35,
+        0,
+        Math.PI * 2
+      );
+      ctx.strokeStyle = SELECT_COLOR;
+      ctx.lineWidth = 3;
+      ctx.fillStyle = SELECT_GLOW;
+      ctx.stroke();
+      ctx.fill();
+      ctx.restore();
+    };
+
     this.boardRuntime.renderer
       .getLayerManager()
-      .applyDrawResult(ctx, "underlay", "onPointerSelect");
+      .getLayer("underlay")
+      .drawEvent(drawSelect, "onPointerSelect");
+
+    if ("clearCache" in args && typeof args["clearCache"] === "function")
+      (args as any).clearCache();
   }
 
   defaultOnHover<T extends TBoardEventContext = TBoardEventContext>(args: T) {
     const { squareSize, piece, piecesImage } = args;
-    const ctx = this.boardRuntime.getCanvasLayers().getContext("dynamicPieces");
-    if (!piece || !ctx) return;
+    const hoverConfig = this.boardRuntime.getHoverConfig();
+    if (!piece) return;
     const image = piecesImage?.[piece.type];
 
-    ctx.save();
-    ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
-    ctx.shadowBlur = 10;
-    ctx.shadowOffsetX = 5;
-    ctx.shadowOffsetY = 5;
+    // highlight
+    if (hoverConfig.highlight) {
+      const drawHighlight = (ctx: TBaseCtx) => {
+        ctx.save();
 
-    if (image instanceof HTMLImageElement)
-      this.drawOnHoverHTML(image, ctx, piece, squareSize);
-    else if (typeof image === "string")
-      this.drawOnHoverText(image, ctx, piece, squareSize);
-    ctx.restore();
+        ctx.shadowColor = "rgba(255, 204, 0, 0.8)";
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
 
-    this.boardRuntime.renderer
-      .getLayerManager()
-      .applyDrawResult(ctx, "dynamicPieces", "onPointerHover");
+        ctx.lineWidth = 3.5;
+        ctx.strokeStyle = "#ffcc00";
+        ctx.lineJoin = "round";
+
+        ctx.beginPath();
+        ctx.strokeRect(
+          piece.x + 1,
+          piece.y + 1,
+          squareSize - 2,
+          squareSize - 2
+        );
+
+        ctx.restore();
+      };
+
+      this.boardRuntime.renderer
+        .getLayerManager()
+        .getLayer("overlay")
+        .drawEvent(drawHighlight, "onPointerHover");
+    }
+
+    // scaling
+    if (hoverConfig.scaling && piece) {
+      const drawScaling = (ctx: TBaseCtx) => {
+        ctx.save();
+        ctx.shadowColor = "rgba(0, 0, 0, 0.5)";
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 5;
+        ctx.shadowOffsetY = 5;
+
+        if (image instanceof HTMLImageElement)
+          this.drawOnHoverHTML(
+            image,
+            ctx,
+            piece,
+            squareSize,
+            hoverConfig.scaleAmount
+          );
+        else if (typeof image === "string")
+          this.drawOnHoverText(
+            image,
+            ctx,
+            piece,
+            squareSize,
+            hoverConfig.scaleAmount
+          );
+        ctx.restore();
+      };
+
+      this.boardRuntime.renderer
+        .getLayerManager()
+        .getLayer("overlay")
+        .drawEvent(drawScaling, "onPointerHover");
+    }
 
     if ("clearCache" in args && typeof args["clearCache"] === "function")
       (args as any).clearCache();
@@ -81,31 +135,33 @@ class Iterators {
 
   drawOnHoverHTML(
     image: HTMLImageElement,
-    ctx: CanvasRenderingContext2D,
+    ctx: TBaseCtx,
     piece: TPieceInternalRef,
-    squareSize: number
+    squareSize: number,
+    scale: number
   ) {
     if (image && image.complete && image.naturalWidth > 0) {
       ctx.drawImage(
         image,
-        piece.x - (squareSize * (this.scale - 1)) / 2,
-        piece.y - (squareSize * (this.scale - 1)) / 2,
-        squareSize * this.scale,
-        squareSize * this.scale
+        piece.x - (squareSize * (scale - 1)) / 2,
+        piece.y - (squareSize * (scale - 1)) / 2,
+        squareSize * scale,
+        squareSize * scale
       );
     }
   }
 
   drawOnHoverText(
     image: string,
-    ctx: CanvasRenderingContext2D,
+    ctx: TBaseCtx,
     piece: TPieceInternalRef,
-    squareSize: number
+    squareSize: number,
+    scale: number
   ) {
     const image_ = image.length > 1 ? image[0] : image;
     ctx.save();
     ctx.fillStyle = piece.type[0] === "w" ? "#ffffffff" : "#000";
-    ctx.font = `${squareSize * 0.8 * this.scale}px monospace`;
+    ctx.font = `${squareSize * 0.8 * scale}px monospace`;
     let fontSize = squareSize * 0.8;
     ctx.font = `${fontSize}px monospace`;
     const textWidth = ctx.measureText(image_).width;

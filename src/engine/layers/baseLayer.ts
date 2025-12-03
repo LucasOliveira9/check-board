@@ -1,14 +1,17 @@
 import {
   TAnimation,
+  TBaseCtx,
   TCanvasCoords,
   TCanvasLayer,
   TDrawRegion,
+  TEventName,
   TEvents,
   TPieceBoard,
   TPieceCoords,
   TPieceId,
   TPieceInternalRef,
   TRender,
+  TSafeCtx,
 } from "types";
 import { ICanvasLayer } from "./interface";
 import BoardRuntime from "../BoardRuntime/BoardRuntime";
@@ -28,12 +31,7 @@ abstract class BaseLayer implements ICanvasLayer {
   protected animationGen = 0;
   protected animationRef: number | null = null;
   protected animation: TAnimation[] = [];
-  protected ctx:
-    | (CanvasRenderingContext2D & {
-        __drawRegions: TDrawRegion[];
-        __clearRegions: () => void;
-      })
-    | null = null;
+  protected ctx: TBaseCtx | null = null;
 
   protected delayedPieceClear: Map<TPieceId, TPieceId> = new Map();
   private destroyed = false;
@@ -264,6 +262,14 @@ abstract class BaseLayer implements ICanvasLayer {
   getEvents(event?: TEvents) {
     if (event) return this.eventsMap[event];
     return this.eventsMap;
+  }
+
+  drawEvent(fun: (ctx: TBaseCtx) => void, event: TEvents) {
+    if (!this.ctx) return;
+    fun(this.ctx);
+    this.boardRuntime.renderer
+      .getLayerManager()
+      .applyDrawResult(this.ctx, this.name, event);
   }
 
   render(delta: number) {

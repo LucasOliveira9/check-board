@@ -1,5 +1,10 @@
 import Utils from "../../utils/utils";
-import { TCanvasLayer, TDrawRegion, TSafeCtx } from "../../types/draw";
+import {
+  TBaseCtx,
+  TCanvasLayer,
+  TDrawRegion,
+  TSafeCtx,
+} from "../../types/draw";
 
 class CanvasLayers {
   private staticPiecesCanvas: React.RefObject<HTMLCanvasElement | null>;
@@ -8,36 +13,11 @@ class CanvasLayers {
   private underlayCanvas: React.RefObject<HTMLCanvasElement | null>;
   private dynamicPiecesCanvas: React.RefObject<HTMLCanvasElement | null>;
 
-  private staticPiecesCtx:
-    | (CanvasRenderingContext2D & {
-        __drawRegions: TDrawRegion[];
-        __clearRegions: () => void;
-      })
-    | null = null;
-  private boardCtx:
-    | (CanvasRenderingContext2D & {
-        __drawRegions: TDrawRegion[];
-        __clearRegions: () => void;
-      })
-    | null = null;
-  private overlayCtx:
-    | (CanvasRenderingContext2D & {
-        __drawRegions: TDrawRegion[];
-        __clearRegions: () => void;
-      })
-    | null = null;
-  private underlayCtx:
-    | (CanvasRenderingContext2D & {
-        __drawRegions: TDrawRegion[];
-        __clearRegions: () => void;
-      })
-    | null = null;
-  private dynamicPiecesCtx:
-    | (CanvasRenderingContext2D & {
-        __drawRegions: TDrawRegion[];
-        __clearRegions: () => void;
-      })
-    | null = null;
+  private staticPiecesCtx: TBaseCtx | null = null;
+  private boardCtx: TBaseCtx | null = null;
+  private overlayCtx: TBaseCtx | null = null;
+  private underlayCtx: TBaseCtx | null = null;
+  private dynamicPiecesCtx: TBaseCtx | null = null;
 
   private clientStaticPiecesCtx: TSafeCtx | null = null;
   private clientBoardCtx: TSafeCtx | null = null;

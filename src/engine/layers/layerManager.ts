@@ -1,4 +1,5 @@
 import {
+  TBaseCtx,
   TBoardEventContext,
   TCanvasCoords,
   TCanvasLayer,
@@ -122,10 +123,12 @@ class LayerManager {
   }
 
   applyDrawResult(
-    ctx_: TSafeCtx & {
-      __drawRegions: TDrawRegion[];
-      __clearRegions: () => void;
-    },
+    ctx_:
+      | (TSafeCtx & {
+          __drawRegions: TDrawRegion[];
+          __clearRegions: () => void;
+        })
+      | TBaseCtx,
     layer: TCanvasLayer,
     event?: TEvents,
     record?: TPieceId

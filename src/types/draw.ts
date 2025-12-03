@@ -45,6 +45,17 @@ type TRender = {
   y: number;
 };
 
+type THoverConfig = {
+  highlight: boolean;
+  scaling: boolean;
+  scaleAmount: number;
+};
+
+type TBaseCtx = CanvasRenderingContext2D & {
+  __drawRegions: TDrawRegion[];
+  __clearRegions: () => void;
+};
+
 type TSafeCtx = Omit<
   CanvasRenderingContext2D,
   | "clearRect"
@@ -74,6 +85,8 @@ export type {
   TCanvasCoords,
   TCanvasLayer,
   TSafeCtx,
+  TBaseCtx,
   TDrawRegion,
   TCanvasLayerClient,
+  THoverConfig,
 };
