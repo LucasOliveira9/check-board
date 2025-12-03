@@ -99,22 +99,41 @@ class EngineHelpers {
     return res;
   }
 
-  move(from: TNotation, to: TNotation, piece: TPieceBoard, click: boolean) {
+  async move(
+    from: TNotation,
+    to: TNotation,
+    piece: TPieceBoard,
+    click: boolean
+  ) {
     if (from === to) return false;
     const piece_ = this.boardRuntime.getInternalRefVal(piece.id);
+    const selected = this.boardRuntime.getSelected();
     // IMPLEMENTAR LÓGICA DO CLIENT MOVE
     const moveCallback = this.boardRuntime.getMove();
     if (moveCallback) {
       const move = moveCallback({ from, to, piece });
       if (move) {
-        this.boardRuntime.setSelected(null);
+        if (selected && selected.isDragging) {
+          await this.boardRuntime.renderer
+            .getLayerManager()
+            .togglePieceLayer("dynamicPieces", "staticPieces", selected.id);
+          this.boardRuntime.setSelected(null, true);
+        } else this.boardRuntime.setSelected(null);
         this.boardRuntime.updateBoardState(from, to, click);
         return true;
       } else {
-        const selected = this.boardRuntime.getSelected();
-        selected && ((piece_.x = selected.x), (piece_.y = selected.y)),
-          (piece_.square = piece.square);
-        this.boardRuntime.setSelected(null);
+        if (selected) {
+          if (selected.isDragging) {
+            piece_.x = selected.x;
+            piece_.y = selected.y;
+            piece_.square = structuredClone(selected.square);
+            this.boardRuntime.setSelected(null, true);
+            await this.boardRuntime.renderer
+              .getLayerManager()
+              .togglePieceLayer("dynamicPieces", "staticPieces", selected.id);
+          } else this.boardRuntime.setSelected(null);
+        }
+
         return false;
       }
     } else {

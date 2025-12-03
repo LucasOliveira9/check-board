@@ -367,7 +367,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.internalRef = internalRef;
   }
 
-  async setSelected(selected: TSelected | null) {
+  async setSelected(selected: TSelected | null, noRender?: boolean) {
     if (selected === null && this.selected === null) {
       this.selected = selected;
       return;
@@ -378,7 +378,8 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     const layerManager = this.renderer.getLayerManager();
     this.selected = selected;
     layerManager.drawEvent("onPointerSelect");
-    await this.renderer.render(false);
+
+    if (!noRender) await this.renderer.render(false);
   }
 
   async setPieceHover(piece: TPieceId | null) {

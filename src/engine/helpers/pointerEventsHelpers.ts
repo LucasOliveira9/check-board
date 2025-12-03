@@ -28,11 +28,11 @@ class PointerEventsHelpers {
         piece.x = x;
         piece.y = y;
       }
-      if (piece) {
+      /*if (piece) {
         await this.boardRuntime.renderer
           .getLayerManager()
           .togglePieceLayer("dynamicPieces", "staticPieces", selected.id);
-      }
+      }*/
     }
 
     const square = Utils.coordsToSquare(
@@ -176,11 +176,9 @@ class PointerEventsHelpers {
     }
     const { from, to, piece } =
       await this.boardRuntime.helpers.pointerEventsHelper.detectMove(e);
-    let move = false;
-    let selected = this.boardRuntime.getSelected();
 
     if (from !== null) {
-      move = this.boardRuntime.helpers.move(
+      await this.boardRuntime.helpers.move(
         from.notation,
         to.notation,
         piece,
@@ -191,13 +189,6 @@ class PointerEventsHelpers {
       cursor: "default",
     });
 
-    if (!move) {
-      const id = selected?.isDragging && selected?.id ? selected.id : null;
-      if (id)
-        this.boardRuntime.renderer
-          .getLayerManager()
-          .togglePieceLayer("dynamicPieces", "staticPieces", id);
-    }
     await this.boardRuntime.setPieceHover(null);
   }
 
@@ -268,7 +259,7 @@ class PointerEventsHelpers {
       const { from, to, piece } =
         await this.boardRuntime.helpers.pointerEventsHelper.detectMove(e);
       if (from !== null) {
-        const move = this.boardRuntime.helpers.move(
+        const move = await this.boardRuntime.helpers.move(
           from.notation,
           to.notation,
           piece,
