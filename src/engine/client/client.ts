@@ -14,6 +14,8 @@ class Client {
   private toChangeStreamDelay: number | null = null;
   private currFlip = false;
   private pauseFenStream = false;
+  private resizeStream: number[] = [];
+  private resizing: boolean = false;
   private debugCountFenStream = 0;
   constructor(boardRuntime: BoardRuntime) {
     runtimeMap.set(this, boardRuntime);
@@ -83,7 +85,8 @@ class Client {
       if (!this.destroyed) {
         this.fenStream.length <= 0 && (this.debugCountFenStream = 0);
         this.loading = false;
-        if (this.fenStream.length && !this.pauseFenStream) this.loadPosition();
+        if (this.fenStream.length && !this.pauseFenStream)
+          queueMicrotask(() => this.loadPosition());
       }
     }
   }
@@ -110,6 +113,32 @@ class Client {
     if (!this.fenStream.length || this.pauseFenStream)
       this.getRuntime()?.setBlackView(!this.getRuntime().getIsBlackView());
     else this.toFlip = true;
+  }
+
+  public updateSize(size: number) {
+    this.resizeStream.push(size);
+    if (this.resizing) return;
+    this.sizeStream();
+  }
+
+  public async sizeStream() {
+    if (this.resizing) return;
+    this.resizing = true;
+    try {
+      while (!this.destroyed && this.resizeStream.length) {
+        const size = this.resizeStream.shift();
+        if (size === null || size === undefined) continue;
+        try {
+          await this.getRuntime?.().setSize(size);
+        } catch (e) {
+          console.error("Resize failed:", size, e);
+        }
+      }
+    } finally {
+      if (this.destroyed) return;
+      this.resizing = false;
+      if (this.resizeStream.length) queueMicrotask(() => this.sizeStream());
+    }
   }
 
   public getSquareCoords(notation: TNotation) {

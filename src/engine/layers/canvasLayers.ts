@@ -207,7 +207,8 @@ class CanvasLayers {
 
   resize(size: number) {
     this.size = size;
-    [
+    this.setQuality();
+    /*[
       this.overlayOffscreen,
       this.underlayOffscreen,
       this.dynamicPiecesOffscreen,
@@ -216,7 +217,7 @@ class CanvasLayers {
         c.width = size;
         c.height = size;
       }
-    });
+    });*/
   }
 
   clearAllRect() {

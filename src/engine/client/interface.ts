@@ -8,6 +8,7 @@ interface BoardHandled {
   togglePause(): void;
   loadFenStream(b: string[]): void;
   setfenStreamDelay(n: number): void;
+  updateSize(size: number): void;
 }
 
 export type { BoardHandled };

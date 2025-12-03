@@ -318,6 +318,15 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.isMoving = b;
   }
 
+  async setSize(size: number) {
+    this.args.size = size;
+    this.getCanvasLayers().clearAllRect();
+    this.getCanvasLayers().resize(size);
+    this.setInternalRefObj({} as Record<TPieceId, TPieceInternalRef>);
+    this.renderer.getLayerManager().resetAllLayers();
+    await this.refreshCanvas(true);
+  }
+
   setAnimationDuration(time: number) {
     if (time < 150 || time > 500) return;
     this.animationDuration = time;
@@ -340,6 +349,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   async refreshCanvas(init: boolean) {
     this.helpers.pieceHelper.clearCache();
     this.selected = null;
+    await this.setPieceHover(null);
     //this.clearAnimation();
     await this.initInternalRef();
     await this.renderer.render(init);

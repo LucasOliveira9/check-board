@@ -34,6 +34,11 @@ function imperativeHandle(
       if (!clientRef.current) return;
       clientRef.current.setfenStreamDelay(n);
     },
+
+    updateSize: (size) => {
+      if (!clientRef.current) return;
+      clientRef.current.updateSize(size);
+    },
   };
 }
 
