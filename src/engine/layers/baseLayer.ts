@@ -60,7 +60,6 @@ abstract class BaseLayer implements ICanvasLayer {
   clear(): void {
     const canvasLayers = this.boardRuntime.getCanvasLayers();
     const dpr = canvasLayers.getDpr();
-
     for (const c of this.clearQueue) {
       this.ctx?.save();
       this.ctx?.setTransform(1, 0, 0, 1, 0, 0);
@@ -117,7 +116,7 @@ abstract class BaseLayer implements ICanvasLayer {
   }
 
   resetClearCoords() {
-    this.clearQueue.length = 0;
+    this.clearQueue = [];
   }
 
   addEvent(event: TEvents, coords: TCanvasCoords[] | TCanvasCoords) {

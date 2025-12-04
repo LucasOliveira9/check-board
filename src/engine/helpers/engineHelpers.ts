@@ -108,29 +108,29 @@ class EngineHelpers {
     if (from === to) return false;
     const piece_ = this.boardRuntime.getInternalRefVal(piece.id);
     const selected = this.boardRuntime.getSelected();
-    // IMPLEMENTAR LÓGICA DO CLIENT MOVE
+    const id = selected?.id;
     const moveCallback = this.boardRuntime.getMove();
     if (moveCallback) {
       const move = moveCallback({ from, to, piece });
       if (move) {
-        if (selected && selected.isDragging) {
+        if (selected && selected.isDragging && id) {
+          this.boardRuntime.setSelected(null, true);
           await this.boardRuntime.renderer
             .getLayerManager()
-            .togglePieceLayer("dynamicPieces", "staticPieces", selected.id);
-          this.boardRuntime.setSelected(null, true);
+            .togglePieceLayer("dynamicPieces", "staticPieces", id, true);
         } else this.boardRuntime.setSelected(null);
         this.boardRuntime.updateBoardState(from, to, click);
         return true;
       } else {
         if (selected) {
-          if (selected.isDragging) {
+          if (selected.isDragging && id) {
             piece_.x = selected.x;
             piece_.y = selected.y;
             piece_.square = structuredClone(selected.square);
             this.boardRuntime.setSelected(null, true);
             await this.boardRuntime.renderer
               .getLayerManager()
-              .togglePieceLayer("dynamicPieces", "staticPieces", selected.id);
+              .togglePieceLayer("dynamicPieces", "staticPieces", id);
           } else this.boardRuntime.setSelected(null);
         }
 
@@ -138,7 +138,12 @@ class EngineHelpers {
       }
     } else {
       // DEFAULT
-      this.boardRuntime.setSelected(null);
+      if (selected && selected.isDragging) {
+        this.boardRuntime.setSelected(null, true);
+        await this.boardRuntime.renderer
+          .getLayerManager()
+          .togglePieceLayer("dynamicPieces", "staticPieces", selected.id, true);
+      } else this.boardRuntime.setSelected(null);
       this.boardRuntime.updateBoardState(from, to, click);
     }
     return true;

@@ -75,19 +75,12 @@ class Renderer2D implements IRenderer2D {
   }
 
   private async renderDynamicPieces() {
-    const boardRuntime = this.boardRuntime;
-    const canvasLayers = boardRuntime.getCanvasLayers();
-    const canvas = canvasLayers.getCanvas("dynamicPieces").current;
-    const ctx = canvasLayers.getContext("dynamicPieces");
-
-    if (!canvas || !ctx) return;
     const layer = this.layerManager.getLayer("dynamicPieces");
     const animation = layer.getAnimation();
 
     if (animation.length === 0) {
       layer.clearAnimation();
       layer.render(0);
-      //boardRuntime.draw.pieces("dynamic");
       return;
     }
 
@@ -131,30 +124,15 @@ class Renderer2D implements IRenderer2D {
   }
 
   private renderStaticPieces(): void {
-    const boardRuntime = this.boardRuntime,
-      canvasLayers = boardRuntime.getCanvasLayers();
-    const canvas = canvasLayers.getCanvas("staticPieces").current;
-    const ctx = canvasLayers.getContext("staticPieces");
-    if (canvas === null || !ctx) return;
     const layer = this.layerManager.getLayer("staticPieces");
     layer.render(0);
   }
   private renderUnderlay(): void {
-    const boardRuntime = this.boardRuntime,
-      canvasLayers = boardRuntime.getCanvasLayers();
-    const ctx = canvasLayers.getContext("underlay");
-    const canvas = canvasLayers.getCanvas("underlay").current;
-    if (!canvas === null || !ctx) return;
     const layer = this.layerManager.getLayer("underlay");
     layer.render(0);
   }
 
   private renderOverlay(): void {
-    const boardRuntime = this.boardRuntime,
-      canvasLayers = boardRuntime.getCanvasLayers();
-    const canvas = canvasLayers.getCanvas("overlay").current;
-    const ctx = canvasLayers.getContext("overlay");
-    if (!canvas === null || !ctx) return;
     const layer = this.layerManager.getLayer("overlay");
     layer.render(0);
   }
@@ -164,12 +142,6 @@ class Renderer2D implements IRenderer2D {
   }*/
 
   private renderBoard(): void {
-    const boardRuntime = this.boardRuntime,
-      canvasLayers = boardRuntime.getCanvasLayers();
-    if (!canvasLayers) return;
-    const canvas = canvasLayers.getCanvas("board").current;
-    const ctx = canvasLayers.getContext("board");
-    if (!canvas === null || !ctx) return;
     const layer = this.layerManager.getLayer("board");
     layer.render(0);
   }

@@ -28,11 +28,6 @@ class PointerEventsHelpers {
         piece.x = x;
         piece.y = y;
       }
-      /*if (piece) {
-        await this.boardRuntime.renderer
-          .getLayerManager()
-          .togglePieceLayer("dynamicPieces", "staticPieces", selected.id);
-      }*/
     }
 
     const square = Utils.coordsToSquare(
@@ -43,24 +38,8 @@ class PointerEventsHelpers {
     );
 
     if (selected && square?.notation === selected.square.notation) {
-      selected &&
-        this.boardRuntime.setSelected({
-          ...selected,
-          isDragging: false,
-          startX: null,
-          startY: null,
-        });
-
       return { from: null, to: null, piece: null };
     } else if (!selected || !square || !piece) {
-      selected &&
-        this.boardRuntime.setSelected({
-          ...selected,
-          isDragging: false,
-          startX: null,
-          startY: null,
-        });
-
       return { from: null, to: null, piece: null };
     }
     const piece_ = this.boardRuntime.getBoard()[selected.square.notation];
@@ -184,7 +163,7 @@ class PointerEventsHelpers {
         piece,
         false
       );
-    }
+    } else await this.handlePointerLeave(e);
     this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
       cursor: "default",
     });

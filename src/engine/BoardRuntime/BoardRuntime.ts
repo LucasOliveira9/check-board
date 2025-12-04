@@ -459,6 +459,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
   updateBoardState(from: TNotation, to: TNotation, delay: boolean) {
     const piece = this.board[from];
+    const layerManager = this.renderer.getLayerManager();
     let enemie = this.board[to];
     piece.square = {
       file: to.charAt(0) as TFile,
@@ -476,9 +477,8 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
     if (enemie) {
       if (delay && this.getDefaultAnimation()) {
-        const layerManager = this.renderer.getLayerManager();
         layerManager.addDelayedPieceClear(piece.id, enemie.id);
-      }
+      } else layerManager.getLayer("staticPieces").removeAll?.(enemie.id);
 
       this.deleteIntervalRefVal(enemie.id);
     }
