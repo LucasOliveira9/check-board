@@ -74,7 +74,7 @@ class StaticPiecesLayer extends BaseLayer {
           h: squareSize,
         };
 
-        this.addClearCoords(coords);
+        this.addClearQueue(coords);
         this.removeAll?.(id);
       }
     }

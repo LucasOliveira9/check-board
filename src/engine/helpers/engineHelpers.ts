@@ -6,6 +6,7 @@ import { TNotation } from "../../types/square";
 import { TPieceBoard } from "../../types/piece";
 import { TCanvasCoords } from "../../types/draw";
 import PointerEventsHelpers from "./pointerEventsHelpers";
+import PipelineRender from "../BoardRuntime/pipelineRender";
 
 class EngineHelpers {
   public pointerEventsHelper: PointerEventsHelpers;
@@ -99,11 +100,12 @@ class EngineHelpers {
     return res;
   }
 
-  async move(
+  move(
     from: TNotation,
     to: TNotation,
     piece: TPieceBoard,
-    click: boolean
+    click: boolean,
+    offset: { x: number; y: number }
   ) {
     if (from === to) return false;
     const piece_ = this.boardRuntime.getInternalRefVal(piece.id);
@@ -114,24 +116,28 @@ class EngineHelpers {
       const move = moveCallback({ from, to, piece });
       if (move) {
         if (selected && selected.isDragging && id) {
-          this.boardRuntime.setSelected(null, true);
-          await this.boardRuntime.renderer
-            .getLayerManager()
-            .togglePieceLayer("dynamicPieces", "staticPieces", id, true);
-        } else this.boardRuntime.setSelected(null);
+          this.pointerEventsHelper.endDrag(offset.x, offset.y, true, false);
+          this.toggleSelected(false);
+          this.boardRuntime.pipelineRender.setNextEvent("onToggleCanvas", [
+            "dynamicPieces",
+            "staticPieces",
+            id,
+            true,
+          ]);
+        }
         this.boardRuntime.updateBoardState(from, to, click);
         return true;
       } else {
         if (selected) {
           if (selected.isDragging && id) {
-            piece_.x = selected.x;
-            piece_.y = selected.y;
-            piece_.square = structuredClone(selected.square);
-            this.boardRuntime.setSelected(null, true);
-            await this.boardRuntime.renderer
-              .getLayerManager()
-              .togglePieceLayer("dynamicPieces", "staticPieces", id);
-          } else this.boardRuntime.setSelected(null);
+            this.pointerEventsHelper.endDrag(offset.x, offset.y, false, false);
+            this.toggleSelected(false);
+            this.boardRuntime.pipelineRender.setNextEvent("onToggleCanvas", [
+              "dynamicPieces",
+              "staticPieces",
+              id,
+            ]);
+          } else this.toggleSelected(true);
         }
 
         return false;
@@ -139,14 +145,39 @@ class EngineHelpers {
     } else {
       // DEFAULT
       if (selected && selected.isDragging) {
-        this.boardRuntime.setSelected(null, true);
-        await this.boardRuntime.renderer
-          .getLayerManager()
-          .togglePieceLayer("dynamicPieces", "staticPieces", selected.id, true);
-      } else this.boardRuntime.setSelected(null);
+        this.pointerEventsHelper.endDrag(piece_.x, piece_.y, true, false);
+        this.toggleSelected(false);
+        this.boardRuntime.pipelineRender.setNextEvent("onToggleCanvas", [
+          "dynamicPieces",
+          "staticPieces",
+          id,
+          true,
+        ]);
+      } else this.toggleSelected(true);
       this.boardRuntime.updateBoardState(from, to, click);
     }
     return true;
+  }
+
+  toggleSelected(keep: boolean) {
+    const selected = this.boardRuntime.getSelected();
+    if (!selected) return;
+    if (keep)
+      this.boardRuntime.pipelineRender.setNextEvent("onPointerSelect", [
+        {
+          ...selected,
+          isDragging: false,
+          startX: null,
+          startY: null,
+          secondClick: false,
+        },
+        true,
+      ]);
+    else
+      this.boardRuntime.pipelineRender.setNextEvent("onPointerSelect", [
+        null,
+        true,
+      ]);
   }
 }
 

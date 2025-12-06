@@ -41,7 +41,7 @@ class DynamicPiecesLayer extends BaseLayer {
       const eased = easeOutCubic(progress);
 
       const coords = this.getCoords(anim.id);
-      coords && this.addClearCoords(coords);
+      coords && this.addClearQueue(coords);
 
       piece_.x = anim.from.x + (anim.to.x - anim.from.x) * eased;
       piece_.y = anim.from.y + (anim.to.y - anim.from.y) * eased;
@@ -85,39 +85,12 @@ class DynamicPiecesLayer extends BaseLayer {
       if (id === pieceHoverRef && !piece.anim) continue;
       ctx.save();
       const image = piecesImage && piecesImage[piece.type];
-      if (image instanceof HTMLImageElement) {
-        if (image && image.complete && image.naturalWidth > 0) {
-          ctx.drawImage(
-            image,
-            piece.x - (squareSize * (this.scale - 1)) / 2,
-            piece.y - (squareSize * (this.scale - 1)) / 2,
-            squareSize * this.scale,
-            squareSize * this.scale
-          );
-        }
-      } else if (typeof image === "string") {
-        const image_ = image.length > 1 ? image[0] : image;
-        ctx.save();
-        ctx.fillStyle = piece.type[0] === "w" ? "#ffffffff" : "#000";
-        ctx.font = `${squareSize * 0.8 * this.scale}px monospace`;
-        let fontSize = squareSize * 0.8;
-        ctx.font = `${fontSize}px monospace`;
-        const textWidth = ctx.measureText(image_).width;
-        if (textWidth > squareSize * 0.9) {
-          fontSize *= (squareSize * 0.9) / textWidth;
-          ctx.font = `${fontSize}px monospace`;
-        }
-        ctx.textAlign = "center";
-        ctx.textBaseline = "middle";
-        ctx.fillText(
-          image_,
-          piece.x + squareSize / 2,
-          piece.y + squareSize / 2
-        );
-        ctx.restore();
-      }
-
+      if (image instanceof HTMLImageElement)
+        this.DrawHTMLPiece(image, ctx, piece, squareSize);
+      else if (typeof image === "string")
+        this.DrawTextPiece(image, ctx, piece, squareSize);
       ctx.restore();
+
       if (selected?.isDragging && selected.id === id)
         layerManager.applyDrawResult(ctx, "dynamicPieces", "onPointerDrag", id);
       else layerManager.applyDrawResult(ctx, "dynamicPieces", undefined, id);
@@ -129,13 +102,62 @@ class DynamicPiecesLayer extends BaseLayer {
         .getLayerManager()
         .togglePieceLayer("dynamicPieces", "staticPieces", pieceId, true);
     }
-    if (this.toggleCanvas.length > 0)
-      await this.boardRuntime.renderer.render(false);
+    if (this.toggleCanvas.length > 0) await this.toggle();
     this.toggleCanvas.length = 0;
   }
 
   postRender(): void {
     this.updateAnimation();
+  }
+
+  private DrawHTMLPiece(
+    image: HTMLImageElement,
+    ctx: CanvasRenderingContext2D,
+    piece: TPieceInternalRef,
+    squareSize: number
+  ) {
+    if (image && image.complete && image.naturalWidth > 0) {
+      ctx.drawImage(
+        image,
+        piece.x - (squareSize * (this.scale - 1)) / 2,
+        piece.y - (squareSize * (this.scale - 1)) / 2,
+        squareSize * this.scale,
+        squareSize * this.scale
+      );
+    }
+  }
+
+  private DrawTextPiece(
+    image: string,
+    ctx: CanvasRenderingContext2D,
+    piece: TPieceInternalRef,
+    squareSize: number
+  ) {
+    const image_ = image.length > 1 ? image[0] : image;
+    ctx.save();
+    ctx.fillStyle = piece.type[0] === "w" ? "#ffffffff" : "#000";
+    ctx.font = `${squareSize * 0.8 * this.scale}px monospace`;
+    let fontSize = squareSize * 0.8;
+    ctx.font = `${fontSize}px monospace`;
+    const textWidth = ctx.measureText(image_).width;
+    if (textWidth > squareSize * 0.9) {
+      fontSize *= (squareSize * 0.9) / textWidth;
+      ctx.font = `${fontSize}px monospace`;
+    }
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(image_, piece.x + squareSize / 2, piece.y + squareSize / 2);
+    ctx.restore();
+  }
+
+  private async toggle() {
+    return new Promise<void>((resolve) => {
+      this.boardRuntime.pipelineRender.setNextEvent(
+        "onRender",
+        [false],
+        resolve
+      );
+    });
   }
 }
 

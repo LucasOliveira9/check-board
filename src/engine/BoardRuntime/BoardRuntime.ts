@@ -1,4 +1,4 @@
-import { TBoardRuntime, TSelected } from "../../types/board";
+import { TBoardRuntime, TPipelineRender, TSelected } from "../../types/board";
 import {
   TAnimation,
   TBoardEventContext,
@@ -27,6 +27,7 @@ import {
   TRender,
 } from "../../types/draw";
 import { TSafeCtx } from "../../types/draw";
+import PipelineRender from "./pipelineRender";
 
 class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected internalRef: Record<TPieceId, TPieceInternalRef> = {} as Record<
@@ -46,10 +47,26 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     scaling: true,
     scaleAmount: 1.05,
   };
+  pipelineRender = new PipelineRender(this);
 
   public boardEvents: BoardEvents = new BoardEvents(this);
   public helpers: EngineHelpers = new EngineHelpers(this);
   public renderer: IRenderer;
+
+  eventsRuntime: Record<TPipelineRender, Function | null> = {
+    onPointerSelect: this.setSelected.bind(this),
+    onPointerHover: this.setPieceHover.bind(this),
+    onPointerDragStart: null,
+    onPointerDrag: null,
+    onPointerDrop: null,
+    onAnimationFrame: null,
+    onDrawPiece: null,
+    onDrawBoard: null,
+    onDrawOverlay: null,
+    onDrawUnderlay: null,
+    onToggleCanvas: this.toggleCanvas.bind(this),
+    onRender: this.render.bind(this),
+  };
 
   constructor(protected args: TBoardRuntime<T>) {
     Object.assign(this, args);
@@ -69,6 +86,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.args.canvasLayers.destroy();
     this.helpers.destroy();
     this.boardEvents.destroy();
+    this.pipelineRender.destroy();
 
     if (this.args.pieceStyle) {
       Object.entries(this.args.pieceStyle).map(([_, val]) => {
@@ -348,11 +366,12 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
   async refreshCanvas(init: boolean) {
     this.helpers.pieceHelper.clearCache();
-    this.selected = null;
-    await this.setPieceHover(null);
-    //this.clearAnimation();
+    this.pipelineRender.setNextEvent("onPointerSelect", [null, true]);
+    this.pipelineRender.setNextEvent("onPointerHover", [null, true]);
     await this.initInternalRef();
-    await this.renderer.render(init);
+    return new Promise<void>((resolve) => {
+      this.pipelineRender.setNextEvent("onRender", [init], resolve);
+    });
   }
 
   updateBoard(piece: TPieceBoard) {
@@ -379,15 +398,15 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.selected = selected;
     layerManager.drawEvent("onPointerSelect");
 
-    if (!noRender) await this.renderer.render(false);
+    if (!noRender) this.pipelineRender.setNextEvent("onRender", [false]);
   }
 
-  async setPieceHover(piece: TPieceId | null) {
+  async setPieceHover(piece: TPieceId | null, noRender?: boolean) {
     const lastHover = this.getPieceHover();
     const layerManager = this.renderer.getLayerManager();
 
-    if (lastHover === null && piece === null) return;
-    else if (lastHover === piece) return;
+    if (lastHover === piece) return;
+
     this.pieceHover = piece;
     layerManager.drawEvent("onPointerHover");
 
@@ -396,37 +415,40 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         await layerManager.togglePieceLayer(
           "dynamicPieces",
           "staticPieces",
-          lastHover
+          lastHover,
+          noRender
         );
       } else if (lastHover === null && piece !== null) {
         await layerManager.togglePieceLayer(
           "staticPieces",
           "dynamicPieces",
-          piece
+          piece,
+          noRender
         );
       } else if (lastHover !== null && piece !== null) {
         await layerManager.togglePieceLayer(
           "dynamicPieces",
           "staticPieces",
-          lastHover
+          lastHover,
+          noRender
         );
         await layerManager.togglePieceLayer(
           "staticPieces",
           "dynamicPieces",
-          piece
+          piece,
+          noRender
         );
       }
-    } else this.renderer.render(false);
+    } else if (!noRender) this.pipelineRender.setNextEvent("onRender", [false]);
   }
 
-  setBlackView(b: boolean) {
+  async setBlackView(b: boolean) {
     if (this.getIsBlackView() === b) return;
     this.args.isBlackView = b;
     this.setInternalRefObj({} as Record<TPieceId, TPieceInternalRef>);
-    // this.clearAnimation();
     this.getCanvasLayers().clearAllRect();
     this.renderer.getLayerManager().resetAllLayers();
-    this.refreshCanvas(true);
+    await this.refreshCanvas(true);
   }
 
   deleteIntervalRefVal(key: TPieceId) {
@@ -446,7 +468,9 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     await new Promise(requestAnimationFrame);
     await this.initPieceImages();
     await this.initInternalRef();
-    await this.renderer.render(true);
+    return new Promise<void>((resolve) => {
+      this.pipelineRender.setNextEvent("onRender", [true], resolve);
+    });
   }
 
   async initPieceImages() {
@@ -457,7 +481,22 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     await this.loadImages();
   }
 
-  updateBoardState(from: TNotation, to: TNotation, delay: boolean) {
+  async toggleCanvas(
+    from: TCanvasLayer,
+    to: TCanvasLayer,
+    pieceId: TPieceId,
+    noRender?: boolean
+  ) {
+    await this.renderer
+      .getLayerManager()
+      .togglePieceLayer(from, to, pieceId, noRender);
+  }
+
+  async render(b: boolean) {
+    await this.renderer.render(b);
+  }
+
+  async updateBoardState(from: TNotation, to: TNotation, delay: boolean) {
     const piece = this.board[from];
     const layerManager = this.renderer.getLayerManager();
     let enemie = this.board[to];
@@ -484,7 +523,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     }
     (enemie as any) = null;
 
-    this.refreshCanvas(false);
+    await this.refreshCanvas(false);
 
     if (this.args.onUpdate) {
       this.args.onUpdate();

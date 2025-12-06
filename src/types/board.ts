@@ -1,6 +1,6 @@
 import CanvasLayers from "../engine/layers/canvasLayers";
 import BoardRuntime from "../engine/BoardRuntime/BoardRuntime";
-import { TBoardEventContext, TBoardEvents, TMove } from "./events";
+import { TBoardEventContext, TBoardEvents, TEvents, TMove } from "./events";
 import { TPieceId, TPieceImage } from "./piece";
 import { TSquare } from "./square";
 import { THoverConfig } from "types";
@@ -78,7 +78,16 @@ type TSelected = {
   isDragging: boolean;
   startX: number | null;
   startY: number | null;
+  secondClick: boolean;
 };
+
+const RenderExtends = {
+  onToggleCanvas: "onToggleCanvas",
+  onRender: "onRender",
+} as const;
+type TRenderExtends = keyof typeof RenderExtends;
+
+type TPipelineRender = TEvents | TRenderExtends;
 
 export type {
   TSelected,
@@ -88,4 +97,5 @@ export type {
   TPieceConfig,
   TBoardRuntime,
   TBoardProps,
+  TPipelineRender,
 };

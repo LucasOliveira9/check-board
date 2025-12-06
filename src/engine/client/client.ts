@@ -70,7 +70,9 @@ class Client {
         console.log("rodei");
         await this.getRuntime()?.setBoardByFen(nextFen);
         if (this.toFlip) {
-          this.getRuntime()?.setBlackView(!this.getRuntime().getIsBlackView());
+          await this.getRuntime()?.setBlackView(
+            !this.getRuntime().getIsBlackView()
+          );
           this.toFlip = false;
         }
         console.log("resolvi");
@@ -109,9 +111,11 @@ class Client {
     return Utils.parseBoard(this.getRuntime().getBoard());
   }
 
-  public flip() {
+  public async flip() {
     if (!this.fenStream.length || this.pauseFenStream)
-      this.getRuntime()?.setBlackView(!this.getRuntime().getIsBlackView());
+      await this.getRuntime()?.setBlackView(
+        !this.getRuntime().getIsBlackView()
+      );
     else this.toFlip = true;
   }
 

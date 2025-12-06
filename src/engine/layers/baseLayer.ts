@@ -60,13 +60,14 @@ abstract class BaseLayer implements ICanvasLayer {
   clear(): void {
     const canvasLayers = this.boardRuntime.getCanvasLayers();
     const dpr = canvasLayers.getDpr();
+
     for (const c of this.clearQueue) {
       this.ctx?.save();
       this.ctx?.setTransform(1, 0, 0, 1, 0, 0);
       this.ctx?.clearRect(c.x * dpr, c.y * dpr, c.w * dpr, c.h * dpr);
       this.ctx?.restore();
     }
-    this.resetClearCoords();
+    this.resetClearQueue();
   }
 
   draw(): void {
@@ -85,11 +86,21 @@ abstract class BaseLayer implements ICanvasLayer {
   }
   removeAll?(pieceId: TPieceId) {
     const coords = this.getCoords(pieceId);
-    coords && this.addClearCoords(coords);
+    coords && this.addClearQueue(coords);
 
     this.pieces.delete(pieceId);
-    this.coordsMap.delete(pieceId);
     this.renderMap.delete(pieceId);
+    this.coordsMap.delete(pieceId);
+
+    /*for (const c of this.clearQueue) {
+      for (const [id, coords] of this.coordsMap.entries()) {
+        if (this.intersects(coords, c)) {
+          this.clearQueue.push(coords);
+          this.renderMap.add(id);
+          //console.log("vilão-> ", pieceId, "afetado-> ", id, c, coords);
+        }
+      }
+    }*/
   }
   handleEvent?(event: TEvents, coords: TCanvasCoords): void {
     if (!this.eventsMap[event]) this.eventsMap[event] = [];
@@ -111,11 +122,11 @@ abstract class BaseLayer implements ICanvasLayer {
     this.renderMap.delete(pieceId);
   }
 
-  addClearCoords(coords: TCanvasCoords) {
+  addClearQueue(coords: TCanvasCoords) {
     this.clearQueue.push(coords);
   }
 
-  resetClearCoords() {
+  resetClearQueue() {
     this.clearQueue = [];
   }
 
@@ -130,7 +141,7 @@ abstract class BaseLayer implements ICanvasLayer {
     if (!hasEvent) return;
     const regions: TCanvasCoords[] = [];
     for (const e of hasEvent) {
-      this.addClearCoords(e);
+      this.addClearQueue(e);
       regions.push(e);
     }
     delete this.eventsMap[event];

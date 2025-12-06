@@ -67,11 +67,12 @@ class Renderer2D implements IRenderer2D {
   }
   async render(init: boolean) {
     if (init) this.renderBoard();
+    this.layerManager.renderEvents(true);
     this.renderStaticPieces();
     await this.renderDynamicPieces();
     this.renderUnderlay();
     this.renderOverlay();
-    this.layerManager.renderEvents();
+    this.layerManager.renderEvents(false);
   }
 
   private async renderDynamicPieces() {
@@ -175,7 +176,7 @@ class Renderer2D implements IRenderer2D {
   }
 
   addToClear(coords: TCanvasCoords, canvas: TCanvasLayer) {
-    this.layerManager.getLayer(canvas).addClearCoords(coords);
+    this.layerManager.getLayer(canvas).addClearQueue(coords);
   }
 
   addEvent(

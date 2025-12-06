@@ -6,8 +6,8 @@ class Events {
   eventsLayerMap: Record<TEvents, TCanvasLayer | null> = {
     onPointerSelect: "underlay",
     onPointerHover: "dynamicPieces",
-    onPointerDragStart: null,
-    onPointerDrag: null,
+    onPointerDragStart: "dynamicPieces",
+    onPointerDrag: "dynamicPieces",
     onPointerDrop: null,
     onAnimationFrame: null,
     onDrawPiece: null,
@@ -167,11 +167,32 @@ class Events {
         });
     }
   }
+
   onPointerDragStart() {
+    const selected = this.boardRuntime.getSelected();
+    if (!selected || !selected.isDragging) return;
+    this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
+      cursor: "grabbing",
+    });
     return;
   }
+
   onPointerDrag() {
-    return;
+    const selected = this.boardRuntime.getSelected();
+    const squareSize = this.boardRuntime.getSize() / 8;
+    if (!selected || !selected.isDragging) return;
+    const piece = this.boardRuntime.getInternalRefVal(selected.id);
+    if (!piece) return;
+    const layer = this.boardRuntime.renderer
+      .getLayerManager()
+      .getLayer("dynamicPieces");
+
+    layer.addCoords(selected.id, {
+      x: piece.x,
+      y: piece.y,
+      w: squareSize,
+      h: squareSize,
+    });
   }
   onPointerDrop() {
     return;

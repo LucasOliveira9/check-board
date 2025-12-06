@@ -38,6 +38,19 @@ class LayerManager {
   };
   private boardRuntime: BoardRuntime;
   private drawList: Set<TEvents> = new Set();
+  private firstDrawList: Set<TEvents> = new Set();
+  private list: Record<TEvents, Set<TEvents>> = {
+    onPointerSelect: this.drawList,
+    onPointerHover: this.drawList,
+    onPointerDragStart: this.firstDrawList,
+    onPointerDrag: this.firstDrawList,
+    onPointerDrop: this.drawList,
+    onAnimationFrame: this.drawList,
+    onDrawPiece: this.drawList,
+    onDrawBoard: this.drawList,
+    onDrawOverlay: this.drawList,
+    onDrawUnderlay: this.drawList,
+  };
   private delayedPieceClear: Map<TPieceId, TPieceId> = new Map();
 
   constructor(boardRuntime: BoardRuntime) {
@@ -119,7 +132,7 @@ class LayerManager {
     fromLayer.removeAll?.(pieceId);
     toLayer.addAll?.(pieceId, piece, newCoords);
     if (noRender) return;
-    await this.boardRuntime.renderer.render(false);
+    this.boardRuntime.pipelineRender.setNextEvent("onRender", [false]);
   }
 
   applyDrawResult(
@@ -137,10 +150,16 @@ class LayerManager {
     if (!regions.length) return;
 
     for (const coords of regions) {
+      const coords_ = {
+        x: Math.floor(coords.x),
+        y: Math.floor(coords.y),
+        w: Math.ceil(coords.w),
+        h: Math.ceil(coords.h),
+      };
       if (record) {
-        this.getLayer(layer).addCoords(record, coords);
+        this.getLayer(layer).addCoords(record, coords_);
       }
-      if (event) this.getLayer(layer).addEvent(event, coords);
+      if (event) this.getLayer(layer).addEvent(event, coords_);
     }
 
     ctx_.__clearRegions();
@@ -152,11 +171,11 @@ class LayerManager {
   }
 
   addDraw(event: TEvents) {
-    this.drawList.add(event);
+    this.list[event].add(event);
   }
 
   removeDraw(event: TEvents) {
-    this.drawList.delete(event);
+    this.list[event].delete(event);
   }
 
   getEventEnabled() {
@@ -183,13 +202,14 @@ class LayerManager {
     for (const layer of Object.values(this.layers)) layer.resetLayer();
   }
 
-  renderEvents() {
-    for (const event of this.drawList.values()) {
+  renderEvents(first: boolean) {
+    const list = first ? this.firstDrawList.values() : this.drawList.values();
+    for (const event of list) {
       this.interaction[event] = true;
       this.events.run(event);
       this.interaction[event] = false;
     }
-    this.drawList.clear();
+    first ? this.firstDrawList.clear() : this.drawList.clear();
   }
 
   addDelayedPieceClear(owner: TPieceId, target: TPieceId) {
@@ -218,7 +238,7 @@ class LayerManager {
       const layer_ = this.getLayer(layer);
       const coords = layer_.getCoords(delayed);
       if (coords) {
-        layer_.addClearCoords(coords);
+        layer_.addClearQueue(coords);
         layer_.removeAll?.(delayed);
         layer_.clear();
       }
