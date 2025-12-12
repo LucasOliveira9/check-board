@@ -327,6 +327,17 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   getHoverConfig() {
+    const MIN_SCALE = 0.75;
+    const MAX_SCALE = 1.15;
+    if (
+      this.hoverConfig.scaleAmount < MIN_SCALE ||
+      this.hoverConfig.scaleAmount > MAX_SCALE
+    )
+      this.hoverConfig.scaleAmount = Math.min(
+        MAX_SCALE,
+        Math.max(MIN_SCALE, this.hoverConfig.scaleAmount)
+      );
+
     return this.hoverConfig;
   }
 
