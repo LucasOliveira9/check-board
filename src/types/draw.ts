@@ -22,7 +22,13 @@ type TDrawPieces<T extends TBoardEventContext = TBoardEventContext> = {
   injection?: TBoardInjection<T>;
 };
 
-type TCanvasCoords = { x: number; y: number; w: number; h: number };
+type TCanvasCoords = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  id?: string;
+};
 const CANVAS_LAYERS = {
   board: { name: "board", client: false },
   staticPieces: { name: "staticPieces", client: false },
@@ -54,6 +60,7 @@ type THoverConfig = {
 type TBaseCtx = CanvasRenderingContext2D & {
   __drawRegions: TDrawRegion[];
   __clearRegions: () => void;
+  __actualRegions: TCanvasCoords[];
 };
 
 type TSafeCtx = Omit<

@@ -1,6 +1,6 @@
 import LayerManager from "engine/layers/layerManager";
 import { TPieceId, TPieceInternalRef } from "../../types/piece";
-import BoardRuntime from "../BoardRuntime/BoardRuntime";
+import BoardRuntime from "../boardRuntime/boardRuntime";
 import { IRenderer } from "./interface";
 
 class Renderer3D implements IRenderer {

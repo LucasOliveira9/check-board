@@ -1,6 +1,6 @@
 import { TNotation } from "../../types/square";
 import { TPieceInternalRef } from "../../types/piece";
-import BoardRuntime from "../BoardRuntime/BoardRuntime";
+import BoardRuntime from "../boardRuntime/boardRuntime";
 import Utils from "../../utils/utils";
 
 const runtimeMap = new WeakMap<Client, BoardRuntime>();
@@ -75,6 +75,7 @@ class Client {
           );
           this.toFlip = false;
         }
+        console.log(nextFen);
         console.log("resolvi");
         if (this.fenStreamDelay > 0) await this.delay(this.fenStreamDelay);
         if (this.toChangeStreamDelay !== null) {

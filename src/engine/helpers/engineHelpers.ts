@@ -1,12 +1,11 @@
 import { TEventName, TLazyReturn, TResolvers } from "../../types/helpers";
-import BoardRuntime from "../BoardRuntime/BoardRuntime";
+import BoardRuntime from "../boardRuntime/boardRuntime";
 import PieceHelpers from "./pieceHelpers";
 import { TBoardEventContext, TBoardEvents } from "../../types/events";
 import { TNotation } from "../../types/square";
 import { TPieceBoard } from "../../types/piece";
 import { TCanvasCoords } from "../../types/draw";
 import PointerEventsHelpers from "./pointerEventsHelpers";
-import PipelineRender from "../BoardRuntime/pipelineRender";
 
 class EngineHelpers {
   public pointerEventsHelper: PointerEventsHelpers;
@@ -108,7 +107,6 @@ class EngineHelpers {
     offset: { x: number; y: number }
   ) {
     if (from === to) return false;
-    const piece_ = this.boardRuntime.getInternalRefVal(piece.id);
     const selected = this.boardRuntime.getSelected();
     const id = selected?.id;
     const moveCallback = this.boardRuntime.getMove();
@@ -145,7 +143,7 @@ class EngineHelpers {
     } else {
       // DEFAULT
       if (selected && selected.isDragging) {
-        this.pointerEventsHelper.endDrag(piece_.x, piece_.y, true, false);
+        this.pointerEventsHelper.endDrag(offset.x, offset.y, true, false);
         this.toggleSelected(false);
         this.boardRuntime.pipelineRender.setNextEvent("onToggleCanvas", [
           "dynamicPieces",

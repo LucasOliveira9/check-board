@@ -1,5 +1,5 @@
-import BoardRuntime from "../BoardRuntime/BoardRuntime";
-import { TCanvasLayer, TDrawRegion, TEvents } from "types";
+import BoardRuntime from "../boardRuntime/boardRuntime";
+import { TCanvasCoords, TCanvasLayer, TDrawRegion, TEvents } from "types";
 import Utils from "../../utils/utils";
 
 class Events {
@@ -38,6 +38,7 @@ class Events {
     ctx: CanvasRenderingContext2D & {
       __drawRegions: TDrawRegion[];
       __clearRegions: () => void;
+      __actualRegions: TCanvasCoords[];
     }
   ) {
     const size = this.boardRuntime.getSize(),
@@ -46,15 +47,10 @@ class Events {
       pieceHoverRef = this.boardRuntime.getPieceHover(),
       selectedRef = this.boardRuntime.getSelected(),
       events = this.boardRuntime.getEvents(),
-      squareSize = size / 8,
+      squareSize = Math.ceil(size / 8),
       injection = this.boardRuntime.getInjection();
 
-    if (
-      pieceHoverRef &&
-      !selectedRef?.isDragging &&
-      this.boardRuntime.renderer.getLayerManager().getEventEnabled()
-        .onPointerHover
-    ) {
+    if (pieceHoverRef && !selectedRef?.isDragging) {
       const piece = internalRef[pieceHoverRef];
       const canvas = this.boardRuntime
         .getCanvasLayers()
@@ -102,10 +98,11 @@ class Events {
     ctx: CanvasRenderingContext2D & {
       __drawRegions: TDrawRegion[];
       __clearRegions: () => void;
+      __actualRegions: TCanvasCoords[];
     }
   ) {
     const isBlackView = this.boardRuntime.getIsBlackView(),
-      size = this.boardRuntime.getSize(),
+      size = Math.ceil(this.boardRuntime.getSize()),
       piecesImage = this.boardRuntime.getPieceStyle(),
       internalRef = this.boardRuntime.getInternalRefObj(),
       selectedRef = this.boardRuntime.getSelected(),
@@ -113,13 +110,7 @@ class Events {
       injection = this.boardRuntime.getInjection();
     const squareSize = size / 8;
 
-    if (
-      !selectedRef?.id ||
-      !ctx ||
-      !this.boardRuntime.renderer.getLayerManager().getEventEnabled()
-        .onPointerSelect
-    )
-      return;
+    if (!selectedRef?.id || !ctx) return;
 
     const sqr = internalRef[selectedRef.id]
       ? Utils.squareToCoords(selectedRef.square, squareSize, isBlackView)
@@ -179,7 +170,7 @@ class Events {
 
   onPointerDrag() {
     const selected = this.boardRuntime.getSelected();
-    const squareSize = this.boardRuntime.getSize() / 8;
+    const squareSize = Math.ceil(this.boardRuntime.getSize() / 8);
     if (!selected || !selected.isDragging) return;
     const piece = this.boardRuntime.getInternalRefVal(selected.id);
     if (!piece) return;

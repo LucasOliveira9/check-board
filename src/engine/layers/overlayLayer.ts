@@ -1,5 +1,5 @@
 import { TDrawRegion } from "types";
-import BoardRuntime from "../BoardRuntime/BoardRuntime";
+import BoardRuntime from "../boardRuntime/boardRuntime";
 import BaseLayer from "./baseLayer";
 
 class OverlayLayer extends BaseLayer {

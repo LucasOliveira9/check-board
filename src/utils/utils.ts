@@ -1,4 +1,4 @@
-import { TDrawRegion, TSafeCtx } from "../types/draw";
+import { TCanvasCoords, TDrawRegion, TSafeCtx } from "../types/draw";
 import { IRenderer, IRenderer2D } from "../engine/render/interface";
 import { TSquare, TFile, TRank, TNotation } from "../types/square";
 import { TDeepReadonly } from "../types/utils";
@@ -18,9 +18,15 @@ class Utils {
       const file = this.files.indexOf(square.file);
       const rank = square.rank - 1;
       if (!isBlackView) {
-        return { x: file * squareSize, y: (7 - rank) * squareSize };
+        return {
+          x: Math.floor(file * squareSize),
+          y: Math.floor((7 - rank) * squareSize),
+        };
       }
-      return { x: (7 - file) * squareSize, y: rank * squareSize };
+      return {
+        x: Math.floor((7 - file) * squareSize),
+        y: Math.floor(rank * squareSize),
+      };
     }
   }
 
@@ -64,6 +70,14 @@ class Utils {
 
     return { offsetX: x, offsetY: y };
   };
+
+  static async asyncHandler(
+    fun: (arg: (value: void | PromiseLike<void>) => void) => void
+  ): Promise<void> {
+    return new Promise<void>((resolve) => {
+      fun(resolve);
+    });
+  }
 
   static deepFreeze<T>(obj: T): TDeepReadonly<T> {
     const obj_ = structuredClone(obj);
@@ -211,6 +225,7 @@ class Utils {
     const cache = new Map<PropertyKey, any>();
     let currentPath: { x: number; y: number }[] = [];
     const recordedRegions: TDrawRegion[] = [];
+    const actualRegions: TCanvasCoords[] = [];
 
     // ---- NOVO: expansão automática pelo shadow ----
     function expandForShadow(x: number, y: number, w: number, h: number) {
@@ -248,6 +263,18 @@ class Utils {
         w: s.w,
         h: s.h,
         type,
+      });
+    }
+
+    function recordActualRegion(x: number, y: number, w: number, h: number) {
+      if (!Number.isFinite(x) || !Number.isFinite(y) || w <= 0 || h <= 0)
+        return;
+
+      actualRegions.push({
+        x,
+        y,
+        w,
+        h,
       });
     }
 
@@ -466,6 +493,7 @@ class Utils {
                 const rectH = ascent + descent + padTop + padBottom;
 
                 recordRegion(prop, rectX, rectY, rectW, rectH);
+                recordActualRegion(leftX, topY, width, ascent + descent);
                 break;
               }
 
@@ -494,7 +522,7 @@ class Utils {
                   return;
                 }
 
-                const pad = Math.max((ctx.lineWidth ?? 1) * 0.75, 1);
+                const pad = 0; //Math.max((ctx.lineWidth ?? 1) * 0.75, 1);
 
                 recordRegion(
                   "drawImage",
@@ -503,6 +531,8 @@ class Utils {
                   dw + pad * 2,
                   dh + pad * 2
                 );
+
+                recordActualRegion(dx, dy, dw, dh);
                 break;
               }
             }
@@ -526,11 +556,16 @@ class Utils {
 
     (baseCtx as any).__drawRegions = recordedRegions;
     (baseCtx as any).__currentPath = currentPath;
-    (baseCtx as any).__clearRegions = () => (recordedRegions.length = 0);
+    (baseCtx as any).__clearRegions = () => {
+      recordedRegions.length = 0;
+      actualRegions.length = 0;
+    };
+    (baseCtx as any).__actualRegions = actualRegions;
 
     return baseCtx as CanvasRenderingContext2D & {
       __drawRegions: TDrawRegion[];
       __clearRegions: () => void;
+      __actualRegions: TCanvasCoords[];
     };
   }
 

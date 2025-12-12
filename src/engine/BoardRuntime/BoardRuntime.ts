@@ -12,7 +12,7 @@ import {
   TPieceId,
   TPieceInternalRef,
 } from "../../types/piece";
-import BoardEvents from "./BoardEvents";
+import BoardEvents from "./boardEvents";
 import EngineHelpers from "../helpers/engineHelpers";
 import { TFile, TNotation, TRank, TSquare } from "../../types/square";
 import { IRenderer } from "../render/interface";
@@ -27,7 +27,7 @@ import {
   TRender,
 } from "../../types/draw";
 import { TSafeCtx } from "../../types/draw";
-import PipelineRender from "./pipelineRender";
+import PipelineRender from "../render/pipelineRender";
 
 class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected internalRef: Record<TPieceId, TPieceInternalRef> = {} as Record<
@@ -251,6 +251,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
             const clearCtx = ctx_ as TSafeCtx & {
               __drawRegions: TDrawRegion[];
               __clearRegions: () => void;
+              __actualRegions: TCanvasCoords[];
             };
             this.renderer
               .getLayerManager()
@@ -306,6 +307,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
             const clearCtx = ctx_ as TSafeCtx & {
               __drawRegions: TDrawRegion[];
               __clearRegions: () => void;
+              __actualRegions: TCanvasCoords[];
             };
             this.renderer
               .getLayerManager()
@@ -337,9 +339,9 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   async setSize(size: number) {
-    this.args.size = size;
+    this.args.size = Math.floor(size / 8) * 8;
     this.getCanvasLayers().clearAllRect();
-    this.getCanvasLayers().resize(size);
+    this.getCanvasLayers().resize(Math.floor(size / 8) * 8);
     this.setInternalRefObj({} as Record<TPieceId, TPieceInternalRef>);
     this.renderer.getLayerManager().resetAllLayers();
     await this.refreshCanvas(true);
@@ -365,13 +367,18 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   async refreshCanvas(init: boolean) {
+    this.renderer.getLayerManager().setHoverEnabled(false);
     this.helpers.pieceHelper.clearCache();
     this.pipelineRender.setNextEvent("onPointerSelect", [null, true]);
     this.pipelineRender.setNextEvent("onPointerHover", [null, true]);
     await this.initInternalRef();
-    return new Promise<void>((resolve) => {
+
+    const render = (resolve: (value: void | PromiseLike<void>) => void) =>
       this.pipelineRender.setNextEvent("onRender", [init], resolve);
-    });
+
+    await Utils.asyncHandler(render);
+    this.renderer.getLayerManager().setHoverEnabled(true);
+    //await this.renderer.render(init);
   }
 
   updateBoard(piece: TPieceBoard) {
@@ -393,7 +400,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     } else if (selected?.id === this.selected?.id) {
       this.selected = selected;
       return;
-    }
+    } else if (!this.renderer.getLayerManager().isSelectionEnabled()) return;
     const layerManager = this.renderer.getLayerManager();
     this.selected = selected;
     layerManager.drawEvent("onPointerSelect");
@@ -406,6 +413,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     const layerManager = this.renderer.getLayerManager();
 
     if (lastHover === piece) return;
+    else if (!this.renderer.getLayerManager().isHoverEnabled()) return;
 
     this.pieceHover = piece;
     layerManager.drawEvent("onPointerHover");
@@ -531,7 +539,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   async initInternalRef() {
-    const squareSize = this.args.size / 8;
+    const squareSize = Math.floor(this.args.size / 8);
     const ids = Object.values(this.board);
     const layerManager = this.renderer.getLayerManager();
     this.renderer.getLayerManager().getLayer("staticPieces").clearPieces?.(ids);
@@ -550,10 +558,10 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       const startX = square.x;
       const startY = square.y;
       const coords: TCanvasCoords = {
-        x: startX,
-        y: startY,
-        w: squareSize,
-        h: squareSize,
+        x: Math.floor(startX),
+        y: Math.floor(startY),
+        w: Math.ceil(squareSize),
+        h: Math.ceil(squareSize),
       };
 
       const ref: TPieceInternalRef = {
@@ -565,7 +573,9 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
       this.setInternalRefVal(piece.id as TPieceId, ref);
       if (!existing) {
-        layerManager.getLayer("staticPieces").addAll?.(piece.id, ref, coords);
+        layerManager
+          .getLayer("staticPieces")
+          .addAll?.(piece.id, ref, coords, coords);
         continue;
       }
       if (piece.square.notation !== existing.square.notation) {
@@ -591,7 +601,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         else {
           const layer = layerManager.getLayer("staticPieces");
           layer.removeAll?.(piece.id);
-          layer.addAll?.(piece.id, ref, coords);
+          layer.addAll?.(piece.id, ref, coords, coords);
         }
       }
     }

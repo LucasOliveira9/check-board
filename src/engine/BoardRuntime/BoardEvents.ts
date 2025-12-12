@@ -1,4 +1,4 @@
-import BoardRuntime from "./BoardRuntime";
+import BoardRuntime from "./boardRuntime";
 
 class BoardEvents {
   constructor(protected boardRuntime: BoardRuntime) {

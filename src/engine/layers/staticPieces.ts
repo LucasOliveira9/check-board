@@ -1,4 +1,5 @@
-import BoardRuntime from "../BoardRuntime/BoardRuntime";
+import Utils from "../../utils/utils";
+import BoardRuntime from "../boardRuntime/boardRuntime";
 import BaseLayer from "./baseLayer";
 import {
   TCanvasCoords,
@@ -12,6 +13,37 @@ class StaticPiecesLayer extends BaseLayer {
   constructor(boardRuntime: BoardRuntime) {
     super("staticPieces", boardRuntime);
   }
+
+  updateClear(): void {
+    const checked: Set<TPieceId> = new Set();
+    for (const coords of this.clearQueue) {
+      const search = this.spatialIndex.search(coords);
+      for (const s of search) {
+        const id = s.id as TPieceId;
+        if (checked.has(id) || this.renderMap.has(id)) continue;
+        this.clearQueue.push(s.box);
+        this.renderMap.add(id);
+        checked.add(id);
+        this.ctx &&
+          ((this.ctx.strokeStyle = "rgba(251, 0, 0, 1)"),
+          (this.ctx.lineWidth = 8));
+        this.ctx?.strokeRect(coords.x, coords.y, coords.w, coords.h);
+        console.log(coords.id, " --- ", s.id, s.box, coords);
+      }
+    }
+    /*for (const coords of this.clearQueue) {
+      for (const [id, c] of this.coordsMap.entries()) {
+        if (checked.has(id)) continue;
+        if (this.pieceIntersects(coords, c)) {
+          this.clearQueue.push(coords);
+          this.renderMap.add(id);
+          checked.add(id);
+        }
+      }
+    }*/
+
+    //if (checked.size > 0) console.log(checked);
+  }
   update(delta: number): void {
     return;
   }
@@ -20,7 +52,7 @@ class StaticPiecesLayer extends BaseLayer {
     const toRender = this.getToRender();
     const piecesImage = this.boardRuntime.getPieceStyle(),
       pieceHoverRef = this.boardRuntime.getPieceHover(),
-      squareSize = this.boardRuntime.getSize() / 8,
+      squareSize = Math.ceil(this.boardRuntime.getSize() / 8),
       ctx = this.ctx;
 
     if (!piecesImage || !toRender || !toRender.length) return;
@@ -53,7 +85,7 @@ class StaticPiecesLayer extends BaseLayer {
   }
 
   clearPieces(board: TPieceBoard[]) {
-    const squareSize = this.boardRuntime.getSize() / 8;
+    const squareSize = Math.ceil(this.boardRuntime.getSize() / 8);
 
     const newPieces = new Set<TPieceId>();
     for (const piece of board) {
@@ -86,8 +118,15 @@ class StaticPiecesLayer extends BaseLayer {
     piece: TPieceInternalRef,
     squareSize: number
   ) {
+    const coords = Utils.squareToCoords(
+      piece.square,
+      squareSize,
+      this.boardRuntime.getIsBlackView()
+    );
+    if (!coords) return;
+
     if (image && image.complete && image.naturalWidth > 0) {
-      ctx.drawImage(image, piece.x, piece.y, squareSize, squareSize);
+      ctx.drawImage(image, coords.x, coords.y, squareSize, squareSize);
     }
   }
 
@@ -97,6 +136,13 @@ class StaticPiecesLayer extends BaseLayer {
     piece: TPieceInternalRef,
     squareSize: number
   ) {
+    const coords = Utils.squareToCoords(
+      piece.square,
+      squareSize,
+      this.boardRuntime.getIsBlackView()
+    );
+    if (!coords) return;
+
     const image_ = image.length > 1 ? image[0] : image;
     ctx.fillStyle = piece.type[0] === "w" ? "#ffffffff" : "#000000ff";
     ctx.font = `${squareSize * 0.7}px monospace`;
@@ -109,7 +155,7 @@ class StaticPiecesLayer extends BaseLayer {
     }
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(image_, piece.x + squareSize / 2, piece.y + squareSize / 2);
+    ctx.fillText(image_, coords.x + squareSize / 2, coords.y + squareSize / 2);
   }
 
   private DrawPathPiece(

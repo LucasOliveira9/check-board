@@ -1,8 +1,8 @@
 import { useRef, useEffect, useImperativeHandle } from "react";
 import CanvasLayers from "../engine/layers/canvasLayers";
 import { TBoardProps, TBoardRuntime } from "../types/board";
-import Board from "./Board";
-import BoardRuntime from "../engine/BoardRuntime/BoardRuntime";
+import Board from "./board";
+import BoardRuntime from "../engine/boardRuntime/boardRuntime";
 import Client from "../engine/client/client";
 import React from "react";
 import { BoardHandled } from "../engine/client/interface";
@@ -31,6 +31,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
       ) {
         const args: TBoardRuntime = {
           ...config,
+          size: Math.floor(size / 8) * 8,
           onMove,
           onUpdate,
           canvasLayers: new CanvasLayers(
@@ -39,7 +40,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
             underlayCanvasRef,
             overlayCanvasRef,
             dynamicPiecesCanvasRef,
-            size
+            Math.floor(size / 8) * 8
           ),
           pieceStyle: pieceConfig.piecesImage,
           mode: "2d",
@@ -72,7 +73,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
         overlayRef={overlayCanvasRef}
         underlayRef={underlayCanvasRef}
         dynamicPiecesRef={dynamicPiecesCanvasRef}
-        size={size}
+        size={Math.floor(size / 8) * 8}
       />
     );
   }

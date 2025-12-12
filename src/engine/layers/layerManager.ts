@@ -1,24 +1,23 @@
 import {
   TBaseCtx,
-  TBoardEventContext,
   TCanvasCoords,
   TCanvasLayer,
   TDrawRegion,
   TEvents,
-  TGetterBoardEventContext,
   TPieceId,
   TSafeCtx,
 } from "types";
 import { EVENTS } from "../../types/events";
 import BaseLayer from "./baseLayer";
 import BoardLayer from "./boardLayer";
-import BoardRuntime from "engine/BoardRuntime/BoardRuntime";
+import BoardRuntime from "engine/boardRuntime/boardRuntime";
 import UnderlayLayer from "./underlayLayer";
 import StaticPiecesLayer from "./staticPieces";
 import DynamicPiecesLayer from "./dynamicPiecesLayer";
 import OverlayLayer from "./overlayLayer";
 import Iterators from "../iterators/iterators";
 import Events from "./events";
+import Utils from "../../utils/utils";
 
 class LayerManager {
   private layers: Record<TCanvasLayer, BaseLayer>;
@@ -103,7 +102,7 @@ class LayerManager {
 
     const fromLayer = this.getLayer(from);
     const toLayer = this.getLayer(to);
-    const squareSize = this.boardRuntime.getSize() / 8;
+    const squareSize = Math.floor(this.boardRuntime.getSize() / 8);
 
     if (!fromLayer || !toLayer) {
       //console.warn("[togglePieceLayer] Invalid Layer:", from, to);
@@ -122,15 +121,29 @@ class LayerManager {
       return;
     }
 
-    const newCoords: TCanvasCoords = {
-      x: piece.x,
-      y: piece.y,
-      w: squareSize,
-      h: squareSize,
-    };
+    const coords_ = Utils.squareToCoords(
+      piece.square,
+      squareSize,
+      this.boardRuntime.getIsBlackView()
+    );
+    if (!coords_) return;
+    const newCoords: TCanvasCoords =
+      to === "staticPieces"
+        ? {
+            x: Math.floor(coords_.x),
+            y: Math.floor(coords_.y),
+            w: Math.ceil(squareSize),
+            h: Math.ceil(squareSize),
+          }
+        : {
+            x: Math.floor(piece.x),
+            y: Math.floor(piece.y),
+            w: Math.ceil(squareSize),
+            h: Math.ceil(squareSize),
+          };
 
     fromLayer.removeAll?.(pieceId);
-    toLayer.addAll?.(pieceId, piece, newCoords);
+    toLayer.addAll?.(pieceId, piece, newCoords, newCoords);
     if (noRender) return;
     this.boardRuntime.pipelineRender.setNextEvent("onRender", [false]);
   }
@@ -139,6 +152,7 @@ class LayerManager {
     ctx_:
       | (TSafeCtx & {
           __drawRegions: TDrawRegion[];
+          __actualRegions: TCanvasCoords[];
           __clearRegions: () => void;
         })
       | TBaseCtx,
@@ -147,7 +161,7 @@ class LayerManager {
     record?: TPieceId
   ) {
     const regions = ctx_.__drawRegions;
-    if (!regions.length) return;
+    const actualRegions = ctx_.__actualRegions;
 
     for (const coords of regions) {
       const coords_ = {
@@ -156,10 +170,18 @@ class LayerManager {
         w: Math.ceil(coords.w),
         h: Math.ceil(coords.h),
       };
-      if (record) {
-        this.getLayer(layer).addCoords(record, coords_);
-      }
+      if (record) this.getLayer(layer).addClearCoords(record, coords_);
       if (event) this.getLayer(layer).addEvent(event, coords_);
+    }
+
+    for (const coords of actualRegions) {
+      const coords_ = {
+        x: Math.floor(coords.x),
+        y: Math.floor(coords.y),
+        w: Math.ceil(coords.w),
+        h: Math.ceil(coords.h),
+      };
+      if (record) this.getLayer(layer).addCoords(record, coords_);
     }
 
     ctx_.__clearRegions();
@@ -205,9 +227,9 @@ class LayerManager {
   renderEvents(first: boolean) {
     const list = first ? this.firstDrawList.values() : this.drawList.values();
     for (const event of list) {
-      this.interaction[event] = true;
-      this.events.run(event);
       this.interaction[event] = false;
+      this.events.run(event);
+      this.interaction[event] = true;
     }
     first ? this.firstDrawList.clear() : this.drawList.clear();
   }

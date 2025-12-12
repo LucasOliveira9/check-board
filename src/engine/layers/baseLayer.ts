@@ -3,24 +3,22 @@ import {
   TBaseCtx,
   TCanvasCoords,
   TCanvasLayer,
-  TDrawRegion,
-  TEventName,
   TEvents,
   TPieceBoard,
-  TPieceCoords,
   TPieceId,
   TPieceInternalRef,
-  TRender,
-  TSafeCtx,
 } from "types";
 import { ICanvasLayer } from "./interface";
-import BoardRuntime from "../BoardRuntime/BoardRuntime";
+import BoardRuntime from "../boardRuntime/boardRuntime";
+import SpatialIndex from "./spatialIndex";
+import SpatialNode from "./spatialNode";
 
 abstract class BaseLayer implements ICanvasLayer {
   name: TCanvasLayer;
   protected boardRuntime: BoardRuntime;
   protected pieces = new Map<TPieceId, TPieceInternalRef>();
   protected coordsMap = new Map<TPieceId, TCanvasCoords>();
+  protected clearMap = new Map<TPieceId, TCanvasCoords>();
   protected renderMap = new Set<TPieceId>();
   protected clearQueue: TCanvasCoords[] = [];
   protected eventsMap: Record<TEvents, TCanvasCoords[]> = {} as Record<
@@ -35,11 +33,14 @@ abstract class BaseLayer implements ICanvasLayer {
 
   protected delayedPieceClear: Map<TPieceId, TPieceId> = new Map();
   private destroyed = false;
+  spatialIndex: SpatialIndex;
 
   constructor(name: TCanvasLayer, boardRuntime: BoardRuntime) {
     this.name = name;
     this.boardRuntime = boardRuntime;
     this.ctx = boardRuntime.getCanvasLayers().getContext(name);
+    const size = this.boardRuntime.getSize();
+    this.spatialIndex = new SpatialIndex({ x: 0, y: 0, w: size, h: size });
   }
 
   destroy() {
@@ -78,40 +79,69 @@ abstract class BaseLayer implements ICanvasLayer {
   }
   removePiece?(pieceId: TPieceId): void {
     this.pieces.delete(pieceId);
+    this.spatialIndex.remove(pieceId);
   }
-  addAll?(pieceId: TPieceId, ref: TPieceInternalRef, coords: TCanvasCoords) {
-    this.pieces.set(pieceId, ref);
-    this.coordsMap.set(pieceId, coords);
-    this.renderMap.add(pieceId);
-  }
-  removeAll?(pieceId: TPieceId) {
-    const coords = this.getCoords(pieceId);
-    coords && this.addClearQueue(coords);
+  addAll?(
+    pieceId: TPieceId,
+    ref: TPieceInternalRef,
+    coords: TCanvasCoords,
+    clearCoords: TCanvasCoords
+  ) {
+    this.addCoords(pieceId, coords);
+    this.addPiece?.(pieceId, ref);
+    this.addClearCoords(pieceId, clearCoords);
+    this.addToRender(pieceId);
 
-    this.pieces.delete(pieceId);
-    this.renderMap.delete(pieceId);
-    this.coordsMap.delete(pieceId);
+    /*if (!coords) return;
 
-    /*for (const c of this.clearQueue) {
-      for (const [id, coords] of this.coordsMap.entries()) {
-        if (this.intersects(coords, c)) {
-          this.clearQueue.push(coords);
-          this.renderMap.add(id);
-          //console.log("vilão-> ", pieceId, "afetado-> ", id, c, coords);
-        }
+    for (const [id, c] of this.coordsMap.entries()) {
+      if (this.intersects(c, coords) && id !== pieceId) {
+        //this.clearQueue.push(c);
+        //this.renderMap.add(id);
+        console.log("vilão-> ", pieceId, "afetado-> ", id, c, coords);
       }
     }*/
   }
+  removeAll?(pieceId: TPieceId) {
+    const coords = this.getClearCoords(pieceId);
+    coords && this.addClearQueue(coords);
+
+    this.removePiece?.(pieceId);
+    this.removeToRender(pieceId);
+    this.removeCoords(pieceId);
+    this.removeClearCoords(pieceId);
+
+    /* if (!coords) return;
+    for (const [id, c] of this.coordsMap.entries()) {
+      if (this.pieceIntersects(coords, c)) {
+        //this.clearQueue.push(coords);
+        //this.renderMap.add(id);
+        console.log("vilão-> ", pieceId, "afetado-> ", id, c, coords);
+      }
+    }*/
+  }
+
   handleEvent?(event: TEvents, coords: TCanvasCoords): void {
     if (!this.eventsMap[event]) this.eventsMap[event] = [];
     this.eventsMap[event].push(coords);
   }
+
   addCoords(pieceId: TPieceId, coords: TCanvasCoords) {
-    this.coordsMap.set(pieceId, coords);
+    if (!this.spatialIndex.update(pieceId, coords))
+      this.spatialIndex.insert(new SpatialNode(pieceId, coords));
+    this.coordsMap.set(pieceId, { ...coords, id: pieceId });
   }
 
   removeCoords(pieceId: TPieceId) {
     this.coordsMap.delete(pieceId);
+  }
+
+  addClearCoords(pieceId: TPieceId, coords: TCanvasCoords) {
+    this.clearMap.set(pieceId, { ...coords, id: pieceId });
+  }
+
+  removeClearCoords(pieceId: TPieceId) {
+    this.clearMap.delete(pieceId);
   }
 
   addToRender(pieceId: TPieceId) {
@@ -138,6 +168,7 @@ abstract class BaseLayer implements ICanvasLayer {
 
   removeEvent(event: TEvents) {
     const hasEvent = this.eventsMap[event];
+
     if (!hasEvent) return;
     const regions: TCanvasCoords[] = [];
     for (const e of hasEvent) {
@@ -159,13 +190,26 @@ abstract class BaseLayer implements ICanvasLayer {
     }
   }
 
-  private intersects(a: TCanvasCoords, b: TCanvasCoords) {
+  intersects(a: TCanvasCoords, b: TCanvasCoords) {
     return !(
-      a.x + a.w < b.x ||
-      b.x + b.w < a.x ||
-      a.y + a.h < b.y ||
-      b.y + b.h < a.y
+      a.x + a.w <= b.x ||
+      b.x + b.w <= a.x ||
+      a.y + a.h <= b.y ||
+      b.y + b.h <= a.y
     );
+  }
+
+  pieceIntersects(a: TCanvasCoords, b: TCanvasCoords) {
+    const left = Math.max(a.x, b.x);
+    const right = Math.min(a.x + a.w, b.x + b.w);
+    const top = Math.max(a.y, b.y);
+    const bottom = Math.min(a.y + a.h, b.y + b.h);
+
+    const overlapW = right - left;
+    const overlapH = bottom - top;
+
+    if (overlapW <= 0 || overlapH <= 0) return false;
+    return overlapW >= 2 && overlapH >= 2;
   }
 
   getCtx() {
@@ -184,6 +228,10 @@ abstract class BaseLayer implements ICanvasLayer {
     return this.coordsMap.get(pieceId);
   }
 
+  getClearCoords(pieceId: TPieceId) {
+    return this.clearMap.get(pieceId);
+  }
+
   getToRender() {
     return Array.from(this.renderMap.keys());
   }
@@ -193,9 +241,18 @@ abstract class BaseLayer implements ICanvasLayer {
   }
 
   resetLayer() {
+    const size = this.boardRuntime.getSize();
     this.pieces.clear();
     this.coordsMap.clear();
     this.renderMap.clear();
+    this.clearMap.clear();
+    this.spatialIndex.destroy();
+    this.spatialIndex = new SpatialIndex({
+      x: 0,
+      y: 0,
+      w: size,
+      h: size,
+    });
     this.clearQueue.length = 0;
     this.eventsMap = {} as Record<TEvents, TCanvasCoords[]>;
   }

@@ -1,41 +1,27 @@
 import { TPipelineRender } from "types";
-import BoardRuntime from "../BoardRuntime/BoardRuntime";
+import BoardRuntime from "../boardRuntime/boardRuntime";
 
 class PipelineRender {
   private eventsNext: Record<
     TPipelineRender,
-    { args: any[][]; token: number } | null
+    {
+      args: any[][];
+      token: number;
+      resolve?: (value: void | PromiseLike<void>) => void;
+    }[]
   > = {
-    onPointerSelect: null,
-    onPointerHover: null,
-    onPointerDragStart: null,
-    onPointerDrag: null,
-    onPointerDrop: null,
-    onAnimationFrame: null,
-    onDrawPiece: null,
-    onDrawBoard: null,
-    onDrawOverlay: null,
-    onDrawUnderlay: null,
-    onToggleCanvas: null,
-    onRender: null,
-  };
-
-  private eventsResolvers: Record<
-    TPipelineRender,
-    ((value: void | PromiseLike<void>) => void) | null
-  > = {
-    onPointerSelect: null,
-    onPointerHover: null,
-    onPointerDragStart: null,
-    onPointerDrag: null,
-    onPointerDrop: null,
-    onAnimationFrame: null,
-    onDrawPiece: null,
-    onDrawBoard: null,
-    onDrawOverlay: null,
-    onDrawUnderlay: null,
-    onToggleCanvas: null,
-    onRender: null,
+    onPointerSelect: [],
+    onPointerHover: [],
+    onPointerDragStart: [],
+    onPointerDrag: [],
+    onPointerDrop: [],
+    onAnimationFrame: [],
+    onDrawPiece: [],
+    onDrawBoard: [],
+    onDrawOverlay: [],
+    onDrawUnderlay: [],
+    onToggleCanvas: [],
+    onRender: [],
   };
 
   private eventsToken: Record<TPipelineRender, number> = {
@@ -72,20 +58,14 @@ class PipelineRender {
     resolve?: (value: void | PromiseLike<void>) => void
   ) {
     const token = ++this.eventsToken[event];
-    this.eventsNext[event] = { args: [...next], token };
-    if (resolve) {
-      if (this.eventsResolvers[event]) {
-        this.eventsResolvers[event]!();
-      }
-      this.eventsResolvers[event] = resolve;
-    }
+    this.eventsNext[event].push({ args: [...next], token, resolve });
 
-    if (!this.stream.includes(event)) this.stream.push(event);
+    this.stream.push(event);
     if (!this.loading) this.loadEvents();
   }
 
   getNextEvent(event: TPipelineRender) {
-    return this.eventsNext[event];
+    return this.eventsNext[event].shift();
   }
 
   async loadEvents() {
@@ -98,18 +78,17 @@ class PipelineRender {
         const next = this.getNextEvent(event);
         if (!next) continue;
 
-        const { args, token } = next;
+        const { args, token, resolve } = next;
         if (token !== this.eventsToken[event]) {
+          resolve?.();
+          this.stream.unshift(event);
           continue;
         }
-
-        const resolver = this.eventsResolvers[event];
-        this.eventsResolvers[event] = null;
 
         const method = this.boardRuntime.eventsRuntime[event];
         if (!method || !args) continue;
         await method(...args);
-        resolver?.();
+        resolve?.();
       }
     } finally {
       if (this.destroyed) return;

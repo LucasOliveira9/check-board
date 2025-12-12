@@ -1,7 +1,8 @@
 import { TPieceId } from "../../types/piece";
 import { TSelected } from "../../types/board";
 import Utils from "../../utils/utils";
-import BoardRuntime from "../BoardRuntime/BoardRuntime";
+import BoardRuntime from "../boardRuntime/boardRuntime";
+import { TCanvasLayer } from "types";
 
 class PointerEventsHelpers {
   constructor(protected boardRuntime: BoardRuntime) {}
@@ -48,7 +49,7 @@ class PointerEventsHelpers {
     if (
       (selected && selected?.isDragging) ||
       this.boardRuntime.getIsMoving() ||
-      e.button !== -1
+      e.pressure > 0
     ) {
       return;
     }
@@ -62,7 +63,8 @@ class PointerEventsHelpers {
     );
 
     if (!searchPiece) {
-      this.boardRuntime.pipelineRender.setNextEvent("onPointerHover", [null]);
+      this.boardRuntime.getPieceHover() &&
+        this.boardRuntime.pipelineRender.setNextEvent("onPointerHover", [null]);
       this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
         cursor: "default",
       });
@@ -106,13 +108,13 @@ class PointerEventsHelpers {
           this.boardRuntime.getPieceHover() &&
             this.boardRuntime.pipelineRender.setNextEvent("onPointerHover", [
               null,
-              true,
             ]);
           this.boardRuntime.pipelineRender.setNextEvent("onToggleCanvas", [
             "staticPieces",
             "dynamicPieces",
             selected.id,
           ]);
+
           return;
         }
 
@@ -269,7 +271,7 @@ class PointerEventsHelpers {
     return false;
   }
 
-  toggleLayer() {
+  toggleLayer(from: TCanvasLayer, to: TCanvasLayer) {
     const selected = this.boardRuntime.getSelected();
     const piece =
       selected && this.boardRuntime.getInternalRefVal(selected.id as TPieceId);
@@ -277,9 +279,10 @@ class PointerEventsHelpers {
     if (selected && selected.isDragging && piece) {
       piece.x = selected.x;
       piece.y = selected.y;
+      piece.square = structuredClone(selected.square);
       this.boardRuntime.pipelineRender.setNextEvent("onToggleCanvas", [
-        "dynamicPieces",
-        "staticPieces",
+        from,
+        to,
         selected.id,
         true,
       ]);
@@ -307,7 +310,7 @@ class PointerEventsHelpers {
       piece.y = y;
     }
 
-    toggle && this.toggleLayer();
+    toggle && this.toggleLayer("dynamicPieces", "staticPieces");
     return;
   }
 }

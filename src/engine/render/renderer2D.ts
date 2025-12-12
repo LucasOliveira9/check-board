@@ -6,7 +6,7 @@ import {
   TPieceId,
   TPieceInternalRef,
 } from "../../types/piece";
-import BoardRuntime from "../BoardRuntime/BoardRuntime";
+import BoardRuntime from "../boardRuntime/boardRuntime";
 import { IRenderer2D } from "./interface";
 import { TEvents } from "../../types/events";
 import LayerManager from "../layers/layerManager";

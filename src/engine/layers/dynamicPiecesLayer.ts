@@ -1,4 +1,4 @@
-import BoardRuntime from "../BoardRuntime/BoardRuntime";
+import BoardRuntime from "../boardRuntime/boardRuntime";
 import BaseLayer from "./baseLayer";
 import { TDrawRegion, TEvents, TPieceId, TPieceInternalRef } from "types";
 import Utils from "../../utils/utils";
@@ -40,7 +40,7 @@ class DynamicPiecesLayer extends BaseLayer {
       const piece_ = anim.piece;
       const eased = easeOutCubic(progress);
 
-      const coords = this.getCoords(anim.id);
+      const coords = this.getClearCoords(anim.id);
       coords && this.addClearQueue(coords);
 
       piece_.x = anim.from.x + (anim.to.x - anim.from.x) * eased;
@@ -65,7 +65,7 @@ class DynamicPiecesLayer extends BaseLayer {
     const piecesImage = this.boardRuntime.getPieceStyle(),
       toRender = this.getToRender(),
       pieceHoverRef = this.boardRuntime.getPieceHover(),
-      squareSize = this.boardRuntime.getSize() / 8,
+      squareSize = Math.ceil(this.boardRuntime.getSize() / 8),
       selected = this.boardRuntime.getSelected(),
       ctx = this.ctx,
       layerManager = this.boardRuntime.renderer.getLayerManager();
@@ -102,7 +102,8 @@ class DynamicPiecesLayer extends BaseLayer {
         .getLayerManager()
         .togglePieceLayer("dynamicPieces", "staticPieces", pieceId, true);
     }
-    if (this.toggleCanvas.length > 0) await this.toggle();
+    if (this.toggleCanvas.length > 0)
+      await Utils.asyncHandler(this.toggle.bind(this));
     this.toggleCanvas.length = 0;
   }
 
@@ -150,14 +151,8 @@ class DynamicPiecesLayer extends BaseLayer {
     ctx.restore();
   }
 
-  private async toggle() {
-    return new Promise<void>((resolve) => {
-      this.boardRuntime.pipelineRender.setNextEvent(
-        "onRender",
-        [false],
-        resolve
-      );
-    });
+  private async toggle(resolve: (value: void | PromiseLike<void>) => void) {
+    this.boardRuntime.pipelineRender.setNextEvent("onRender", [false], resolve);
   }
 }
 

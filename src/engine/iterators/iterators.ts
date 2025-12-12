@@ -1,7 +1,8 @@
 import { TBaseCtx } from "types";
 import { TBoardEventContext, TEvents } from "../../types/events";
 import { TPieceInternalRef } from "../../types/piece";
-import BoardRuntime from "../BoardRuntime/BoardRuntime";
+import BoardRuntime from "../boardRuntime/boardRuntime";
+import Utils from "../../utils/utils";
 
 class Iterators {
   ITERATORS: Record<TEvents, any> = {
@@ -65,7 +66,10 @@ class Iterators {
     const image = piecesImage?.[piece.type];
 
     // highlight
-    if (hoverConfig.highlight) {
+    if (
+      hoverConfig.highlight &&
+      this.boardRuntime.getSelected()?.id !== this.boardRuntime.getPieceHover()
+    ) {
       const drawHighlight = (ctx: TBaseCtx) => {
         ctx.save();
 
@@ -125,7 +129,7 @@ class Iterators {
 
       this.boardRuntime.renderer
         .getLayerManager()
-        .getLayer("overlay")
+        .getLayer("dynamicPieces")
         .drawEvent(drawScaling, "onPointerHover");
     }
 
@@ -140,11 +144,17 @@ class Iterators {
     squareSize: number,
     scale: number
   ) {
+    const coords = Utils.squareToCoords(
+      piece.square,
+      squareSize,
+      this.boardRuntime.getIsBlackView()
+    );
+    if (!coords) return;
     if (image && image.complete && image.naturalWidth > 0) {
       ctx.drawImage(
         image,
-        piece.x - (squareSize * (scale - 1)) / 2,
-        piece.y - (squareSize * (scale - 1)) / 2,
+        coords.x - (squareSize * (scale - 1)) / 2,
+        coords.y - (squareSize * (scale - 1)) / 2,
         squareSize * scale,
         squareSize * scale
       );
@@ -158,6 +168,12 @@ class Iterators {
     squareSize: number,
     scale: number
   ) {
+    const coords = Utils.squareToCoords(
+      piece.square,
+      squareSize,
+      this.boardRuntime.getIsBlackView()
+    );
+    if (!coords) return;
     const image_ = image.length > 1 ? image[0] : image;
     ctx.save();
     ctx.fillStyle = piece.type[0] === "w" ? "#ffffffff" : "#000";
@@ -171,7 +187,7 @@ class Iterators {
     }
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(image_, piece.x + squareSize / 2, piece.y + squareSize / 2);
+    ctx.fillText(image_, coords.x + squareSize / 2, coords.y + squareSize / 2);
     ctx.restore();
     const padding = squareSize * 1.5;
 

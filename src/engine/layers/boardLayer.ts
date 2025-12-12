@@ -1,4 +1,4 @@
-import BoardRuntime from "../BoardRuntime/BoardRuntime";
+import BoardRuntime from "../boardRuntime/boardRuntime";
 import BaseLayer from "./baseLayer";
 import { TDrawRegion } from "types";
 
