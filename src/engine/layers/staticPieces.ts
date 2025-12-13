@@ -31,18 +31,6 @@ class StaticPiecesLayer extends BaseLayer {
         console.log(coords.id, " --- ", s.id, s.box, coords);
       }
     }
-    /*for (const coords of this.clearQueue) {
-      for (const [id, c] of this.coordsMap.entries()) {
-        if (checked.has(id)) continue;
-        if (this.pieceIntersects(coords, c)) {
-          this.clearQueue.push(coords);
-          this.renderMap.add(id);
-          checked.add(id);
-        }
-      }
-    }*/
-
-    //if (checked.size > 0) console.log(checked);
   }
   update(delta: number): void {
     return;

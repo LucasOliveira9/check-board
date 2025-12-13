@@ -1,5 +1,11 @@
 import BoardRuntime from "../boardRuntime/boardRuntime";
-import { TCanvasCoords, TCanvasLayer, TDrawRegion, TEvents } from "types";
+import {
+  TCanvasCoords,
+  TCanvasLayer,
+  TDrawRegion,
+  TEvents,
+  TLazyReturn,
+} from "types";
 import Utils from "../../utils/utils";
 
 class Events {
@@ -57,9 +63,10 @@ class Events {
         .getCanvas("dynamicPieces").current
         ? this.boardRuntime.getCanvasLayers().getCanvas("dynamicPieces").current
         : undefined;
+
       if (piece && !piece.anim) {
         if (events?.onPointerHover) {
-          const context = this.boardRuntime.getContext(true, {
+          let context = this.boardRuntime.getContext(true, {
             squareSize,
             x: piece.x,
             y: piece.y,
@@ -68,11 +75,13 @@ class Events {
             square: piece.square,
           });
 
+          (context as any).__event = "onPointerHover";
           this.boardRuntime.helpers.triggerEvent(
             events,
             "onPointerHover",
             injection ? injection(context) : context
           );
+
           return;
         }
 
@@ -135,12 +144,13 @@ class Events {
           piece: piece_,
           square: selectedRef.square,
         });
-
+        (context as any).__event = "onPointerSelect";
         this.boardRuntime.helpers.triggerEvent(
           events,
           "onPointerSelect",
           injection ? injection(context) : context
         );
+
         return;
       }
       this.boardRuntime.renderer

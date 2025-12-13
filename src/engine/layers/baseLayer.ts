@@ -91,16 +91,6 @@ abstract class BaseLayer implements ICanvasLayer {
     this.addPiece?.(pieceId, ref);
     this.addClearCoords(pieceId, clearCoords);
     this.addToRender(pieceId);
-
-    /*if (!coords) return;
-
-    for (const [id, c] of this.coordsMap.entries()) {
-      if (this.intersects(c, coords) && id !== pieceId) {
-        //this.clearQueue.push(c);
-        //this.renderMap.add(id);
-        console.log("vilão-> ", pieceId, "afetado-> ", id, c, coords);
-      }
-    }*/
   }
   removeAll?(pieceId: TPieceId) {
     const coords = this.getClearCoords(pieceId);
@@ -110,15 +100,6 @@ abstract class BaseLayer implements ICanvasLayer {
     this.removeToRender(pieceId);
     this.removeCoords(pieceId);
     this.removeClearCoords(pieceId);
-
-    /* if (!coords) return;
-    for (const [id, c] of this.coordsMap.entries()) {
-      if (this.pieceIntersects(coords, c)) {
-        //this.clearQueue.push(coords);
-        //this.renderMap.add(id);
-        console.log("vilão-> ", pieceId, "afetado-> ", id, c, coords);
-      }
-    }*/
   }
 
   handleEvent?(event: TEvents, coords: TCanvasCoords): void {

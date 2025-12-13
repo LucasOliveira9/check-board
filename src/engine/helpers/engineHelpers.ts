@@ -84,6 +84,7 @@ class EngineHelpers {
       const fn = events?.[event];
       if (!fn) return;
       (args as any).__event = event;
+
       if (extra !== undefined) {
         res = (fn as (arg: T, extra: K) => TCanvasCoords[] | null | undefined)(
           args,
