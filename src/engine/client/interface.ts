@@ -1,3 +1,4 @@
+import { TPieceInternalRef } from "types";
 import { TNotation } from "../../types/square";
 
 interface BoardHandled {
@@ -9,6 +10,9 @@ interface BoardHandled {
   loadFenStream(b: string[]): void;
   setfenStreamDelay(n: number): void;
   updateSize(size: number): void;
+  getPieceAt(
+    notation: TNotation
+  ): { id: string; piece: TPieceInternalRef } | null;
 }
 
 export type { BoardHandled };

@@ -39,6 +39,11 @@ function imperativeHandle(
       if (!clientRef.current) return;
       clientRef.current.updateSize(size);
     },
+
+    getPieceAt: (notation) => {
+      if (!clientRef.current) return null;
+      return clientRef.current.getPieceAt(notation);
+    },
   };
 }
 

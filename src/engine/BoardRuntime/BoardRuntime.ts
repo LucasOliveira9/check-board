@@ -193,7 +193,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     return this.selected ? Utils.deepFreeze(this.selected) : null;
   }
 
-  getReadonlyPiece(piece?: TPieceInternalRef) {
+  getReadonlyPiece(piece?: TPieceInternalRef, at?: TNotation) {
     return piece ? Utils.deepFreeze(piece) : null;
   }
 
