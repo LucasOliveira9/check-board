@@ -88,6 +88,10 @@ class PieceHelpers {
     this.cache.set(to, piece);
   }
 
+  removeCache(target: TNotation) {
+    this.cache.delete(target);
+  }
+
   getPieceImages: Record<string, TPieceImage<TPieceDisplay>> = {
     string: {
       wK: "♔",

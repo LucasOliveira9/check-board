@@ -78,6 +78,18 @@ type TMove = {
   piece: TPieceBoard;
 };
 
+type TMoveReturn = {
+  status: boolean;
+  flag: TMoveFlag;
+};
+
+type TMoveFlag = {
+  enpassant?: boolean;
+  kingSideCastling?: boolean;
+  queenSideCastling?: boolean;
+  capture?: boolean;
+};
+
 const EVENTS = {
   onPointerSelect: "onPointerSelect",
   onPointerHover: "onPointerHover",
@@ -137,6 +149,8 @@ export type {
   TBoardEventContextBase,
   TBoardEventContextExtras,
   TMove,
+  TMoveReturn,
+  TMoveFlag,
   TAnimation,
   TGetterBoardEventContext,
   TEvents,

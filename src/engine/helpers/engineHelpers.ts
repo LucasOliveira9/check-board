@@ -113,7 +113,7 @@ class EngineHelpers {
     const moveCallback = this.boardRuntime.getMove();
     if (moveCallback) {
       const move = moveCallback({ from, to, piece });
-      if (move) {
+      if (move.status) {
         if (selected && selected.isDragging && id) {
           this.pointerEventsHelper.endDrag(offset.x, offset.y, true, false);
           this.toggleSelected(false);
@@ -124,7 +124,7 @@ class EngineHelpers {
             true,
           ]);
         }
-        this.boardRuntime.updateBoardState(from, to, click);
+        this.boardRuntime.updateBoardState(from, to, click, move.flag);
         return true;
       } else {
         if (selected) {

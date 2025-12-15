@@ -4,6 +4,7 @@ import {
   TBoardEventContext,
   TDrawFunction,
   TEvents,
+  TMoveFlag,
 } from "../../types/events";
 import {
   TPiece,
@@ -520,32 +521,99 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     await this.renderer.render(b);
   }
 
-  async updateBoardState(from: TNotation, to: TNotation, delay: boolean) {
+  async updateBoardState(
+    from: TNotation,
+    to: TNotation,
+    delay: boolean,
+    flag?: TMoveFlag
+  ) {
     const piece = this.board[from];
     const layerManager = this.renderer.getLayerManager();
-    let enemie = this.board[to];
-    piece.square = {
-      file: to.charAt(0) as TFile,
-      rank: parseInt(to.charAt(1)) as TRank,
-      notation: to,
-    };
 
-    this.board[to] = piece;
-    delete this.board[from];
+    if (flag?.kingSideCastling || flag?.queenSideCastling) {
+      const type = piece.type[0];
+      let rook = null;
+      if (type === "w")
+        rook = flag.kingSideCastling ? this.board["h1"] : this.board["a1"];
+      else rook = flag.kingSideCastling ? this.board["h8"] : this.board["a8"];
+      if (rook) {
+        const file = flag.kingSideCastling ? "f" : "d",
+          rank = type === "w" ? 1 : 8,
+          rookNotation = `${file}${rank}` as TNotation,
+          oldSquare = rook.square.notation;
 
-    this.helpers.pieceHelper.updateCache(from, to, {
-      id: piece.id,
-      piece: this.getInternalRefVal(piece.id),
-    });
+        const kingFile = flag.kingSideCastling ? "g" : "c",
+          kingRank = type === "w" ? 1 : 8,
+          kingNotation = `${kingFile}${kingRank}` as TNotation;
+        piece.square = {
+          file: kingFile,
+          rank: kingRank,
+          notation: kingNotation,
+        };
+        rook.square = {
+          file,
+          rank,
+          notation: rookNotation,
+        };
 
-    if (enemie) {
-      if (delay && this.getDefaultAnimation()) {
-        layerManager.addDelayedPieceClear(piece.id, enemie.id);
-      } else layerManager.getLayer("staticPieces").removeAll?.(enemie.id);
+        this.board[kingNotation] = piece;
+        delete this.board[from];
 
-      this.deleteIntervalRefVal(enemie.id);
+        this.board[rookNotation] = rook;
+        delete this.board[oldSquare];
+
+        this.helpers.pieceHelper.updateCache(from, kingNotation, {
+          id: piece.id,
+          piece: this.getInternalRefVal(piece.id),
+        });
+
+        this.helpers.pieceHelper.updateCache(oldSquare, rookNotation, {
+          id: rook.id,
+          piece: this.getInternalRefVal(rook.id),
+        });
+      }
+    } else {
+      let enpassant = null;
+
+      piece.square = {
+        file: to.charAt(0) as TFile,
+        rank: parseInt(to.charAt(1)) as TRank,
+        notation: to,
+      };
+
+      if (flag?.enpassant) {
+        enpassant =
+          piece.type[0] === "w"
+            ? `${piece.square.file}${piece.square.rank - 1}`
+            : `${piece.square.file}${piece.square.rank + 1}`;
+      }
+
+      let enemie = enpassant
+        ? this.board[enpassant as TNotation]
+        : this.board[to];
+
+      this.board[to] = piece;
+      delete this.board[from];
+
+      if (enpassant) {
+        delete this.board[enpassant as TNotation];
+        this.helpers.pieceHelper.removeCache(enpassant as TNotation);
+      }
+
+      this.helpers.pieceHelper.updateCache(from, to, {
+        id: piece.id,
+        piece: this.getInternalRefVal(piece.id),
+      });
+
+      if (enemie) {
+        if (delay && this.getDefaultAnimation()) {
+          layerManager.addDelayedPieceClear(piece.id, enemie.id);
+        } else layerManager.getLayer("staticPieces").removeAll?.(enemie.id);
+
+        this.deleteIntervalRefVal(enemie.id);
+      }
+      (enemie as any) = null;
     }
-    (enemie as any) = null;
 
     await this.refreshCanvas(false);
   }

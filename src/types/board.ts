@@ -1,6 +1,12 @@
 import CanvasLayers from "../engine/layers/canvasLayers";
 import BoardRuntime from "../engine/boardRuntime/boardRuntime";
-import { TBoardEventContext, TBoardEvents, TEvents, TMove } from "./events";
+import {
+  TBoardEventContext,
+  TBoardEvents,
+  TEvents,
+  TMove,
+  TMoveReturn,
+} from "./events";
 import { TPieceId, TPieceImage } from "./piece";
 import { TSquare } from "./square";
 import { THoverConfig } from "types";
@@ -29,7 +35,7 @@ interface TBoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   events?: TBoardEvents;
   injection?: TBoardInjection<T>;
   pieceStyle?: TPieceImage;
-  onMove?: (arg: TMove) => boolean;
+  onMove?: (arg: TMove) => TMoveReturn;
   onUpdate?: () => void;
   defaultAnimation?: boolean;
   hoverConfig?: THoverConfig;
@@ -66,7 +72,7 @@ type TConfig<T extends TBoardEventContext = TBoardEventContext> = {
 
 type TBoardProps = {
   config: TConfig;
-  onMove?: (arg: TMove) => boolean;
+  onMove?: (arg: TMove) => TMoveReturn;
   onUpdate?: () => void;
 };
 
