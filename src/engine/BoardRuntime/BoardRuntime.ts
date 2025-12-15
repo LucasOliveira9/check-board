@@ -389,7 +389,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
     await Utils.asyncHandler(render);
     this.renderer.getLayerManager().setHoverEnabled(true);
-    //await this.renderer.render(init);
+    if (this.args.onUpdate) this.args.onUpdate();
   }
 
   updateBoard(piece: TPieceBoard) {
@@ -543,10 +543,6 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     (enemie as any) = null;
 
     await this.refreshCanvas(false);
-
-    if (this.args.onUpdate) {
-      this.args.onUpdate();
-    }
   }
 
   async initInternalRef() {
