@@ -103,9 +103,14 @@ class Client {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  public togglePause() {
+  public async togglePause() {
+    const boardRuntime = this.getRuntime();
+    if (!boardRuntime) return;
     this.pauseFenStream = !this.pauseFenStream;
-    if (!this.pauseFenStream && !this.loading) this.loadPosition();
+    if (!this.pauseFenStream && !this.loading) {
+      await boardRuntime.resetEvents(true);
+      this.loadPosition();
+    }
   }
 
   public getBoard(): string {

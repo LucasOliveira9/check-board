@@ -398,6 +398,16 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     }
   }
 
+  async resetEvents(render: boolean) {
+    this.pipelineRender.setNextEvent("onPointerHover", [null, true]);
+    this.pipelineRender.setNextEvent("onPointerSelect", [null, true]);
+    if (!render) return;
+    const render_ = (resolve: (value: void | PromiseLike<void>) => void) =>
+      this.pipelineRender.setNextEvent("onRender", [false], resolve);
+
+    await Utils.asyncHandler(render_);
+  }
+
   updateBoard(piece: TPieceBoard) {
     this.board[piece.square.notation] = piece;
   }
