@@ -389,7 +389,12 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
     await Utils.asyncHandler(render);
     this.renderer.getLayerManager().setHoverEnabled(true);
-    if (this.args.onUpdate) this.args.onUpdate();
+
+    try {
+      if (this.args.onUpdate) this.args.onUpdate();
+    } catch (e) {
+      console.log(e);
+    }
   }
 
   updateBoard(piece: TPieceBoard) {
