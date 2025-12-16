@@ -41,13 +41,16 @@ class Client {
     return this.getRuntime()?.getReadonlyInternalRef();
   }
 
-  public setBoard(board: string, force?: boolean) {
+  public async setBoard(board: string, force?: boolean) {
     if (force) {
       this.clearFenStream();
       this.pauseFenStream = false;
     }
     this.fenStream.push(board);
-    if (!this.loading) this.loadPosition();
+    if (!this.loading) {
+      await this.getRuntime()?.resetEvents(true);
+      this.loadPosition();
+    }
   }
 
   private clearFenStream() {
