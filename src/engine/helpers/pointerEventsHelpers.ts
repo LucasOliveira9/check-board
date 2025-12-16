@@ -61,7 +61,7 @@ class PointerEventsHelpers {
       this.boardRuntime.getIsBlackView(),
       this.boardRuntime.getInternalRefObj()
     );
-    if (searchPiece?.id === selected?.id) return;
+    if (selected && searchPiece?.id === selected?.id) return;
 
     if (!searchPiece) {
       this.boardRuntime.getPieceHover() &&
