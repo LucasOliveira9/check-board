@@ -38,18 +38,6 @@ const Board: React.FC<TBoard> = ({
     [boardRuntime]
   );
 
-  useEffect(() => {
-    return () => {
-      boardRuntime.current?.destroy();
-      boardRuntime.current = null;
-      boardRef.current = null;
-      staticPiecesRef.current = null;
-      overlayRef.current = null;
-      underlayRef.current = null;
-      dynamicPiecesRef.current = null;
-    };
-  }, []);
-
   return (
     <div
       style={{

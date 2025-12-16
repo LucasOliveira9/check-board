@@ -45,7 +45,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected board: Record<TNotation, TPieceBoard>;
   protected hoverConfig: THoverConfig = {
     highlight: true,
-    scaling: true,
+    scaling: false,
     scaleAmount: 1.05,
   };
   pipelineRender = new PipelineRender(this);
@@ -53,6 +53,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   public boardEvents: BoardEvents = new BoardEvents(this);
   public helpers: EngineHelpers = new EngineHelpers(this);
   public renderer: IRenderer;
+  private mounted = false;
 
   eventsRuntime: Record<TPipelineRender, Function | null> = {
     onPointerSelect: this.setSelected.bind(this),
@@ -69,7 +70,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     onRender: this.render.bind(this),
   };
 
-  constructor(protected args: TBoardRuntime<T>) {
+  constructor(private args: TBoardRuntime<T>) {
     Object.assign(this, args);
     if (args.hoverConfig) this.hoverConfig = args.hoverConfig;
     this.renderer =
@@ -82,12 +83,24 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       );
   }
 
+  static async create(args: TBoardRuntime) {
+    const this_ = new BoardRuntime(args);
+    await this_.init();
+    return this_;
+  }
+
   destroy() {
-    //this.clearAnimation();
+    if (!this.mounted) return;
+    this.destroyed = true;
     this.args.canvasLayers.destroy();
     this.helpers.destroy();
     this.boardEvents.destroy();
     this.pipelineRender.destroy();
+
+    (this.args.canvasLayers as any) = null;
+    (this.helpers as any) = null;
+    (this.boardEvents as any) = null;
+    (this.pipelineRender as any) = null;
 
     if (this.args.pieceStyle) {
       Object.entries(this.args.pieceStyle).map(([_, val]) => {
@@ -99,15 +112,14 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         (val as any) = null;
       });
     }
-
-    for (const key of Object.getOwnPropertyNames(this)) {
-      (this as any)[key] = null;
-    }
-    this.destroyed = true;
   }
 
   getSize() {
     return this.args.size;
+  }
+
+  mount() {
+    this.mounted = true;
   }
 
   getIsBlackView() {
@@ -509,7 +521,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   async initPieceImages() {
-    if (!this.args.pieceStyle) {
+    if (!this.args || !this.args.pieceStyle) {
       this.args.pieceStyle =
         this.helpers.pieceHelper.getPieceImages[this.args.pieceConfig?.type];
     }

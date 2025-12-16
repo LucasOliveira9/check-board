@@ -7,6 +7,7 @@ import Client from "../engine/client/client";
 import React from "react";
 import { BoardHandled } from "../engine/client/interface";
 import imperativeHandle from "../engine/client/imperativeHandle";
+import { TBoardEventContext } from "types";
 
 const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
   ({ config, onMove, onUpdate }, ref) => {
@@ -21,7 +22,11 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
     const boardRuntime = useRef<BoardRuntime | null>(null);
     const clientRef = useRef<Client | null>(null);
 
+    const disposed = useRef(0);
     useEffect(() => {
+      let runtime: BoardRuntime<TBoardEventContext> | null = null;
+      let c: Client | null = null;
+      const id = ++disposed.current;
       if (
         boardCanvasRef.current &&
         staticPiecesCanvasRef.current &&
@@ -46,21 +51,29 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
           mode: "2d",
         };
 
-        const runtime = new BoardRuntime(args);
-        boardRuntime.current = runtime;
-
-        runtime.init();
-
-        const c = new Client(runtime);
-        clientRef.current = c;
-
-        return () => {
-          runtime.destroy();
-          c.destroy();
-          boardRuntime.current = null;
-          clientRef.current = null;
-        };
+        (async () => {
+          const create = await BoardRuntime.create(args);
+          if (disposed.current !== id) {
+            create.destroy();
+            return;
+          }
+          create.mount();
+          runtime = create;
+          boardRuntime.current = runtime;
+          c = new Client(runtime);
+          clientRef.current = c;
+        })();
       }
+
+      return () => {
+        disposed.current++;
+        runtime?.destroy();
+        c?.destroy();
+        runtime = null;
+        c = null;
+        boardRuntime.current = null;
+        clientRef.current = null;
+      };
     }, []);
 
     useImperativeHandle(ref, () => imperativeHandle(clientRef));

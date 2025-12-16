@@ -64,6 +64,7 @@ class CanvasLayers {
   }
 
   destroy() {
+    this.clearAllRect();
     this.clearCanvas();
     for (const key of Object.getOwnPropertyNames(this)) {
       (this as any)[key] = null;
