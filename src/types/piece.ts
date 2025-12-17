@@ -114,3 +114,5 @@ export type {
   TPieceCoords,
   TPieceType,
 };
+
+export { pieceKey };

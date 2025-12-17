@@ -62,7 +62,7 @@ class PieceHelpers {
     if (cached) return { piece: { ...cached.piece }, id: cached.id };
 
     const piece = Object.entries(refObj).find(([_, piece]) => {
-      return piece.square.notation === square.notation;
+      return piece.square?.notation === square.notation;
     });
 
     if (!piece) return;

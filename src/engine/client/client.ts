@@ -160,7 +160,7 @@ class Client {
 
     const internalRef = boardRuntime.getInternalRefObj();
     const hasPiece = Object.entries(internalRef).find(
-      ([id, piece]) => piece.square.notation === notation
+      ([id, piece]) => piece.square?.notation === notation
     );
     if (!hasPiece) return null;
     const [id, piece] = hasPiece;

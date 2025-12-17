@@ -7,11 +7,13 @@ import {
   TMoveFlag,
 } from "../../types/events";
 import {
+  pieceKey,
   TPiece,
   TPieceBoard,
   TPieceCoords,
   TPieceId,
   TPieceInternalRef,
+  TPieceKey,
 } from "../../types/piece";
 import BoardEvents from "./boardEvents";
 import EngineHelpers from "../helpers/engineHelpers";
@@ -42,7 +44,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected animationDuration: number = 400;
   protected piecesToRender: { piece: TPieceInternalRef; id: TPieceId }[] = [];
   protected isMoving: boolean = false;
-  protected board: Record<TNotation, TPieceBoard>;
+  protected board!: Record<TNotation, TPieceBoard>;
   protected hoverConfig: THoverConfig = {
     highlight: true,
     scaling: false,
@@ -70,16 +72,50 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     onRender: this.render.bind(this),
   };
 
+  activePiecesPool: Record<TPiece, Map<TNotation, TPieceId>> = {
+    wP: new Map(),
+    wR: new Map(),
+    wN: new Map(),
+    wB: new Map(),
+    wQ: new Map(),
+    wK: new Map(),
+    bP: new Map(),
+    bR: new Map(),
+    bN: new Map(),
+    bB: new Map(),
+    bQ: new Map(),
+    bK: new Map(),
+  };
+
+  inactivePiecesPool: Record<TPiece, TPieceId[]> = {
+    wP: [],
+    wR: [],
+    wN: [],
+    wB: [],
+    wQ: [],
+    wK: [],
+    bP: [],
+    bR: [],
+    bN: [],
+    bB: [],
+    bQ: [],
+    bK: [],
+  };
+
+  piecesBoard: Map<TPieceId, TPieceBoard> = new Map();
+
   constructor(private args: TBoardRuntime<T>) {
     Object.assign(this, args);
     if (args.hoverConfig) this.hoverConfig = args.hoverConfig;
     this.renderer =
       args.mode === "2d" ? new Renderer2D(this) : new Renderer3D(this);
 
-    if (Utils.validateFen(args.board)) this.board = Utils.parseFen(args.board);
+    this.setInactivePieces();
+    if (Utils.validateFen(args.board))
+      this.setBoard(Utils.parseFen(args.board));
     else
-      this.board = Utils.parseFen(
-        "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
+      this.setBoard(
+        Utils.parseFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
       );
   }
 
@@ -112,6 +148,18 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         (val as any) = null;
       });
     }
+  }
+
+  addPieceBoard(id: TPieceId, piece: TPieceBoard) {
+    this.piecesBoard.set(id, piece);
+  }
+
+  deletePieceBoard(id: TPieceId) {
+    this.piecesBoard.delete(id);
+  }
+
+  getPieceBoard(id: TPieceId) {
+    return this.piecesBoard.get(id);
   }
 
   getSize() {
@@ -362,6 +410,29 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.isMoving = b;
   }
 
+  setInactivePieces() {
+    for (let total = 1; total <= 64; total++) {
+      for (const key of pieceKey) {
+        const id = `${key}${total}` as TPieceId;
+        this.inactivePiecesPool[key].push(id);
+        const piece: TPieceBoard = {
+          square: null,
+          type: key,
+          id,
+        };
+        this.piecesBoard.set(id, piece);
+      }
+    }
+  }
+
+  getInactivePiece(key: TPiece) {
+    return this.inactivePiecesPool[key].shift();
+  }
+
+  addInactivePiece(key: TPiece, id: TPieceId) {
+    this.inactivePiecesPool[key].unshift(id);
+  }
+
   async setSize(size: number) {
     this.args.size = Math.floor(size / 8) * 8;
     this.getCanvasLayers().clearAllRect();
@@ -380,14 +451,130 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     if (!Utils.validateFen(board).status) return;
     await this.setPieceHover(null);
     this.setIsMoving(true);
-    this.board = Utils.parseFen(board);
+    this.setBoard(Utils.parseFen(board));
     await this.refreshCanvas(false);
     this.setIsMoving(false);
   }
 
-  async setBoard(board: Record<TNotation, TPieceBoard>) {
-    board && (this.board = structuredClone(board));
-    await this.refreshCanvas(false);
+  setBoard(pieces: Record<TPiece, TNotation[]>) {
+    for (const piece of pieceKey) {
+      const needMove: { from: TNotation; to: TNotation }[] = [];
+      const squares = pieces[piece as TPiece] ? pieces[piece as TPiece] : [];
+      const activePool = this.activePiecesPool[piece as TPiece];
+      const checkedSquares: Set<TNotation> = new Set();
+      const usedSquares: Set<TNotation> = new Set();
+
+      for (let i = 0; i < squares.length; i++) {
+        const square = squares[i];
+        const find = activePool.get(square);
+        if (find) {
+          usedSquares.add(square);
+          checkedSquares.add(square);
+        }
+      }
+
+      const create: TNotation[] = [];
+      const keys = Array.from(activePool.keys());
+      let k = 0;
+      for (let i = 0; i < squares.length; i++) {
+        const square = squares[i];
+        if (usedSquares.has(square)) continue;
+
+        while (k < keys.length) {
+          const key = keys[k++];
+          if (!key) continue;
+          if (checkedSquares.has(key)) continue;
+
+          needMove.push({ from: key, to: square });
+          checkedSquares.add(key);
+          usedSquares.add(square);
+          break;
+        }
+      }
+
+      for (let i = 0; i < squares.length; i++) {
+        const square = squares[i];
+        if (usedSquares.has(square)) continue;
+        create.push(square);
+      }
+
+      const moveToInactive: Set<TNotation> = new Set();
+      for (const key of keys) {
+        if (checkedSquares.has(key)) continue;
+        moveToInactive.add(key);
+      }
+      this.updateBoardPieces(needMove, moveToInactive, create, piece as TPiece);
+    }
+    this.createBoard();
+  }
+
+  private createBoard() {
+    const board: Record<TNotation, TPieceBoard> = {} as Record<
+      TNotation,
+      TPieceBoard
+    >;
+    for (const [key, obj] of Object.entries(this.activePiecesPool)) {
+      for (const o of obj.keys()) {
+        const id = obj.get(o);
+        if (!id) continue;
+        const piece = this.piecesBoard.get(id);
+        if (!piece) continue;
+        board[o] = {
+          id,
+          square: piece.square,
+          type: key as TPiece,
+        };
+      }
+    }
+
+    this.board = board;
+  }
+
+  private updateBoardPieces(
+    needMove: { from: TNotation; to: TNotation }[],
+    moveToInactive: Set<TNotation>,
+    needCreate: TNotation[],
+    type: TPiece
+  ) {
+    for (const obj of needMove) {
+      const id = this.activePiecesPool[type].get(obj.from);
+      if (!id) continue;
+      this.activePiecesPool[type].delete(obj.from);
+      this.activePiecesPool[type].set(obj.to, id);
+      const curr = this.piecesBoard.get(id);
+      if (!curr) continue;
+
+      curr.square = {
+        file: obj.to[0] as TFile,
+        rank: parseInt(obj.to[1]) as TRank,
+        notation: obj.to,
+      };
+    }
+
+    for (const inactive of moveToInactive.values()) {
+      const curr = this.activePiecesPool[type].get(inactive);
+      if (!curr) continue;
+      this.inactivePiecesPool[type].push(curr);
+      this.activePiecesPool[type].delete(inactive);
+      const piece = this.piecesBoard.get(curr);
+      piece && (piece.square = null);
+    }
+
+    for (let i = 0; i < needCreate.length; i++) {
+      const inactive = this.inactivePiecesPool[type].shift();
+      if (!inactive) continue;
+      const square = needCreate[i];
+      this.activePiecesPool[type].set(square, inactive);
+
+      const curr = this.piecesBoard.get(inactive);
+      if (!curr) continue;
+
+      curr.square = {
+        file: square.charAt(0) as TFile,
+        rank: parseInt(square.charAt(1)) as TRank,
+        notation: square,
+      };
+    }
   }
 
   async refreshCanvas(init: boolean) {
@@ -421,6 +608,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   updateBoard(piece: TPieceBoard) {
+    if (!piece.square) return;
     this.board[piece.square.notation] = piece;
   }
 
@@ -558,7 +746,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       if (type === "w")
         rook = flag.kingSideCastling ? this.board["h1"] : this.board["a1"];
       else rook = flag.kingSideCastling ? this.board["h8"] : this.board["a8"];
-      if (rook) {
+      if (rook && rook.square) {
         const file = flag.kingSideCastling ? "f" : "d",
           rank = type === "w" ? 1 : 8,
           rookNotation = `${file}${rank}` as TNotation,
@@ -593,6 +781,10 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
           id: rook.id,
           piece: this.getInternalRefVal(rook.id),
         });
+        this.activePiecesPool[piece.type].delete(from);
+        this.activePiecesPool[piece.type].set(kingNotation, piece.id);
+        this.activePiecesPool[rook.type].delete(oldSquare);
+        this.activePiecesPool[rook.type].set(rookNotation, rook.id);
       }
     } else {
       let enpassant = null;
@@ -616,9 +808,13 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
       this.board[to] = piece;
       delete this.board[from];
+      this.activePiecesPool[piece.type].delete(from);
+      this.activePiecesPool[piece.type].set(to, piece.id);
+      this.piecesBoard.set(piece.id, piece);
 
       if (enpassant) {
         delete this.board[enpassant as TNotation];
+
         this.helpers.pieceHelper.removeCache(enpassant as TNotation);
       }
 
@@ -631,6 +827,17 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         if (delay && this.getDefaultAnimation()) {
           layerManager.addDelayedPieceClear(piece.id, enemie.id);
         } else layerManager.getLayer("staticPieces").removeAll?.(enemie.id);
+
+        if (enemie.square) {
+          const inactive = this.activePiecesPool[enemie.type].get(
+            enemie.square.notation
+          );
+          this.activePiecesPool[enemie.type].delete(enemie.square.notation);
+          inactive && this.inactivePiecesPool[enemie.type].push(inactive);
+
+          const enemie_ = this.piecesBoard.get(enemie.id);
+          enemie_ && (enemie_.square = null);
+        }
 
         this.deleteIntervalRefVal(enemie.id);
       }
@@ -649,7 +856,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     for (const piece of Object.values(this.board)) {
       const existing = this.internalRef[piece.id];
 
-      if (existing && existing.square.notation === piece.square.notation)
+      if (existing && existing.square?.notation === piece.square?.notation)
         continue;
 
       const square =
@@ -680,7 +887,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
           .addAll?.(piece.id, ref, coords, coords);
         continue;
       }
-      if (piece.square.notation !== existing.square.notation) {
+      if (piece.square?.notation !== existing.square?.notation) {
         if (!this.getEvents()?.onDrawPiece && this.args.defaultAnimation) {
           ref.anim = true;
           this.setIsMoving(true);

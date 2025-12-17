@@ -29,12 +29,14 @@ class PointerEventsHelpers {
       isBlackView
     );
 
-    if (selected && square?.notation === selected.square.notation) {
+    if (selected && square?.notation === selected.square?.notation) {
       return { from: null, to: null, piece: null };
     } else if (!selected || !square || !piece) {
       return { from: null, to: null, piece: null };
     }
-    const piece_ = this.boardRuntime.getBoard()[selected.square.notation];
+    const piece_ = selected.square
+      ? this.boardRuntime.getBoard()[selected.square.notation]
+      : null;
     if (piece_) {
       return { from: selected.square, to: square, piece: piece_ };
     }
@@ -214,7 +216,7 @@ class PointerEventsHelpers {
     );
     if (piece_) {
       if (selected) {
-        if (square.notation !== selected.square.notation) {
+        if (square.notation !== selected.square?.notation) {
           const move = this.moveOnClick(e, selected);
           !move &&
             this.boardRuntime.pipelineRender.setNextEvent("onPointerSelect", [

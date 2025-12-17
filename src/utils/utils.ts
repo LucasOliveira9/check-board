@@ -3,6 +3,7 @@ import { IRenderer, IRenderer2D } from "../engine/render/interface";
 import { TSquare, TFile, TRank, TNotation } from "../types/square";
 import { TDeepReadonly } from "../types/utils";
 import { TPiece, TPieceBoard, TPieceId } from "../types/piece";
+import BoardRuntime from "engine/boardRuntime/boardRuntime";
 
 class Utils {
   static files = "abcdefgh";
@@ -111,30 +112,15 @@ class Utils {
 
   static parseFen(fen: string) {
     fen = fen.trim();
-    const board: Record<TNotation, TPieceBoard> = {} as Record<
-      TNotation,
-      TPieceBoard
-    >;
+
     const isValidFen = this.validateFen(fen);
-    if (!isValidFen.status) return board;
+    if (!isValidFen.status) return {} as Record<TPiece, TNotation[]>;
     const ranks = fen.split("/");
     const isDigit = /^[1-8]$/;
     const isWhite = /^[PNBRQK]$/;
     const files = "abcdefgh";
-    const ids = {
-      p: 1,
-      n: 1,
-      b: 1,
-      r: 1,
-      q: 1,
-      k: 1,
-      P: 1,
-      N: 1,
-      B: 1,
-      R: 1,
-      Q: 1,
-      K: 1,
-    };
+
+    const map: Record<TPiece, TNotation[]> = {} as Record<TPiece, TNotation[]>;
 
     let rankNumber = 8;
 
@@ -149,24 +135,16 @@ class Utils {
         const isWhitePiece = isWhite.test(ch);
         const file_ = files[fileIndex] as TFile;
         const rank_ = rankNumber as TRank;
-        const id = `${isWhitePiece ? "w" : "b"}${ch.toUpperCase()}${ids[
-          ch as keyof typeof ids
-        ]++}` as TPieceId;
-        const piece: TPieceBoard = {
-          square: {
-            file: file_,
-            rank: rank_,
-            notation: `${file_}${rank_}`,
-          },
-          type: `${isWhitePiece ? "w" : "b"}${ch.toUpperCase()}` as TPiece,
-          id,
-        };
-        board[`${file_}${rank_}`] = piece;
+        const type = `${isWhitePiece ? "w" : "b"}${ch.toUpperCase()}` as TPiece;
+        const notation = `${file_}${rank_}` as TNotation;
+
+        if (!map[type]) map[type] = [];
+        map[type].push(notation);
         fileIndex++;
       }
       rankNumber--;
     }
-    return board;
+    return map;
   }
 
   static parseBoard(board: Record<TNotation, TPieceBoard>) {

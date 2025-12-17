@@ -6,6 +6,6 @@ type TSquare = {
   file: TFile;
   rank: TRank;
   notation: TNotation;
-};
+} | null;
 
 export type { TFile, TRank, TSquare, TNotation };
