@@ -103,7 +103,7 @@ class DynamicPiecesLayer extends BaseLayer {
         .togglePieceLayer("dynamicPieces", "staticPieces", pieceId, true);
     }
     if (this.toggleCanvas.length > 0)
-      await Utils.asyncHandler(this.toggle.bind(this));
+      await this.boardRuntime.renderer.render(false);
     this.toggleCanvas.length = 0;
   }
 
@@ -149,10 +149,6 @@ class DynamicPiecesLayer extends BaseLayer {
     ctx.textBaseline = "middle";
     ctx.fillText(image_, piece.x + squareSize / 2, piece.y + squareSize / 2);
     ctx.restore();
-  }
-
-  private async toggle(resolve: (value: void | PromiseLike<void>) => void) {
-    this.boardRuntime.pipelineRender.setNextEvent("onRender", [false], resolve);
   }
 }
 
