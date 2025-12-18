@@ -65,6 +65,22 @@ class Events {
         : undefined;
 
       if (piece && !piece.anim) {
+        if (this.boardRuntime.getDefault().onPointerHover) {
+          this.boardRuntime.renderer
+            .getLayerManager()
+            .getIterator()
+            .defaultOnHover({
+              ctx,
+              size,
+              squareSize,
+              x: piece.x,
+              y: piece.y,
+              canvas: canvas ? canvas : undefined,
+              piece: piece,
+              square: piece.square,
+              piecesImage: piecesImage,
+            });
+        }
         if (events?.onPointerHover) {
           let context = this.boardRuntime.getContext(true, {
             squareSize,
@@ -81,24 +97,7 @@ class Events {
             "onPointerHover",
             injection ? injection(context) : context
           );
-
-          return;
         }
-
-        this.boardRuntime.renderer
-          .getLayerManager()
-          .getIterator()
-          .defaultOnHover({
-            ctx,
-            size,
-            squareSize,
-            x: piece.x,
-            y: piece.y,
-            canvas: canvas ? canvas : undefined,
-            piece: piece,
-            square: piece.square,
-            piecesImage: piecesImage,
-          });
       }
     }
   }
@@ -135,6 +134,22 @@ class Events {
         internalRef
       )?.piece;
 
+      if (this.boardRuntime.getDefault().onPointerSelect) {
+        this.boardRuntime.renderer
+          .getLayerManager()
+          .getIterator()
+          .defaultOnSelect({
+            ctx,
+            x,
+            y,
+            size,
+            squareSize,
+            getPiece: piece_,
+            getPiecesImage: piecesImage,
+            getSquare: selectedRef.square,
+          });
+      }
+
       if (events?.onPointerSelect) {
         const context = this.boardRuntime.getContext(true, {
           squareSize,
@@ -150,22 +165,7 @@ class Events {
           "onPointerSelect",
           injection ? injection(context) : context
         );
-
-        return;
       }
-      this.boardRuntime.renderer
-        .getLayerManager()
-        .getIterator()
-        .defaultOnSelect({
-          ctx,
-          x,
-          y,
-          size,
-          squareSize,
-          getPiece: piece_,
-          getPiecesImage: piecesImage,
-          getSquare: selectedRef.square,
-        });
     }
   }
 

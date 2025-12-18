@@ -37,7 +37,7 @@ interface TBoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   pieceStyle?: TPieceImage;
   onMove?: (arg: TMove) => TMoveReturn;
   onUpdate?: () => void;
-  defaultAnimation?: boolean;
+  default: TDefault;
   hoverConfig?: THoverConfig;
   canvasLayers: CanvasLayers;
   mode: "2d" | "3d";
@@ -66,7 +66,7 @@ type TConfig<T extends TBoardEventContext = TBoardEventContext> = {
   darkTile?: string;
   events?: TBoardEvents<T>;
   injection?: TBoardInjection<T>;
-  defaultAnimation?: boolean;
+  default: TDefault;
   hoverConfig?: THoverConfig;
 };
 
@@ -87,6 +87,12 @@ type TSelected = {
   secondClick: boolean;
 };
 
+type TDefault = {
+  onPointerSelect: boolean;
+  onPointerHover: boolean;
+  moveAnimation: boolean;
+};
+
 const RenderExtends = {
   onToggleCanvas: "onToggleCanvas",
   onRender: "onRender",
@@ -104,4 +110,5 @@ export type {
   TBoardRuntime,
   TBoardProps,
   TPipelineRender,
+  TDefault,
 };

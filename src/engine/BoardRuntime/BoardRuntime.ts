@@ -1,4 +1,9 @@
-import { TBoardRuntime, TPipelineRender, TSelected } from "../../types/board";
+import {
+  TBoardRuntime,
+  TDefault,
+  TPipelineRender,
+  TSelected,
+} from "../../types/board";
 import {
   TAnimation,
   TBoardEventContext,
@@ -41,7 +46,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected pieceHover: TPieceId | null = null;
   protected isImagesLoaded: boolean = false;
   protected destroyed = false;
-  protected animationDuration: number = 400;
+  protected animationDuration: number = 300;
   protected piecesToRender: { piece: TPieceInternalRef; id: TPieceId }[] = [];
   protected isMoving: boolean = false;
   protected board!: Record<TNotation, TPieceBoard>;
@@ -56,6 +61,11 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   public helpers: EngineHelpers = new EngineHelpers(this);
   public renderer: IRenderer;
   private mounted = false;
+  private default: TDefault = {
+    onPointerSelect: true,
+    onPointerHover: true,
+    moveAnimation: true,
+  };
 
   eventsRuntime: Record<TPipelineRender, Function | null> = {
     onPointerSelect: this.setSelected.bind(this),
@@ -246,6 +256,11 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     return this.animationDuration;
   }
 
+  getDefault() {
+    if (this.args.default) return this.args.default;
+    return this.default;
+  }
+
   getReadonlyInternalRef() {
     return Utils.deepFreeze(this.internalRef);
   }
@@ -279,7 +294,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   getDefaultAnimation() {
-    return this.args.defaultAnimation;
+    return this.args.default.moveAnimation;
   }
 
   getContext(cache: boolean, args: TBoardEventContext) {
@@ -888,7 +903,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         continue;
       }
       if (piece.square?.notation !== existing.square?.notation) {
-        if (!this.getEvents()?.onDrawPiece && this.args.defaultAnimation) {
+        if (!this.getEvents()?.onDrawPiece && this.getDefaultAnimation()) {
           ref.anim = true;
           this.setIsMoving(true);
         }
@@ -900,7 +915,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
           id: piece.id,
         });
 
-        if (this.args.defaultAnimation)
+        if (this.getDefaultAnimation())
           await layerManager.togglePieceLayer(
             "staticPieces",
             "dynamicPieces",
