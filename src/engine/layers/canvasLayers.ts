@@ -234,7 +234,16 @@ class CanvasLayers {
     });*/
   }
 
-  clearAllRect() {
+  clearAllRect(custom?: Record<TCanvasLayer, boolean>) {
+    if (custom) {
+      for (const [key, value] of Object.entries(custom)) {
+        if (!value) continue;
+        const layer = key as TCanvasLayer;
+        const ctx = this[`${layer}Ctx`];
+        ctx?.clearRect(0, 0, this.size, this.size);
+      }
+      return;
+    }
     [
       this.staticPiecesCtx,
       this.boardCtx,
