@@ -103,7 +103,13 @@ class DynamicPiecesLayer extends BaseLayer {
         .togglePieceLayer("dynamicPieces", "staticPieces", pieceId, true);
     }
     if (this.toggleCanvas.length > 0)
-      await this.boardRuntime.renderer.render(false);
+      await this.boardRuntime.renderer.render({
+        board: false,
+        staticPieces: true,
+        overlay: true,
+        underlay: true,
+        dynamicPieces: true,
+      });
     this.toggleCanvas.length = 0;
   }
 

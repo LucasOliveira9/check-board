@@ -44,6 +44,11 @@ function imperativeHandle(
       if (!clientRef.current) return null;
       return clientRef.current.getPieceAt(notation);
     },
+
+    setPieceType: (type) => {
+      if (!clientRef.current) return;
+      clientRef.current.setPieceType(type);
+    },
   };
 }
 

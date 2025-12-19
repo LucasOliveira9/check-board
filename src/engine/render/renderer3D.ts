@@ -2,10 +2,11 @@ import LayerManager from "engine/layers/layerManager";
 import { TPieceId, TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../boardRuntime/boardRuntime";
 import { IRenderer } from "./interface";
+import { TCanvasLayer } from "types";
 
 class Renderer3D implements IRenderer {
   constructor(protected boardRuntime: BoardRuntime) {}
-  async render(init: boolean): Promise<void> {
+  async render(init: Record<TCanvasLayer, boolean>): Promise<void> {
     throw new Error("Method not implemented.");
   }
   getLayerManager(): LayerManager {

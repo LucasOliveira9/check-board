@@ -238,6 +238,10 @@ abstract class BaseLayer implements ICanvasLayer {
     this.eventsMap = {} as Record<TEvents, TCanvasCoords[]>;
   }
 
+  redrawPieces() {
+    for (const id of this.pieces.keys()) this.addToRender(id);
+  }
+
   updateClear(): void {
     return;
   }

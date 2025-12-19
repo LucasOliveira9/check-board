@@ -145,7 +145,15 @@ class LayerManager {
     fromLayer.removeAll?.(pieceId);
     toLayer.addAll?.(pieceId, piece, newCoords, newCoords);
     if (noRender) return;
-    this.boardRuntime.pipelineRender.setNextEvent("onRender", [false]);
+    this.boardRuntime.pipelineRender.setNextEvent("onRender", [
+      {
+        board: false,
+        staticPieces: true,
+        overlay: true,
+        underlay: true,
+        dynamicPieces: true,
+      },
+    ]);
   }
 
   applyDrawResult(

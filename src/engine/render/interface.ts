@@ -9,7 +9,7 @@ import {
 import LayerManager from "engine/layers/layerManager";
 
 interface IRenderer {
-  render(init: boolean): Promise<void>;
+  render(init: Record<TCanvasLayer, boolean>): Promise<void>;
   addDynamicPiece(id: TPieceId, piece: TPieceInternalRef): void;
   addStaticPiece(id: TPieceId, piece: TPieceInternalRef): void;
   deleteStaticPiece(id: TPieceId): void;

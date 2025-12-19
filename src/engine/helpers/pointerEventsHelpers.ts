@@ -133,7 +133,15 @@ class PointerEventsHelpers {
           Math.min(clampY, this.boardRuntime.getSize() - squareSize)
         );
         this.boardRuntime.renderer.getLayerManager().addDraw("onPointerDrag");
-        this.boardRuntime.pipelineRender.setNextEvent("onRender", [false]);
+        this.boardRuntime.pipelineRender.setNextEvent("onRender", [
+          {
+            board: false,
+            staticPieces: true,
+            overlay: true,
+            underlay: true,
+            dynamicPieces: true,
+          },
+        ]);
       }
     }
   }
@@ -174,7 +182,16 @@ class PointerEventsHelpers {
       null,
       true,
     ]);
-    !move && this.boardRuntime.pipelineRender.setNextEvent("onRender", [false]);
+    !move &&
+      this.boardRuntime.pipelineRender.setNextEvent("onRender", [
+        {
+          board: false,
+          staticPieces: true,
+          overlay: true,
+          underlay: true,
+          dynamicPieces: true,
+        },
+      ]);
   }
 
   handlePointerLeave(e: React.PointerEvent<HTMLCanvasElement>) {
@@ -190,7 +207,15 @@ class PointerEventsHelpers {
       null,
       true,
     ]);
-    this.boardRuntime.pipelineRender.setNextEvent("onRender", [false]);
+    this.boardRuntime.pipelineRender.setNextEvent("onRender", [
+      {
+        board: false,
+        staticPieces: true,
+        overlay: true,
+        underlay: true,
+        dynamicPieces: true,
+      },
+    ]);
   }
 
   handleClick(e: React.PointerEvent<HTMLCanvasElement>) {

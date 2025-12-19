@@ -454,7 +454,13 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.getCanvasLayers().resize(Math.floor(size / 8) * 8);
     this.setInternalRefObj({} as Record<TPieceId, TPieceInternalRef>);
     this.renderer.getLayerManager().resetAllLayers();
-    await this.refreshCanvas(true);
+    await this.refreshCanvases({
+      board: true,
+      staticPieces: true,
+      overlay: true,
+      underlay: true,
+      dynamicPieces: true,
+    });
   }
 
   setAnimationDuration(time: number) {
@@ -466,7 +472,13 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     if (!Utils.validateFen(board).status) return;
     this.setIsMoving(true);
     this.setBoard(Utils.parseFen(board));
-    await this.refreshCanvas(false);
+    await this.refreshCanvases({
+      board: false,
+      staticPieces: true,
+      overlay: true,
+      underlay: true,
+      dynamicPieces: true,
+    });
     this.setIsMoving(false);
   }
 
@@ -591,14 +603,14 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     }
   }
 
-  async refreshCanvas(init: boolean) {
+  async refreshCanvases(canvases: Record<TCanvasLayer, boolean>) {
     await this.resetEvents(true);
     this.renderer.getLayerManager().setHoverEnabled(false);
     this.helpers.pieceHelper.clearCache();
     await this.initInternalRef();
 
     const render = (resolve: (value: void | PromiseLike<void>) => void) =>
-      this.pipelineRender.setNextEvent("onRender", [init], resolve);
+      this.pipelineRender.setNextEvent("onRender", [canvases], resolve);
     await Utils.asyncHandler(render);
     this.renderer.getLayerManager().setHoverEnabled(true);
 
@@ -627,7 +639,19 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
     if (!render || !toRender) return;
     const render_ = (resolve: (value: void | PromiseLike<void>) => void) =>
-      this.pipelineRender.setNextEvent("onRender", [false], resolve);
+      this.pipelineRender.setNextEvent(
+        "onRender",
+        [
+          {
+            board: false,
+            staticPieces: true,
+            overlay: true,
+            underlay: true,
+            dynamicPieces: true,
+          },
+        ],
+        resolve
+      );
 
     await Utils.asyncHandler(render_);
   }
@@ -657,7 +681,16 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.selected = selected;
     layerManager.drawEvent("onPointerSelect");
 
-    if (!noRender) this.pipelineRender.setNextEvent("onRender", [false]);
+    if (!noRender)
+      this.pipelineRender.setNextEvent("onRender", [
+        {
+          board: false,
+          staticPieces: true,
+          overlay: true,
+          underlay: true,
+          dynamicPieces: true,
+        },
+      ]);
   }
 
   async setPieceHover(piece: TPieceId | null, noRender?: boolean) {
@@ -699,7 +732,16 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
           noRender
         );
       }
-    } else if (!noRender) this.pipelineRender.setNextEvent("onRender", [false]);
+    } else if (!noRender)
+      this.pipelineRender.setNextEvent("onRender", [
+        {
+          board: false,
+          staticPieces: true,
+          overlay: true,
+          underlay: true,
+          dynamicPieces: true,
+        },
+      ]);
   }
 
   async setBlackView(b: boolean) {
@@ -708,7 +750,13 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.setInternalRefObj({} as Record<TPieceId, TPieceInternalRef>);
     this.getCanvasLayers().clearAllRect();
     this.renderer.getLayerManager().resetAllLayers();
-    await this.refreshCanvas(true);
+    await this.refreshCanvases({
+      board: true,
+      staticPieces: true,
+      overlay: true,
+      underlay: true,
+      dynamicPieces: true,
+    });
   }
 
   deleteIntervalRefVal(key: TPieceId) {
@@ -729,7 +777,19 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     await this.initPieceImages();
     await this.initInternalRef();
     return new Promise<void>((resolve) => {
-      this.pipelineRender.setNextEvent("onRender", [true], resolve);
+      this.pipelineRender.setNextEvent(
+        "onRender",
+        [
+          {
+            board: true,
+            staticPieces: true,
+            overlay: true,
+            underlay: true,
+            dynamicPieces: true,
+          },
+        ],
+        resolve
+      );
     });
   }
 
@@ -739,6 +799,33 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         this.helpers.pieceHelper.getPieceImages[this.args.pieceConfig?.type];
     }
     await this.loadImages();
+  }
+
+  async setPieceImages(type: "string" | "image") {
+    if (this.destroyed || this.args.pieceConfig.type === type || this.isMoving)
+      return;
+    if (!this.isImagesLoaded && type === "image") await this.loadImages();
+    this.args.pieceConfig.type = type;
+    this.args.pieceStyle = this.helpers.pieceHelper.getPieceImages[type];
+
+    const layerManager = this.renderer.getLayerManager();
+    this.getCanvasLayers().clearAllRect({
+      board: false,
+      staticPieces: true,
+      overlay: true,
+      underlay: true,
+      dynamicPieces: true,
+    });
+    layerManager.getLayer("staticPieces").redrawPieces();
+    layerManager.getLayer("dynamicPieces").redrawPieces();
+
+    await this.refreshCanvases({
+      board: false,
+      staticPieces: true,
+      overlay: true,
+      underlay: true,
+      dynamicPieces: true,
+    });
   }
 
   async toggleCanvas(
@@ -752,7 +839,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       .togglePieceLayer(from, to, pieceId, noRender);
   }
 
-  async render(b: boolean) {
+  async render(b: Record<TCanvasLayer, boolean>) {
     await this.renderer.render(b);
   }
 
@@ -869,7 +956,13 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       (enemie as any) = null;
     }
 
-    await this.refreshCanvas(false);
+    await this.refreshCanvases({
+      board: false,
+      staticPieces: true,
+      overlay: true,
+      underlay: true,
+      dynamicPieces: true,
+    });
   }
 
   async initInternalRef() {

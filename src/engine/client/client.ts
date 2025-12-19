@@ -17,6 +17,7 @@ class Client {
   private resizeStream: number[] = [];
   private resizing: boolean = false;
   private debugCountFenStream = 0;
+  private isSettingPieceType = false;
   constructor(boardRuntime: BoardRuntime) {
     runtimeMap.set(this, boardRuntime);
   }
@@ -179,6 +180,18 @@ class Client {
     );
     if (!coords) return null;
     return coords;
+  }
+
+  public async setPieceType(type: "string" | "image") {
+    const runtime = this.getRuntime();
+    if (!runtime || this.isSettingPieceType || runtime.getIsMoving()) return;
+    this.isSettingPieceType = true;
+
+    try {
+      await runtime.setPieceImages(type);
+    } finally {
+      this.isSettingPieceType = false;
+    }
   }
 }
 

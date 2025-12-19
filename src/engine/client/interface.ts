@@ -13,6 +13,7 @@ interface BoardHandled {
   getPieceAt(
     notation: TNotation
   ): { id: string; piece: TPieceInternalRef } | null;
+  setPieceType(type: "string" | "image"): void;
 }
 
 export type { BoardHandled };

@@ -65,13 +65,13 @@ class Renderer2D implements IRenderer2D {
       (this as any)[key] = null;
     }
   }
-  async render(init: boolean) {
-    if (init) this.renderBoard();
+  async render(canvases: Record<TCanvasLayer, boolean>) {
+    if (canvases.board) this.renderBoard();
     this.layerManager.renderEvents(true);
-    this.renderStaticPieces();
-    await this.renderDynamicPieces();
-    this.renderUnderlay();
-    this.renderOverlay();
+    if (canvases.staticPieces) this.renderStaticPieces();
+    if (canvases.dynamicPieces) await this.renderDynamicPieces();
+    if (canvases.underlay) this.renderUnderlay();
+    if (canvases.overlay) this.renderOverlay();
     this.layerManager.renderEvents(false);
   }
 
