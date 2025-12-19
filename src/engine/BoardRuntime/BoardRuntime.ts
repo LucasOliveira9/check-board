@@ -464,7 +464,6 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
   async setBoardByFen(board: string) {
     if (!Utils.validateFen(board).status) return;
-    await this.setPieceHover(null);
     this.setIsMoving(true);
     this.setBoard(Utils.parseFen(board));
     await this.refreshCanvas(false);
@@ -593,15 +592,13 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   async refreshCanvas(init: boolean) {
+    await this.resetEvents(true);
     this.renderer.getLayerManager().setHoverEnabled(false);
     this.helpers.pieceHelper.clearCache();
-    this.pipelineRender.setNextEvent("onPointerSelect", [null, true]);
-    this.pipelineRender.setNextEvent("onPointerHover", [null, true]);
     await this.initInternalRef();
 
     const render = (resolve: (value: void | PromiseLike<void>) => void) =>
       this.pipelineRender.setNextEvent("onRender", [init], resolve);
-
     await Utils.asyncHandler(render);
     this.renderer.getLayerManager().setHoverEnabled(true);
 
@@ -613,9 +610,22 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   async resetEvents(render: boolean) {
-    this.pipelineRender.setNextEvent("onPointerHover", [null, true]);
-    this.pipelineRender.setNextEvent("onPointerSelect", [null, true]);
-    if (!render) return;
+    let toRender = false;
+
+    if (this.selected !== null) {
+      if (this.selected.isDragging)
+        this.helpers.pointerEventsHelper.endDrag(-1, -1, false, true);
+
+      this.pipelineRender.setNextEvent("onPointerSelect", [null, true]);
+      toRender = true;
+    }
+
+    if (this.pieceHover !== null) {
+      this.pipelineRender.setNextEvent("onPointerHover", [null, true]);
+      toRender = true;
+    }
+
+    if (!render || !toRender) return;
     const render_ = (resolve: (value: void | PromiseLike<void>) => void) =>
       this.pipelineRender.setNextEvent("onRender", [false], resolve);
 

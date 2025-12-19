@@ -314,6 +314,7 @@ class PointerEventsHelpers {
     }
 
     toggle && this.toggleLayer("dynamicPieces", "staticPieces");
+    selected.isDragging = false;
     return;
   }
 }
