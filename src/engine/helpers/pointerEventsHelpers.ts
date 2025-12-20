@@ -63,7 +63,16 @@ class PointerEventsHelpers {
       this.boardRuntime.getIsBlackView(),
       this.boardRuntime.getInternalRefObj()
     );
-    if (selected && searchPiece?.id === selected?.id) return;
+    if (searchPiece)
+      this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
+        cursor: "grab",
+      });
+
+    if (selected && searchPiece?.id === selected?.id) {
+      if (this.boardRuntime.getPieceHover() !== null)
+        this.boardRuntime.pipelineRender.setNextEvent("onPointerHover", [null]);
+      return;
+    }
 
     if (!searchPiece) {
       this.boardRuntime.getPieceHover() &&
@@ -77,9 +86,6 @@ class PointerEventsHelpers {
     this.boardRuntime.pipelineRender.setNextEvent("onPointerHover", [
       searchPiece.id,
     ]);
-    this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
-      cursor: "grab",
-    });
   }
 
   handleGrab(e: React.PointerEvent<HTMLCanvasElement>) {
