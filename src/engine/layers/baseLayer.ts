@@ -12,6 +12,7 @@ import { ICanvasLayer } from "./interface";
 import BoardRuntime from "../boardRuntime/boardRuntime";
 import SpatialIndex from "./spatialIndex";
 import SpatialNode from "./spatialNode";
+import Utils from "../../utils/utils";
 
 abstract class BaseLayer implements ICanvasLayer {
   name: TCanvasLayer;
@@ -21,6 +22,7 @@ abstract class BaseLayer implements ICanvasLayer {
   protected clearMap = new Map<TPieceId, TCanvasCoords>();
   protected renderMap = new Set<TPieceId>();
   protected clearQueue: TCanvasCoords[] = [];
+  protected clearQueueHash: Set<number> = new Set();
   protected eventsMap: Record<TEvents, TCanvasCoords[]> = {} as Record<
     TEvents,
     TCanvasCoords[]
@@ -79,7 +81,6 @@ abstract class BaseLayer implements ICanvasLayer {
   }
   removePiece?(pieceId: TPieceId): void {
     this.pieces.delete(pieceId);
-    this.spatialIndex.remove(pieceId);
   }
   addAll?(
     pieceId: TPieceId,
@@ -87,12 +88,16 @@ abstract class BaseLayer implements ICanvasLayer {
     coords: TCanvasCoords,
     clearCoords: TCanvasCoords
   ) {
+    if (this.pieces.has(pieceId) || !this.boardRuntime.isActivePiece(pieceId))
+      return;
+
     this.addCoords(pieceId, coords);
     this.addPiece?.(pieceId, ref);
     this.addClearCoords(pieceId, clearCoords);
     this.addToRender(pieceId);
   }
   removeAll?(pieceId: TPieceId) {
+    if (!this.pieces.has(pieceId)) return;
     const coords = this.getClearCoords(pieceId);
     coords && this.addClearQueue(coords);
 
@@ -114,6 +119,9 @@ abstract class BaseLayer implements ICanvasLayer {
   }
 
   removeCoords(pieceId: TPieceId) {
+    const box = this.getCoords(pieceId);
+    if (!box) return;
+    this.spatialIndex.remove(pieceId, box);
     this.coordsMap.delete(pieceId);
   }
 
@@ -134,11 +142,18 @@ abstract class BaseLayer implements ICanvasLayer {
   }
 
   addClearQueue(coords: TCanvasCoords) {
+    const { P1, P2, P3, P4 } = Utils.getHashingNumbers();
+    const hash =
+      (P1 * coords.x) ^ (P2 * coords.y) ^ (P3 * coords.w) ^ (P4 * coords.h);
+
+    if (this.clearQueueHash.has(hash)) return;
+    this.clearQueueHash.add(hash);
     this.clearQueue.push(coords);
   }
 
   resetClearQueue() {
     this.clearQueue = [];
+    this.clearQueueHash.clear();
   }
 
   addEvent(event: TEvents, coords: TCanvasCoords[] | TCanvasCoords) {

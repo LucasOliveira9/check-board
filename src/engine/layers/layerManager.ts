@@ -103,6 +103,7 @@ class LayerManager {
     const fromLayer = this.getLayer(from);
     const toLayer = this.getLayer(to);
     const squareSize = Math.floor(this.boardRuntime.getSize() / 8);
+    const isActivePiece = this.boardRuntime.isActivePiece(pieceId);
 
     if (!fromLayer || !toLayer) {
       //console.warn("[togglePieceLayer] Invalid Layer:", from, to);
@@ -143,7 +144,7 @@ class LayerManager {
           };
 
     fromLayer.removeAll?.(pieceId);
-    toLayer.addAll?.(pieceId, piece, newCoords, newCoords);
+    isActivePiece && toLayer.addAll?.(pieceId, piece, newCoords, newCoords);
     if (noRender) return;
     this.boardRuntime.pipelineRender.setNextEvent("onRender", [
       {

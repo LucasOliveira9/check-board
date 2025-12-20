@@ -1,5 +1,6 @@
 import { TCanvasCoords } from "types";
 import SpatialNode from "./spatialNode";
+import Utils from "../../utils/utils";
 
 const QuadtreeKeys = {
   NE: "NE",
@@ -165,17 +166,23 @@ class SpatialIndex {
     return null;
   }
 
-  remove(id: string) {
+  remove(id: string, box: TCanvasCoords): boolean;
+  remove(id: string): boolean;
+  remove(id: string, box?: TCanvasCoords) {
     if (this.destroyed) return false;
-
-    const idx = this.objects.findIndex((o) => o.id === id);
+    let idx;
+    if (box) {
+      const { P1, P2, P3, P4 } = Utils.getHashingNumbers();
+      const hash = (P1 * box.x) ^ (P2 * box.y) ^ (P3 * box.w) ^ (P4 * box.h);
+      idx = this.objects.findIndex((o) => o.id === id && o.hash === hash);
+    } else idx = this.objects.findIndex((o) => o.id === id);
     if (idx !== -1) {
       this.objects.splice(idx, 1);
       return true;
     } else if (this.child.NE === null) return false;
 
     for (const child of Object.values(this.child)) {
-      if (child && child.remove(id)) {
+      if (child && (box ? child.remove(id, box) : child.remove(id))) {
         this.tryMerge();
         return true;
       }

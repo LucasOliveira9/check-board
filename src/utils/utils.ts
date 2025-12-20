@@ -7,8 +7,16 @@ import BoardRuntime from "engine/boardRuntime/boardRuntime";
 
 class Utils {
   static files = "abcdefgh";
-
+  private static P1 = 73856093;
+  private static P2 = 19349663;
+  private static P3 = 83492791;
+  private static P4 = 1640531513;
   private constructor() {}
+
+  static getHashingNumbers() {
+    const { P1, P2, P3, P4 } = this;
+    return { P1, P2, P3, P4 };
+  }
 
   static squareToCoords(
     square: TSquare | null,

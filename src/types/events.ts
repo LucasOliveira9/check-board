@@ -88,6 +88,7 @@ type TMoveFlag = {
   kingSideCastling?: boolean;
   queenSideCastling?: boolean;
   capture?: boolean;
+  promotion?: "q" | "r" | "n" | "b" | "p" | "k";
 };
 
 const EVENTS = {

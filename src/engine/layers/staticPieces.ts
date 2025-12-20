@@ -20,10 +20,21 @@ class StaticPiecesLayer extends BaseLayer {
       const search = this.spatialIndex.search(coords);
       for (const s of search) {
         const id = s.id as TPieceId;
-        if (checked.has(id) || this.renderMap.has(id)) continue;
-        this.clearQueue.push(s.box);
+        const { P1, P2, P3, P4 } = Utils.getHashingNumbers();
+        const hash =
+          (P1 * s.box.x) ^ (P2 * s.box.y) ^ (P3 * s.box.w) ^ (P4 * s.box.h);
+        if (
+          checked.has(id) ||
+          this.renderMap.has(id) ||
+          coords.id === id ||
+          this.clearQueueHash.has(hash)
+        )
+          continue;
+
+        this.addClearQueue({ ...s.box, id });
         this.renderMap.add(id);
         checked.add(id);
+        //debug
         this.ctx &&
           ((this.ctx.strokeStyle = "rgba(251, 0, 0, 1)"),
           (this.ctx.lineWidth = 8));
@@ -94,7 +105,7 @@ class StaticPiecesLayer extends BaseLayer {
           h: squareSize,
         };
 
-        this.addClearQueue(coords);
+        this.addClearQueue({ ...coords, id });
         this.removeAll?.(id);
       }
     }
