@@ -8,17 +8,15 @@ import {
   TAnimation,
   TBoardEventContext,
   TDrawFunction,
-  TEvents,
-  TMoveFlag,
+  TMoveResult,
+  TMoveReturn,
 } from "../../types/events";
 import {
   pieceKey,
   TPiece,
   TPieceBoard,
-  TPieceCoords,
   TPieceId,
   TPieceInternalRef,
-  TPieceKey,
 } from "../../types/piece";
 import BoardEvents from "./boardEvents";
 import EngineHelpers from "../helpers/engineHelpers";
@@ -32,7 +30,6 @@ import {
   TCanvasLayer,
   TDrawRegion,
   THoverConfig,
-  TRender,
 } from "../../types/draw";
 import { TSafeCtx } from "../../types/draw";
 import PipelineRender from "../render/pipelineRender";
@@ -848,77 +845,22 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     await this.renderer.render(b);
   }
 
-  async updateBoardState(
-    from: TNotation,
-    to: TNotation,
-    delay: boolean,
-    flag?: TMoveFlag
-  ) {
-    let piece = this.board[from];
-
+  async updateBoardState(move: TMoveResult, delay: boolean) {
     const layerManager = this.renderer.getLayerManager();
-    const newSquare = {
-      file: to.charAt(0) as TFile,
-      rank: parseInt(to.charAt(1)) as TRank,
-      notation: to,
-    };
-    // castling
-    if (flag?.kingSideCastling || flag?.queenSideCastling) {
-      const type = piece.type[0];
-      let rook = null;
-      if (type === "w")
-        rook = flag.kingSideCastling ? this.board["h1"] : this.board["a1"];
-      else rook = flag.kingSideCastling ? this.board["h8"] : this.board["a8"];
-      if (rook && rook.square) {
-        const file = flag.kingSideCastling ? "f" : "d",
-          rank = type === "w" ? 1 : 8,
-          rookNotation = `${file}${rank}` as TNotation,
-          oldSquare = rook.square.notation;
+    const moves = move;
 
-        const kingFile = flag.kingSideCastling ? "g" : "c",
-          kingRank = type === "w" ? 1 : 8,
-          kingNotation = `${kingFile}${kingRank}` as TNotation;
-        piece.square = {
-          file: kingFile,
-          rank: kingRank,
-          notation: kingNotation,
-        };
-        rook.square = {
-          file,
-          rank,
-          notation: rookNotation,
-        };
-
-        this.board[kingNotation] = piece;
-        delete this.board[from];
-
-        this.board[rookNotation] = rook;
-        delete this.board[oldSquare];
-
-        this.helpers.pieceHelper.updateCache(from, kingNotation, {
-          id: piece.id,
-          piece: this.getInternalRefVal(piece.id),
-        });
-
-        this.helpers.pieceHelper.updateCache(oldSquare, rookNotation, {
-          id: rook.id,
-          piece: this.getInternalRefVal(rook.id),
-        });
-        this.activePiecesPool[piece.type].delete(from);
-        this.activePiecesPool[piece.type].set(kingNotation, piece.id);
-        this.activePiecesPool[rook.type].delete(oldSquare);
-        this.activePiecesPool[rook.type].set(rookNotation, rook.id);
-        this.piecesBoard.set(piece.id, piece);
-        this.piecesBoard.set(rook.id, rook);
-      }
-    } else {
-      let enpassant = null;
+    for (const move of moves) {
+      const { from, to, promotion, captured } = move;
+      let piece = this.board[move.from];
+      const newSquare = {
+        file: move.to.charAt(0) as TFile,
+        rank: parseInt(move.to.charAt(1)) as TRank,
+        notation: move.to,
+      };
 
       //promotion
-      if (flag?.promotion) {
-        const newType = `${
-          piece.type[0]
-        }${flag.promotion.toUpperCase()}` as TPiece;
+      if (promotion) {
+        const newType = `${piece.type[0]}${promotion.toUpperCase()}` as TPiece;
         const newId = this.inactivePiecesPool[newType].shift();
         if (newId) {
           const newPiece = this.piecesBoard.get(newId);
@@ -944,8 +886,8 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
             newPiece.square = newSquare;
             this.piecesBoard.set(piece.id, piece);
             this.inactivePiecesPool[piece.type].push(piece.id);
-            this.activePiecesPool[piece.type].delete(from);
-            this.activePiecesPool[newType].set(to, newPiece.id);
+            this.activePiecesPool[piece.type].delete(move.from);
+            this.activePiecesPool[newType].set(move.to, newPiece.id);
             this.piecesBoard.set(newId, newPiece);
             this.deleteIntervalRefVal(piece.id);
 
@@ -966,43 +908,12 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         }
       }
 
-      !flag?.promotion && (piece.square = newSquare);
+      // capture
+      for (const cap of captured) {
+        const enemie = this.board[cap];
 
-      //enpassant
-      if (flag?.enpassant && piece.square) {
-        enpassant =
-          piece.type[0] === "w"
-            ? `${piece.square.file}${piece.square.rank - 1}`
-            : `${piece.square.file}${piece.square.rank + 1}`;
-      }
+        if (!enemie) continue;
 
-      let enemie = enpassant
-        ? this.board[enpassant as TNotation]
-        : this.board[to];
-
-      this.board[to] = piece;
-      delete this.board[from];
-      this.activePiecesPool[piece.type].delete(from);
-      if (!flag?.promotion) {
-        this.activePiecesPool[piece.type].set(to, piece.id);
-        this.piecesBoard.set(piece.id, piece);
-      }
-
-      if (enpassant) {
-        delete this.board[enpassant as TNotation];
-
-        this.helpers.pieceHelper.removeCache(enpassant as TNotation);
-      }
-
-      const piece_ = this.getInternalRefVal(piece.id);
-
-      this.helpers.pieceHelper.updateCache(from, to, {
-        id: piece.id,
-        piece: piece_,
-      });
-
-      // remove enemie
-      if (enemie) {
         if (delay && this.getDefaultAnimation()) {
           layerManager.addDelayedPieceClear(piece.id, enemie.id);
         } else layerManager.getLayer("staticPieces").removeAll?.(enemie.id);
@@ -1011,16 +922,31 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
           const inactive = this.activePiecesPool[enemie.type].get(
             enemie.square.notation
           );
+          this.helpers.pieceHelper.removeCache(cap);
           this.activePiecesPool[enemie.type].delete(enemie.square.notation);
           inactive && this.inactivePiecesPool[enemie.type].push(inactive);
 
           const enemie_ = this.piecesBoard.get(enemie.id);
           enemie_ && (enemie_.square = null);
         }
-
         this.deleteIntervalRefVal(enemie.id);
       }
-      (enemie as any) = null;
+
+      // move piece
+      if (!promotion) {
+        piece.square = newSquare;
+        this.activePiecesPool[piece.type].set(to, piece.id);
+        this.piecesBoard.set(piece.id, piece);
+      }
+      this.activePiecesPool[piece.type].delete(from);
+      this.board[to] = piece;
+      delete this.board[from];
+
+      const piece_ = this.getInternalRefVal(piece.id);
+      this.helpers.pieceHelper.updateCache(from, to, {
+        id: piece.id,
+        piece: piece_,
+      });
     }
 
     await this.refreshCanvases({

@@ -5,6 +5,8 @@ import BoardRuntime from "../boardRuntime/boardRuntime";
 import { TCanvasLayer } from "types";
 
 class PointerEventsHelpers {
+  private triggerUp = true;
+
   constructor(protected boardRuntime: BoardRuntime) {}
 
   destroy() {
@@ -102,6 +104,7 @@ class PointerEventsHelpers {
 
     const dx = offsetX - selected.startX;
     const dy = offsetY - selected.startY;
+
     if (Math.sqrt(dx * dx + dy * dy) > 3 /*&& !promotionRef.current.isProm*/) {
       if (selected.id) {
         const piece = this.boardRuntime.getInternalRefVal(selected.id);
@@ -162,24 +165,6 @@ class PointerEventsHelpers {
       return;
     }
 
-    const { from, to, piece } =
-      this.boardRuntime.helpers.pointerEventsHelper.detectMove(e);
-    let move = false;
-
-    if (from !== null && from.notation !== to.notation) {
-      move = this.boardRuntime.helpers.move(
-        from.notation,
-        to.notation,
-        piece,
-        false,
-        { x: offsetX, y: offsetY }
-      );
-    } else {
-      selected?.isDragging && this.endDrag(offsetX, offsetY, false, true);
-      if (selected?.secondClick || selected?.isDragging) {
-        this.boardRuntime.helpers.toggleSelected(false);
-      } else this.boardRuntime.helpers.toggleSelected(true);
-    }
     this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
       cursor: "default",
     });
@@ -188,16 +173,42 @@ class PointerEventsHelpers {
       null,
       true,
     ]);
-    !move &&
-      this.boardRuntime.pipelineRender.setNextEvent("onRender", [
-        {
-          board: false,
-          staticPieces: true,
-          overlay: true,
-          underlay: true,
-          dynamicPieces: true,
-        },
-      ]);
+    const isDragging = selected?.isDragging;
+    if (this.triggerUp) {
+      const { from, to, piece } =
+        this.boardRuntime.helpers.pointerEventsHelper.detectMove(e);
+
+      if (from !== null && from.notation !== to.notation) {
+        this.boardRuntime.helpers.setNextMove({
+          from: from.notation,
+          to: to.notation,
+          piece,
+          click: false,
+          offset: { x: offsetX, y: offsetY },
+        });
+      } else {
+        isDragging && this.endDrag(offsetX, offsetY, false, true);
+        if (selected?.secondClick || isDragging) {
+          this.boardRuntime.helpers.toggleSelected(false);
+        } else this.boardRuntime.helpers.toggleSelected(true);
+      }
+    } else {
+      this.triggerUp = true;
+      isDragging && this.endDrag(offsetX, offsetY, false, true);
+      if (selected?.secondClick || isDragging) {
+        this.boardRuntime.helpers.toggleSelected(false);
+      } else this.boardRuntime.helpers.toggleSelected(true);
+    }
+
+    this.boardRuntime.pipelineRender.setNextEvent("onRender", [
+      {
+        board: false,
+        staticPieces: true,
+        overlay: true,
+        underlay: true,
+        dynamicPieces: true,
+      },
+    ]);
   }
 
   handlePointerLeave(e: React.PointerEvent<HTMLCanvasElement>) {
@@ -248,20 +259,8 @@ class PointerEventsHelpers {
     if (piece_) {
       if (selected) {
         if (square.notation !== selected.square?.notation) {
-          const move = this.moveOnClick(e, selected);
-          !move &&
-            this.boardRuntime.pipelineRender.setNextEvent("onPointerSelect", [
-              {
-                id: piece_.id,
-                x: piece_.piece.x,
-                y: piece_.piece.y,
-                square: piece_.piece.square,
-                isDragging: false,
-                startX: offsetX,
-                startY: offsetY,
-                secondClick: false,
-              },
-            ]);
+          this.triggerUp = false;
+          this.moveOnClick(e, selected, { x: offsetX, y: offsetY });
         } else {
           selected.startX = offsetX;
           selected.startY = offsetY;
@@ -281,28 +280,30 @@ class PointerEventsHelpers {
           },
         ]);
       }
-    } else if (selected) this.moveOnClick(e, selected);
+    } else if (selected) {
+      this.triggerUp = false;
+      this.moveOnClick(e, selected, { x: offsetX, y: offsetY });
+    }
   }
 
   moveOnClick(
     e: React.PointerEvent<HTMLCanvasElement>,
-    selected: TSelected | null
+    selected: TSelected | null,
+    offset: { x: number; y: number }
   ) {
     if (selected) {
       const { from, to, piece } =
         this.boardRuntime.helpers.pointerEventsHelper.detectMove(e);
       if (from !== null) {
-        const move = this.boardRuntime.helpers.move(
-          from.notation,
-          to.notation,
+        this.boardRuntime.helpers.setNextMove({
+          from: from.notation,
+          to: to.notation,
           piece,
-          true,
-          { x: -1, y: -1 }
-        );
-        if (move) return true;
+          click: true,
+          offset,
+        });
       }
     }
-    return false;
   }
 
   toggleLayer(from: TCanvasLayer, to: TCanvasLayer) {

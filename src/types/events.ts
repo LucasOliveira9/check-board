@@ -80,16 +80,15 @@ type TMove = {
 
 type TMoveReturn = {
   status: boolean;
-  flag: TMoveFlag;
+  result: TMoveResult;
 };
 
-type TMoveFlag = {
-  enpassant?: boolean;
-  kingSideCastling?: boolean;
-  queenSideCastling?: boolean;
-  capture?: boolean;
+type TMoveResult = {
+  from: TNotation;
+  to: TNotation;
+  captured: TNotation[];
   promotion?: "q" | "r" | "n" | "b" | "p" | "k";
-};
+}[];
 
 const EVENTS = {
   onPointerSelect: "onPointerSelect",
@@ -151,7 +150,7 @@ export type {
   TBoardEventContextExtras,
   TMove,
   TMoveReturn,
-  TMoveFlag,
+  TMoveResult,
   TAnimation,
   TGetterBoardEventContext,
   TEvents,

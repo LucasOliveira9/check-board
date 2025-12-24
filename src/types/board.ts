@@ -35,7 +35,7 @@ interface TBoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   events?: TBoardEvents;
   injection?: TBoardInjection<T>;
   pieceStyle?: TPieceImage;
-  onMove?: (arg: TMove) => TMoveReturn;
+  onMove?: (arg: TMove) => Promise<TMoveReturn>;
   onUpdate?: () => void;
   default: TDefault;
   hoverConfig?: THoverConfig;
@@ -72,7 +72,7 @@ type TConfig<T extends TBoardEventContext = TBoardEventContext> = {
 
 type TBoardProps = {
   config: TConfig;
-  onMove?: (arg: TMove) => TMoveReturn;
+  onMove?: (arg: TMove) => Promise<TMoveReturn>;
   onUpdate?: () => void;
 };
 
