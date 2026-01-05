@@ -98,7 +98,8 @@ class PointerEventsHelpers {
     if (
       selected === null ||
       selected.startX === null ||
-      selected?.startY === null
+      selected?.startY === null ||
+      this.boardRuntime.getIsMoving()
     )
       return;
 
@@ -174,6 +175,7 @@ class PointerEventsHelpers {
       true,
     ]);
     const isDragging = selected?.isDragging;
+
     if (this.triggerUp) {
       const { from, to, piece } =
         this.boardRuntime.helpers.pointerEventsHelper.detectMove(e);
@@ -274,6 +276,7 @@ class PointerEventsHelpers {
             y: piece_.piece.y,
             square: piece_.piece.square,
             isDragging: false,
+            isPending: false,
             startX: offsetX,
             startY: offsetY,
             secondClick: false,

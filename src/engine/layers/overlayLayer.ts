@@ -11,7 +11,7 @@ class OverlayLayer extends BaseLayer {
     return;
   }
 
-  draw(): void {
+  async draw(): Promise<void> {
     return;
   }
 }

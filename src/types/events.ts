@@ -76,6 +76,7 @@ type TMove = {
   from: TNotation;
   to: TNotation;
   piece: TPieceBoard;
+  emitter: IEventListener;
 };
 
 type TMoveReturn = {
@@ -89,6 +90,20 @@ type TMoveResult = {
   captured: TNotation[];
   promotion?: "q" | "r" | "n" | "b" | "p" | "k";
 }[];
+
+type TListener = (...args: any[]) => void;
+
+interface IEventListener {
+  on(event: TEventListenerEvents, listener: TListener): () => void;
+  once(event: TEventListenerEvents, listener: TListener): () => void;
+  off(event: TEventListenerEvents, listener: TListener): void;
+}
+const EVENT_LISTENER_EVENTS = {
+  onMoveAbort: "onMoveAbort",
+} as const;
+
+type TEventListenerEvents =
+  (typeof EVENT_LISTENER_EVENTS)[keyof typeof EVENT_LISTENER_EVENTS];
 
 const EVENTS = {
   onPointerSelect: "onPointerSelect",
@@ -155,6 +170,9 @@ export type {
   TGetterBoardEventContext,
   TEvents,
   TDrawFunction,
+  TListener,
+  IEventListener,
+  TEventListenerEvents,
 };
 
 export { EVENTS };

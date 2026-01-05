@@ -85,10 +85,24 @@ class DynamicPiecesLayer extends BaseLayer {
       if (id === pieceHoverRef && !piece.anim) continue;
       ctx.save();
       const image = piecesImage && piecesImage[piece.type];
+
+      if (selected?.isPending && selected.id === id) ctx.globalAlpha = 0.5;
       if (image instanceof HTMLImageElement)
-        this.DrawHTMLPiece(image, ctx, piece, squareSize);
+        this.DrawHTMLPiece(
+          image,
+          ctx,
+          piece,
+          squareSize,
+          selected?.isPending && selected.id === id ? true : false
+        );
       else if (typeof image === "string")
-        this.DrawTextPiece(image, ctx, piece, squareSize);
+        this.DrawTextPiece(
+          image,
+          ctx,
+          piece,
+          squareSize,
+          selected?.isPending && selected.id === id ? true : false
+        );
       ctx.restore();
 
       if (selected?.isDragging && selected.id === id)
@@ -102,6 +116,7 @@ class DynamicPiecesLayer extends BaseLayer {
         .getLayerManager()
         .togglePieceLayer("dynamicPieces", "staticPieces", pieceId, true);
     }
+
     if (this.toggleCanvas.length > 0)
       await this.boardRuntime.renderer.render({
         board: false,
@@ -114,23 +129,25 @@ class DynamicPiecesLayer extends BaseLayer {
   }
 
   postRender(): void {
-    this.updateAnimation();
+    if (this.animation.length > 0) this.updateAnimation();
   }
 
   private DrawHTMLPiece(
     image: HTMLImageElement,
     ctx: CanvasRenderingContext2D,
     piece: TPieceInternalRef,
-    squareSize: number
+    squareSize: number,
+    isPending: boolean
   ) {
+    const x = isPending
+      ? piece.x
+      : piece.x - (squareSize * (this.scale - 1)) / 2;
+    const y = isPending
+      ? piece.y
+      : piece.y - (squareSize * (this.scale - 1)) / 2;
+    const w = isPending ? squareSize : squareSize * this.scale;
     if (image && image.complete && image.naturalWidth > 0) {
-      ctx.drawImage(
-        image,
-        piece.x - (squareSize * (this.scale - 1)) / 2,
-        piece.y - (squareSize * (this.scale - 1)) / 2,
-        squareSize * this.scale,
-        squareSize * this.scale
-      );
+      ctx.drawImage(image, x, y, w, w);
     }
   }
 
@@ -138,13 +155,16 @@ class DynamicPiecesLayer extends BaseLayer {
     image: string,
     ctx: CanvasRenderingContext2D,
     piece: TPieceInternalRef,
-    squareSize: number
+    squareSize: number,
+    isPending: boolean
   ) {
     const image_ = image.length > 1 ? image[0] : image;
     ctx.save();
     ctx.fillStyle = piece.type[0] === "w" ? "#ffffffff" : "#000";
-    ctx.font = `${squareSize * 0.8 * this.scale}px monospace`;
-    let fontSize = squareSize * 0.8;
+    ctx.font = isPending
+      ? `${squareSize * 0.7}px monospace`
+      : `${squareSize * 0.8 * this.scale}px monospace`;
+    let fontSize = isPending ? squareSize * 0.7 : squareSize * 0.8;
     ctx.font = `${fontSize}px monospace`;
     const textWidth = ctx.measureText(image_).width;
     if (textWidth > squareSize * 0.9) {

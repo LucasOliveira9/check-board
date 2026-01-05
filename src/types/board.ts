@@ -82,6 +82,7 @@ type TSelected = {
   y: number;
   square: TSquare;
   isDragging: boolean;
+  isPending: boolean;
   startX: number | null;
   startY: number | null;
   secondClick: boolean;

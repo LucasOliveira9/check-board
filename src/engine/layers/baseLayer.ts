@@ -232,6 +232,10 @@ abstract class BaseLayer implements ICanvasLayer {
     return Array.from(this.renderMap.keys());
   }
 
+  hasToRender(pieceId: TPieceId) {
+    return this.renderMap.has(pieceId);
+  }
+
   clearRenderMap() {
     this.renderMap.clear();
   }

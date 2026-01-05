@@ -145,6 +145,7 @@ class LayerManager {
 
     fromLayer.removeAll?.(pieceId);
     isActivePiece && toLayer.addAll?.(pieceId, piece, newCoords, newCoords);
+
     if (noRender) return;
     this.boardRuntime.pipelineRender.setNextEvent("onRender", [
       {

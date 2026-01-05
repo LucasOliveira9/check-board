@@ -1,16 +1,13 @@
 import { TEventName, TLazyReturn, TResolvers } from "../../types/helpers";
 import BoardRuntime from "../boardRuntime/boardRuntime";
 import PieceHelpers from "./pieceHelpers";
-import {
-  TBoardEventContext,
-  TBoardEvents,
-  TMoveReturn,
-} from "../../types/events";
-import { TNotation } from "../../types/square";
+import { TBoardEventContext, TBoardEvents } from "../../types/events";
+import { TNotation, TSquare } from "../../types/square";
 import { TPieceBoard } from "../../types/piece";
 import { TCanvasCoords } from "../../types/draw";
 import PointerEventsHelpers from "./pointerEventsHelpers";
 import Utils from "../../utils/utils";
+import EventEmmiter from "../../engine/eventEmitter/eventEmitter";
 
 class EngineHelpers {
   public pointerEventsHelper: PointerEventsHelpers;
@@ -115,10 +112,10 @@ class EngineHelpers {
     return res;
   }
 
-  private async movePromiseCancel(): Promise<TMoveReturn> {
+  private async movePromiseCancel(): Promise<void> {
     return new Promise((resolve) => {
       setTimeout(() => {
-        resolve({ status: false, result: [] });
+        resolve();
       }, 8000);
     });
   }
@@ -134,55 +131,54 @@ class EngineHelpers {
     const selected = this.boardRuntime.getSelected();
     const id = selected?.id;
     const moveCallback = this.boardRuntime.getMove();
+    const eventEmitter = new EventEmmiter();
+
     if (moveCallback) {
+      await this.pendingDrag(offset.x, offset.y);
       const move = await Promise.race([
-        moveCallback({ from, to, piece }),
-        this.movePromiseCancel(),
+        moveCallback({ from, to, piece, emitter: eventEmitter }),
+        this.movePromiseCancel().then(() => {
+          eventEmitter.emit("onMoveAbort", []);
+          return { status: false, result: [] };
+        }),
       ]);
 
-      if (move.status) {
-        if (selected && selected.isDragging && id) {
-          this.pointerEventsHelper.endDrag(offset.x, offset.y, true, false);
-          this.toggleSelected(false);
+      if (selected) {
+        if (selected.isPending)
           this.boardRuntime.pipelineRender.setNextEvent("onToggleCanvas", [
             "dynamicPieces",
             "staticPieces",
             id,
             true,
           ]);
-        }
-        this.boardRuntime.updateBoardState(move.result, click);
+        selected.isPending = false;
+        this.boardRuntime.renderer
+          .getLayerManager()
+          .getLayer("dynamicPieces")
+          .removeAll?.(selected.id);
+      }
+
+      if (move.status) {
+        await this.boardRuntime.updateBoardState(move.result, click);
         return true;
       } else {
-        if (selected) {
-          if (selected.isDragging && id) {
-            this.pointerEventsHelper.endDrag(offset.x, offset.y, false, false);
-            this.toggleSelected(false);
-            this.boardRuntime.pipelineRender.setNextEvent("onToggleCanvas", [
-              "dynamicPieces",
-              "staticPieces",
-              id,
-            ]);
-          } else this.toggleSelected(true);
-        }
-
         return false;
       }
     } else {
       // DEFAULT
-      if (selected && selected.isDragging) {
-        this.pointerEventsHelper.endDrag(offset.x, offset.y, true, false);
-        this.toggleSelected(false);
-        this.boardRuntime.pipelineRender.setNextEvent("onToggleCanvas", [
-          "dynamicPieces",
-          "staticPieces",
-          id,
-          true,
-        ]);
-      } else this.toggleSelected(true);
-      this.boardRuntime.updateBoardState([{ from, to, captured: [to] }], click);
+      this.pointerEventsHelper.endDrag(offset.x, offset.y, true, false);
+      this.boardRuntime.pipelineRender.setNextEvent("onToggleCanvas", [
+        "dynamicPieces",
+        "staticPieces",
+        id,
+        true,
+      ]);
+      await this.boardRuntime.updateBoardState(
+        [{ from, to, captured: [to] }],
+        click
+      );
+      return true;
     }
-    return true;
   }
 
   toggleSelected(keep: boolean) {
@@ -219,30 +215,97 @@ class EngineHelpers {
     if (!this.isMoving) this.handleMove();
   }
 
+  private async pendingDrag(x: number, y: number) {
+    const selected = this.boardRuntime.getSelected();
+    this.boardRuntime.renderer.getLayerManager().removeEvent("onPointerSelect");
+    const render = (resolve: (value: void | PromiseLike<void>) => void) =>
+      this.boardRuntime.pipelineRender.setNextEvent(
+        "onRender",
+        [
+          {
+            board: false,
+            staticPieces: true,
+            overlay: true,
+            underlay: true,
+            dynamicPieces: true,
+          },
+        ],
+        resolve
+      );
+    if (!selected || !selected.isDragging) {
+      await Utils.asyncHandler(render);
+      return;
+    }
+
+    const squareSize = this.boardRuntime.getSize() / 8,
+      isBlackView = this.boardRuntime.getIsBlackView();
+    const square = Utils.coordsToSquare(x, y, squareSize, isBlackView);
+    const layer = this.boardRuntime.renderer
+      .getLayerManager()
+      .getLayer("dynamicPieces");
+
+    if (!square) return;
+    const coords = Utils.squareToCoords(square, squareSize, isBlackView);
+    selected.isPending = true;
+    const piece = layer.getPiece(selected.id);
+
+    if (piece) {
+      piece.x = coords ? coords.x : x;
+      piece.y = coords ? coords.y : y;
+    }
+
+    selected.x = coords ? coords.x : x;
+    selected.y = coords ? coords.y : y;
+    selected.square = square;
+    selected.startX = null;
+    selected.startY = null;
+    selected.isDragging = false;
+
+    layer.addToRender(selected.id);
+
+    await Utils.asyncHandler(render);
+    layer.removeToRender(selected.id);
+  }
+
   async handleMove() {
     if (this.isMoving) return;
     this.isMoving = true;
+    this.boardRuntime.setIsMoving(true);
     try {
       while (this.pipelineMove.length) {
+        const selected = this.boardRuntime.getSelected();
         const currMove = this.pipelineMove.shift();
+
         if (!currMove) continue;
         const { from, to, piece, click, offset, token } = currMove;
         if (token !== this.moveToken) continue;
         let move = false;
+        const x = selected?.x,
+          y = selected?.y;
+        const square =
+          selected && selected.square !== null ? { ...selected.square } : null;
+        this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
+          cursor: "progress",
+        });
         move = await this.move(from, to, piece, click, offset);
+        this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
+          cursor: "default",
+        });
+        const newSelectedPiece = this.boardRuntime.getBoard()[to];
+        const piece_ = newSelectedPiece
+          ? this.boardRuntime.getInternalRefVal(newSelectedPiece.id)
+          : null;
+        const coords = newSelectedPiece
+          ? Utils.squareToCoords(
+              newSelectedPiece.square,
+              this.boardRuntime.getSize() / 8,
+              this.boardRuntime.getIsBlackView()
+            )
+          : null;
+
         if (click) {
-          const newSelectedPiece = this.boardRuntime.getBoard()[to];
-          const piece_ = newSelectedPiece
-            ? this.boardRuntime.getInternalRefVal(newSelectedPiece.id)
-            : null;
           if (!move) {
             if (newSelectedPiece && piece_) {
-              const coords = Utils.squareToCoords(
-                newSelectedPiece.square,
-                this.boardRuntime.getSize() / 8,
-                this.boardRuntime.getIsBlackView()
-              );
-
               coords &&
                 this.boardRuntime.pipelineRender.setNextEvent(
                   "onPointerSelect",
@@ -268,7 +331,18 @@ class EngineHelpers {
             }
           }
         }
-        !move &&
+
+        if (!move) {
+          if (selected && x !== undefined && y !== undefined) {
+            selected.x = x;
+            selected.y = y;
+            selected.square = square;
+            const piece = this.boardRuntime.getInternalRefVal(selected.id);
+            piece.x = x;
+            piece.y = y;
+            piece.square = structuredClone(square);
+          }
+
           this.boardRuntime.pipelineRender.setNextEvent("onRender", [
             {
               board: false,
@@ -278,9 +352,16 @@ class EngineHelpers {
               dynamicPieces: true,
             },
           ]);
+
+          this.boardRuntime.pipelineRender.setNextEvent("onPointerSelect", [
+            null,
+            true,
+          ]);
+        }
       }
     } finally {
       this.isMoving = false;
+      this.boardRuntime.setIsMoving(false);
       if (this.pipelineMove.length) queueMicrotask(() => this.handleMove());
     }
   }

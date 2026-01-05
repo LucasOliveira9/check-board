@@ -9,7 +9,7 @@ class BoardLayer extends BaseLayer {
   update(delta: number): void {
     return;
   }
-  draw(): void {
+  async draw(): Promise<void> {
     const ctx = this.ctx;
     if (!ctx) return;
 

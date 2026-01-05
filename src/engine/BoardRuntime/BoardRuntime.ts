@@ -943,6 +943,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       delete this.board[from];
 
       const piece_ = this.getInternalRefVal(piece.id);
+      !delay && (piece_.square = newSquare);
       this.helpers.pieceHelper.updateCache(from, to, {
         id: piece.id,
         piece: piece_,

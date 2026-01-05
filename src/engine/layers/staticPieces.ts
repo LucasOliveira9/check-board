@@ -47,7 +47,7 @@ class StaticPiecesLayer extends BaseLayer {
     return;
   }
 
-  draw(): void {
+  async draw(): Promise<void> {
     const toRender = this.getToRender();
     const piecesImage = this.boardRuntime.getPieceStyle(),
       pieceHoverRef = this.boardRuntime.getPieceHover(),
