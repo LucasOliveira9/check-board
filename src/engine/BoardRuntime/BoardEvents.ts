@@ -13,7 +13,7 @@ class BoardEvents {
 
   OnPointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
     if (this.boardRuntime.getIsMoving()) return;
-    this.boardRuntime.helpers.pointerEventsHelper.handleClick(e);
+    this.boardRuntime.helpers.pointerEventsHelper.startPress(e);
   }
 
   onPointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
@@ -23,7 +23,6 @@ class BoardEvents {
   }
 
   onPointerUp(e: React.PointerEvent<HTMLCanvasElement>) {
-    if (this.boardRuntime.getIsMoving()) return;
     this.boardRuntime.helpers.pointerEventsHelper.handlePointerUp(e);
   }
 

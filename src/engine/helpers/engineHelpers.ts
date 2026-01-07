@@ -333,14 +333,20 @@ class EngineHelpers {
         }
 
         if (!move) {
-          if (selected && x !== undefined && y !== undefined) {
-            selected.x = x;
-            selected.y = y;
-            selected.square = square;
-            const piece = this.boardRuntime.getInternalRefVal(selected.id);
-            piece.x = x;
-            piece.y = y;
-            piece.square = structuredClone(square);
+          if (!click) {
+            if (selected && x !== undefined && y !== undefined) {
+              selected.x = x;
+              selected.y = y;
+              selected.square = square;
+              const piece = this.boardRuntime.getInternalRefVal(selected.id);
+              piece.x = x;
+              piece.y = y;
+              piece.square = structuredClone(square);
+            }
+            this.boardRuntime.pipelineRender.setNextEvent("onPointerSelect", [
+              null,
+              true,
+            ]);
           }
 
           this.boardRuntime.pipelineRender.setNextEvent("onRender", [
@@ -351,11 +357,6 @@ class EngineHelpers {
               underlay: true,
               dynamicPieces: true,
             },
-          ]);
-
-          this.boardRuntime.pipelineRender.setNextEvent("onPointerSelect", [
-            null,
-            true,
           ]);
         }
       }

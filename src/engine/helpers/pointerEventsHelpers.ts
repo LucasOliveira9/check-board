@@ -6,6 +6,8 @@ import { TCanvasLayer } from "types";
 
 class PointerEventsHelpers {
   private triggerUp = true;
+  private pointerSession = 0;
+  private activeSession: null | number = null;
 
   constructor(protected boardRuntime: BoardRuntime) {}
 
@@ -94,14 +96,18 @@ class PointerEventsHelpers {
     const { offsetX, offsetY } = Utils.getCanvasCoords(e);
     const squareSize = this.boardRuntime.getSize() / 8;
     const selected = this.boardRuntime.getSelected();
-
+    const session = this.activeSession;
     if (
+      session === null ||
+      session !== this.pointerSession ||
       selected === null ||
       selected.startX === null ||
       selected?.startY === null ||
+      e.pressure <= 0 ||
       this.boardRuntime.getIsMoving()
-    )
+    ) {
       return;
+    }
 
     const dx = offsetX - selected.startX;
     const dy = offsetY - selected.startY;
@@ -157,6 +163,9 @@ class PointerEventsHelpers {
   }
 
   handlePointerUp(e: React.PointerEvent<HTMLCanvasElement>) {
+    ++this.pointerSession;
+    this.activeSession = null;
+    if (this.boardRuntime.getIsMoving()) return;
     const { offsetX, offsetY } = Utils.getCanvasCoords(e);
     const size = this.boardRuntime.getSize();
     const selected = this.boardRuntime.getSelected();
@@ -188,19 +197,13 @@ class PointerEventsHelpers {
           click: false,
           offset: { x: offsetX, y: offsetY },
         });
-      } else {
-        isDragging && this.endDrag(offsetX, offsetY, false, true);
-        if (selected?.secondClick || isDragging) {
-          this.boardRuntime.helpers.toggleSelected(false);
-        } else this.boardRuntime.helpers.toggleSelected(true);
       }
-    } else {
-      this.triggerUp = true;
-      isDragging && this.endDrag(offsetX, offsetY, false, true);
-      if (selected?.secondClick || isDragging) {
-        this.boardRuntime.helpers.toggleSelected(false);
-      } else this.boardRuntime.helpers.toggleSelected(true);
-    }
+    } else this.triggerUp = true;
+
+    isDragging && this.endDrag(offsetX, offsetY, false, true);
+    if (selected?.secondClick || isDragging) {
+      this.boardRuntime.helpers.toggleSelected(false);
+    } else this.boardRuntime.helpers.toggleSelected(true);
 
     this.boardRuntime.pipelineRender.setNextEvent("onRender", [
       {
@@ -237,12 +240,13 @@ class PointerEventsHelpers {
     ]);
   }
 
-  handleClick(e: React.PointerEvent<HTMLCanvasElement>) {
+  startPress(e: React.PointerEvent<HTMLCanvasElement>) {
     const { offsetX, offsetY } = Utils.getCanvasCoords(e);
     const squareSize = this.boardRuntime.getSize() / 8;
     const selected = this.boardRuntime.getSelected();
 
     if (offsetX === null || offsetY === null) return;
+    this.activeSession = this.pointerSession;
     const square = Utils.coordsToSquare(
       offsetX,
       offsetY,
