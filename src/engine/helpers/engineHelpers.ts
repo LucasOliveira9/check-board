@@ -134,7 +134,7 @@ class EngineHelpers {
     const eventEmitter = new EventEmmiter();
 
     if (moveCallback) {
-      await this.pendingDrag(offset.x, offset.y);
+      const square = await this.pendingDrag(offset.x, offset.y);
       const move = await Promise.race([
         moveCallback({ from, to, piece, emitter: eventEmitter }),
         this.movePromiseCancel().then(() => {
@@ -144,6 +144,10 @@ class EngineHelpers {
       ]);
 
       if (selected) {
+        if (!click && square) {
+          const piece_ = this.boardRuntime.getInternalRefVal(selected.id);
+          piece_.square = square;
+        }
         if (selected.isPending)
           this.boardRuntime.pipelineRender.setNextEvent("onToggleCanvas", [
             "dynamicPieces",
@@ -265,6 +269,7 @@ class EngineHelpers {
 
     await Utils.asyncHandler(render);
     layer.removeToRender(selected.id);
+    return square;
   }
 
   async handleMove() {
