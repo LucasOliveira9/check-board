@@ -7,238 +7,62 @@ import {
   TPieceInternalRef,
 } from "../../types/piece";
 import BoardRuntime from "../boardRuntime/boardRuntime";
-import { IRenderer2D } from "./interface";
-import { TEvents } from "../../types/events";
 import LayerManager from "../layers/layerManager";
+import { IRenderer } from "./interface";
+import { TPipelineRender } from "../../types/board";
+import PipelineRender from "./pipelineRender";
 
-class Renderer2D implements IRenderer2D {
+class Renderer2D implements IRenderer {
   private layerManager: LayerManager;
+  eventsRuntime: Record<TPipelineRender, Function | null>;
+  pipelineRender: PipelineRender;
 
   constructor(protected boardRuntime: BoardRuntime) {
     this.layerManager = new LayerManager(boardRuntime);
-  }
-  renderClientOverlayEvents(): void {
-    return;
-  }
-  getLayerManager(): LayerManager {
-    return this.layerManager;
-  }
-  clearRect(coords: TCanvasCoords, canvas: TCanvasLayer): void {
-    throw new Error("Method not implemented.");
-  }
-  clearStaticToRender(): void {
-    throw new Error("Method not implemented.");
-  }
-  resetStaticPieces(): void {
-    throw new Error("Method not implemented.");
-  }
-  getToRender(canvas: TCanvasLayer): Map<TPieceId, TRender> {
-    throw new Error("Method not implemented.");
-  }
-  getPosition(
-    id: TPieceId,
-    canvas: TCanvasLayer
-  ): { readonly x: number; readonly y: number } | undefined {
-    throw new Error("Method not implemented.");
-  }
-  clearStaticPieces(board: TPieceBoard[]): void {
-    throw new Error("Method not implemented.");
-  }
-  getToClear(canvas: TCanvasLayer): TCanvasCoords[] {
-    throw new Error("Method not implemented.");
-  }
-  resetToClear(canvas: TCanvasLayer): void {
-    throw new Error("Method not implemented.");
-  }
-  deleteStaticPiece(id: TPieceId): void {
-    throw new Error("Method not implemented.");
-  }
-  getDynamicPieceObj(): Record<TPieceId, TPieceInternalRef> {
-    throw new Error("Method not implemented.");
-  }
-  getStaticPieceObj(): Record<TPieceId, TPieceInternalRef> {
-    throw new Error("Method not implemented.");
+    this.eventsRuntime = {
+      onPointerSelect: this.boardRuntime.setSelected.bind(this.boardRuntime),
+      onPointerHover: this.boardRuntime.setPieceHover.bind(this.boardRuntime),
+      onPointerDragStart: null,
+      onPointerDrag: null,
+      onPointerDrop: null,
+      onAnimationFrame: null,
+      onDrawPiece: null,
+      onDrawBoard: null,
+      onDrawOverlay: null,
+      onDrawUnderlay: null,
+      onToggleCanvas: this.toggleCanvas.bind(this),
+      onRender: this.render.bind(this),
+    };
+    this.pipelineRender = new PipelineRender(boardRuntime);
   }
 
   destroy(): void {
+    this.pipelineRender.destroy();
+
     for (const key of Object.getOwnPropertyNames(this)) {
       (this as any)[key] = null;
     }
   }
+
   async render(canvases: Record<TCanvasLayer, boolean>) {
-    if (canvases.board) this.renderBoard();
     this.layerManager.renderEvents(true);
-    if (canvases.staticPieces) this.renderStaticPieces();
-    if (canvases.dynamicPieces) await this.renderDynamicPieces();
-    if (canvases.underlay) this.renderUnderlay();
-    if (canvases.overlay) this.renderOverlay();
+    for (const [canvas, toRender] of Object.entries(canvases))
+      if (toRender)
+        await this.layerManager.getLayer(canvas as TCanvasLayer).renderAsync();
     this.layerManager.renderEvents(false);
   }
 
-  private async renderDynamicPieces() {
-    const layer = this.layerManager.getLayer("dynamicPieces");
-    const animation = layer.getAnimation();
-
-    if (animation.length === 0) {
-      layer.clearAnimation();
-      layer.render(0);
-      return;
-    }
-
-    layer.incrementAnimationGen();
-    const gen = layer.getAnimationGen();
-
-    return new Promise<void>((resolve) => {
-      let resolved = false;
-      const resolver = () => {
-        if (resolved) return;
-
-        layer.getPendingResolvers().delete(gen);
-        try {
-          resolve();
-        } catch (e) {
-          /* swallow */
-        }
-      };
-
-      layer.setPendingResolvers(gen, resolver);
-
-      const render = (time: number) => {
-        if (gen !== layer.getAnimationGen()) return;
-
-        const animation = layer.getAnimation();
-
-        if (animation.length === 0) {
-          resolver();
-          layer.setAnimationRef(null);
-          return;
-        }
-
-        layer.render(time);
-        //boardRuntime.draw.pieces("dynamic", time);
-        const nextRef = requestAnimationFrame(render);
-        layer.setAnimationRef(nextRef);
-      };
-      const firstRef = requestAnimationFrame(render);
-      layer.setAnimationRef(firstRef);
-    });
+  getLayerManager(): LayerManager {
+    return this.layerManager;
   }
 
-  private renderStaticPieces(): void {
-    const layer = this.layerManager.getLayer("staticPieces");
-    layer.render(0);
-  }
-  private renderUnderlay(): void {
-    const layer = this.layerManager.getLayer("underlay");
-    layer.render(0);
-  }
-
-  private renderOverlay(): void {
-    const layer = this.layerManager.getLayer("overlay");
-    layer.render(0);
-  }
-
-  /* renderClientOverlayEvents() {
-    this.boardRuntime.draw.clientOverlayEvents();
-  }*/
-
-  private renderBoard(): void {
-    const layer = this.layerManager.getLayer("board");
-    layer.render(0);
-  }
-
-  addStaticPiece(id: TPieceId, piece: TPieceInternalRef) {
-    /*piece && this.addPosition(id, { x: piece.x, y: piece.y }, "staticPieces");
-    if (!piece || this.layerManager.getLayer("staticPieces").hasPiece(id))
-      return;
-    this.renderMap.staticPieces.set(id, {
-      piece,
-      x: piece.x,
-      y: piece.y,
-    });
-    this.layerManager.getLayer("staticPieces").addPiece(id, piece);*/
-  }
-
-  addDynamicPiece(id: TPieceId, piece: TPieceInternalRef) {
-    /* piece && this.addPosition(id, { x: piece.x, y: piece.y }, "dynamicPieces");
-    if (!piece || this.layerManager.getLayer("dynamicPieces").hasPiece(id))
-      return;
-    this.renderMap.dynamicPieces.set(id, {
-      piece,
-      x: piece.x,
-      y: piece.y,
-    });
-    this.layerManager.getLayer("dynamicPieces").addPiece(id, piece);*/
-  }
-
-  addPosition(id: TPieceId, coords: TPieceCoords, canvas: TCanvasLayer) {
-    //this.coordsMap[canvas].set(id, coords);
-  }
-
-  addToClear(coords: TCanvasCoords, canvas: TCanvasLayer) {
-    this.layerManager.getLayer(canvas).addClearQueue(coords);
-  }
-
-  addEvent(
-    key: TEvents,
-    opts: { canvas: TCanvasLayer; coords: TCanvasCoords }
+  async toggleCanvas(
+    from: TCanvasLayer,
+    to: TCanvasLayer,
+    pieceId: TPieceId,
+    noRender?: boolean
   ) {
-    /* if (!this.eventsMap[key]) this.eventsMap[key] = [];
-    this.eventsMap[key].push(opts);*/
-  }
-
-  addAnimation(
-    key: string,
-    opts: { canvas: TCanvasLayer; coords: TCanvasCoords }
-  ) {
-    /*if (!this.animationMap[key]) this.animationMap[key] = [];
-    this.animationMap[key].push(opts);*/
-  }
-
-  clearEvent(key: TEvents) {
-    /*const curr = this.eventsMap[key];
-    if (!curr) return;
-
-    for (const obj of curr) this.addToClear(obj.coords, obj.canvas);
-    delete this.eventsMap[key];*/
-  }
-
-  clearAnimation(key: string) {
-    /*const curr = this.animationMap[key];
-    if (!curr) return;
-
-    for (const obj of curr) this.addToClear(obj.coords, obj.canvas);
-    delete this.animationMap[key];*/
-  }
-
-  deleteStaticPosition(id: TPieceId) {
-    throw new Error("Method not implemented.");
-  }
-
-  deleteDynamicPosition(id: TPieceId) {
-    throw new Error("Method not implemented.");
-  }
-
-  deleteDynamicPiece(id: TPieceId) {
-    /*const piece = this.dynamicPieces[id];
-    const squareSize = this.boardRuntime.getSize() / 8;
-    if (!piece) return;
-    this.addToClear(
-      {
-        x: piece.x,
-        y: piece.y,
-        w: squareSize,
-        h: squareSize,
-      },
-      "dynamicPieces"
-    );
-    this.deleteDynamicPosition(id);
-    this.renderMap.dynamicPieces.delete(id);
-    delete this.dynamicPieces[id];*/
-  }
-
-  clear(): void {
-    throw new Error("Method not implemented.");
+    await this.layerManager.togglePieceLayer(from, to, pieceId, noRender);
   }
 }
 

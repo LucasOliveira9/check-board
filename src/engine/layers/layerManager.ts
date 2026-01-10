@@ -147,7 +147,7 @@ class LayerManager {
     isActivePiece && toLayer.addAll?.(pieceId, piece, newCoords, newCoords);
 
     if (noRender) return;
-    this.boardRuntime.pipelineRender.setNextEvent("onRender", [
+    this.boardRuntime.renderer.pipelineRender.setNextEvent("onRender", [
       {
         board: false,
         staticPieces: true,

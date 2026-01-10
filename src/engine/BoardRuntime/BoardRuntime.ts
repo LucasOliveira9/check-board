@@ -52,7 +52,6 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     scaling: false,
     scaleAmount: 1.05,
   };
-  pipelineRender = new PipelineRender(this);
 
   public boardEvents: BoardEvents = new BoardEvents(this);
   public helpers: EngineHelpers = new EngineHelpers(this);
@@ -62,21 +61,6 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     onPointerSelect: true,
     onPointerHover: true,
     moveAnimation: true,
-  };
-
-  eventsRuntime: Record<TPipelineRender, Function | null> = {
-    onPointerSelect: this.setSelected.bind(this),
-    onPointerHover: this.setPieceHover.bind(this),
-    onPointerDragStart: null,
-    onPointerDrag: null,
-    onPointerDrop: null,
-    onAnimationFrame: null,
-    onDrawPiece: null,
-    onDrawBoard: null,
-    onDrawOverlay: null,
-    onDrawUnderlay: null,
-    onToggleCanvas: this.toggleCanvas.bind(this),
-    onRender: this.render.bind(this),
   };
 
   activePiecesPool: Record<TPiece, Map<TNotation, TPieceId>> = {
@@ -138,12 +122,10 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.args.canvasLayers.destroy();
     this.helpers.destroy();
     this.boardEvents.destroy();
-    this.pipelineRender.destroy();
 
     (this.args.canvasLayers as any) = null;
     (this.helpers as any) = null;
     (this.boardEvents as any) = null;
-    (this.pipelineRender as any) = null;
 
     if (this.args.pieceStyle) {
       Object.entries(this.args.pieceStyle).map(([_, val]) => {
@@ -612,7 +594,11 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     await this.initInternalRef();
 
     const render = (resolve: (value: void | PromiseLike<void>) => void) =>
-      this.pipelineRender.setNextEvent("onRender", [canvases], resolve);
+      this.renderer.pipelineRender.setNextEvent(
+        "onRender",
+        [canvases],
+        resolve
+      );
     await Utils.asyncHandler(render);
     this.renderer.getLayerManager().setHoverEnabled(true);
 
@@ -630,18 +616,21 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       if (this.selected.isDragging)
         this.helpers.pointerEventsHelper.endDrag(-1, -1, false, true);
 
-      this.pipelineRender.setNextEvent("onPointerSelect", [null, true]);
+      this.renderer.pipelineRender.setNextEvent("onPointerSelect", [
+        null,
+        true,
+      ]);
       toRender = true;
     }
 
     if (this.pieceHover !== null) {
-      this.pipelineRender.setNextEvent("onPointerHover", [null, true]);
+      this.renderer.pipelineRender.setNextEvent("onPointerHover", [null, true]);
       toRender = true;
     }
 
     if (!render || !toRender) return;
     const render_ = (resolve: (value: void | PromiseLike<void>) => void) =>
-      this.pipelineRender.setNextEvent(
+      this.renderer.pipelineRender.setNextEvent(
         "onRender",
         [
           {
@@ -684,7 +673,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     layerManager.drawEvent("onPointerSelect");
 
     if (!noRender)
-      this.pipelineRender.setNextEvent("onRender", [
+      this.renderer.pipelineRender.setNextEvent("onRender", [
         {
           board: false,
           staticPieces: true,
@@ -735,7 +724,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         );
       }
     } else if (!noRender)
-      this.pipelineRender.setNextEvent("onRender", [
+      this.renderer.pipelineRender.setNextEvent("onRender", [
         {
           board: false,
           staticPieces: true,
@@ -779,7 +768,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     await this.initPieceImages();
     await this.initInternalRef();
     return new Promise<void>((resolve) => {
-      this.pipelineRender.setNextEvent(
+      this.renderer.pipelineRender.setNextEvent(
         "onRender",
         [
           {
@@ -828,21 +817,6 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       underlay: true,
       dynamicPieces: true,
     });
-  }
-
-  async toggleCanvas(
-    from: TCanvasLayer,
-    to: TCanvasLayer,
-    pieceId: TPieceId,
-    noRender?: boolean
-  ) {
-    await this.renderer
-      .getLayerManager()
-      .togglePieceLayer(from, to, pieceId, noRender);
-  }
-
-  async render(b: Record<TCanvasLayer, boolean>) {
-    await this.renderer.render(b);
   }
 
   async updateBoardState(move: TMoveResult, delay: boolean) {

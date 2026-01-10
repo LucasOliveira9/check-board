@@ -1,50 +1,14 @@
-import { TEvents } from "../../types/events";
-import { TCanvasCoords, TCanvasLayer, TRender } from "../../types/draw";
-import {
-  TPieceBoard,
-  TPieceCoords,
-  TPieceId,
-  TPieceInternalRef,
-} from "../../types/piece";
 import LayerManager from "engine/layers/layerManager";
+import { TCanvasLayer } from "../../types/draw";
+import { TPipelineRender } from "../../types/board";
+import PipelineRender from "./pipelineRender";
 
 interface IRenderer {
+  pipelineRender: PipelineRender;
+  eventsRuntime: Record<TPipelineRender, Function | null>;
   render(init: Record<TCanvasLayer, boolean>): Promise<void>;
-  addDynamicPiece(id: TPieceId, piece: TPieceInternalRef): void;
-  addStaticPiece(id: TPieceId, piece: TPieceInternalRef): void;
-  deleteStaticPiece(id: TPieceId): void;
-  deleteDynamicPiece(id: TPieceId): void;
-  getDynamicPieceObj(): Record<TPieceId, TPieceInternalRef>;
-  getStaticPieceObj(): Record<TPieceId, TPieceInternalRef>;
   getLayerManager(): LayerManager;
-  clear(): void;
   destroy(): void;
 }
 
-interface IRenderer2D extends IRenderer {
-  clearStaticToRender(): void;
-  clearRect(coords: TCanvasCoords, canvas: TCanvasLayer): void;
-  resetStaticPieces(): void;
-  getToRender(canvas: TCanvasLayer): Map<TPieceId, TRender>;
-  getPosition(
-    id: TPieceId,
-    canvas: TCanvasLayer
-  ): { readonly x: number; readonly y: number } | undefined;
-  clearStaticPieces(board: TPieceBoard[]): void;
-  addPosition(id: TPieceId, coords: TPieceCoords, canvas: TCanvasLayer): void;
-  addToClear(coords: TCanvasCoords, canvas: TCanvasLayer): void;
-  addEvent(
-    key: TEvents,
-    opts: { canvas: TCanvasLayer; coords: TCanvasCoords }
-  ): void;
-  addAnimation(
-    key: string,
-    opts: { canvas: TCanvasLayer; coords: TCanvasCoords }
-  ): void;
-  clearEvent(key: TEvents): void;
-  clearAnimation(key: string): void;
-  getToClear(canvas: TCanvasLayer): TCanvasCoords[];
-  resetToClear(canvas: TCanvasLayer): void;
-}
-
-export { IRenderer, IRenderer2D };
+export { IRenderer };

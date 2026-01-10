@@ -59,7 +59,6 @@ class PipelineRender {
   ) {
     const token = ++this.eventsToken[event];
     this.eventsNext[event].push({ args: [...next], token, resolve });
-
     this.stream.push(event);
     if (!this.loading) this.loadEvents();
   }
@@ -74,18 +73,17 @@ class PipelineRender {
     try {
       while (!this.destroyed && this.stream.length > 0) {
         const event = this.stream.shift()!;
-
         const next = this.getNextEvent(event);
+
         if (!next) continue;
 
         const { args, token, resolve } = next;
         if (token !== this.eventsToken[event]) {
           resolve?.();
-          this.stream.unshift(event);
           continue;
         }
 
-        const method = this.boardRuntime.eventsRuntime[event];
+        const method = this.boardRuntime.renderer.eventsRuntime[event];
         if (!method || !args) continue;
         await method(...args);
         resolve?.();

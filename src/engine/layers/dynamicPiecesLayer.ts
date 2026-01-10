@@ -176,6 +176,53 @@ class DynamicPiecesLayer extends BaseLayer {
     ctx.fillText(image_, piece.x + squareSize / 2, piece.y + squareSize / 2);
     ctx.restore();
   }
+
+  async renderAsync(): Promise<void> {
+    const animation = this.getAnimation();
+
+    if (animation.length === 0) {
+      this.clearAnimation();
+      await this.render(0);
+      return;
+    }
+
+    this.incrementAnimationGen();
+    const gen = this.getAnimationGen();
+
+    return new Promise<void>((resolve) => {
+      let resolved = false;
+      const resolver = () => {
+        if (resolved) return;
+
+        this.getPendingResolvers().delete(gen);
+        try {
+          resolve();
+        } catch (e) {
+          /* swallow */
+        }
+      };
+
+      this.setPendingResolvers(gen, resolver);
+
+      const render = (time: number) => {
+        if (gen !== this.getAnimationGen()) return;
+
+        const animation = this.getAnimation();
+
+        if (animation.length === 0) {
+          resolver();
+          this.setAnimationRef(null);
+          return;
+        }
+
+        this.render(time);
+        const nextRef = requestAnimationFrame(render);
+        this.setAnimationRef(nextRef);
+      };
+      const firstRef = requestAnimationFrame(render);
+      this.setAnimationRef(firstRef);
+    });
+  }
 }
 
 export default DynamicPiecesLayer;

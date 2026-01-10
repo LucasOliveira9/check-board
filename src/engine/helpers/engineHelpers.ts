@@ -144,22 +144,35 @@ class EngineHelpers {
       ]);
 
       if (selected) {
-        if (!click && square) {
+        if (!click && square && move.status) {
           const piece_ = this.boardRuntime.getInternalRefVal(selected.id);
           piece_.square = square;
         }
-        if (selected.isPending)
-          this.boardRuntime.pipelineRender.setNextEvent("onToggleCanvas", [
-            "dynamicPieces",
-            "staticPieces",
-            id,
-            true,
-          ]);
-        selected.isPending = false;
-        this.boardRuntime.renderer
-          .getLayerManager()
-          .getLayer("dynamicPieces")
-          .removeAll?.(selected.id);
+
+        if (selected.isPending) {
+          this.boardRuntime.renderer.pipelineRender.setNextEvent(
+            "onToggleCanvas",
+            ["dynamicPieces", "staticPieces", id, true]
+          );
+          selected.isPending = false;
+
+          await Utils.asyncHandler(
+            (resolve: (value: void | PromiseLike<void>) => void) =>
+              this.boardRuntime.renderer.pipelineRender.setNextEvent(
+                "onRender",
+                [
+                  {
+                    board: false,
+                    staticPieces: true,
+                    overlay: true,
+                    underlay: true,
+                    dynamicPieces: true,
+                  },
+                ],
+                resolve
+              )
+          );
+        }
       }
 
       if (move.status) {
@@ -171,7 +184,7 @@ class EngineHelpers {
     } else {
       // DEFAULT
       this.pointerEventsHelper.endDrag(offset.x, offset.y, true, false);
-      this.boardRuntime.pipelineRender.setNextEvent("onToggleCanvas", [
+      this.boardRuntime.renderer.pipelineRender.setNextEvent("onToggleCanvas", [
         "dynamicPieces",
         "staticPieces",
         id,
@@ -189,21 +202,24 @@ class EngineHelpers {
     const selected = this.boardRuntime.getSelected();
     if (!selected) return;
     if (keep)
-      this.boardRuntime.pipelineRender.setNextEvent("onPointerSelect", [
-        {
-          ...selected,
-          isDragging: false,
-          startX: null,
-          startY: null,
-          secondClick: false,
-        },
-        true,
-      ]);
+      this.boardRuntime.renderer.pipelineRender.setNextEvent(
+        "onPointerSelect",
+        [
+          {
+            ...selected,
+            isDragging: false,
+            startX: null,
+            startY: null,
+            secondClick: false,
+          },
+          true,
+        ]
+      );
     else
-      this.boardRuntime.pipelineRender.setNextEvent("onPointerSelect", [
-        null,
-        true,
-      ]);
+      this.boardRuntime.renderer.pipelineRender.setNextEvent(
+        "onPointerSelect",
+        [null, true]
+      );
   }
 
   setNextMove(args: {
@@ -223,7 +239,7 @@ class EngineHelpers {
     const selected = this.boardRuntime.getSelected();
     this.boardRuntime.renderer.getLayerManager().removeEvent("onPointerSelect");
     const render = (resolve: (value: void | PromiseLike<void>) => void) =>
-      this.boardRuntime.pipelineRender.setNextEvent(
+      this.boardRuntime.renderer.pipelineRender.setNextEvent(
         "onRender",
         [
           {
@@ -312,7 +328,7 @@ class EngineHelpers {
           if (!move) {
             if (newSelectedPiece && piece_) {
               coords &&
-                this.boardRuntime.pipelineRender.setNextEvent(
+                this.boardRuntime.renderer.pipelineRender.setNextEvent(
                   "onPointerSelect",
                   [
                     {
@@ -329,10 +345,10 @@ class EngineHelpers {
                   ]
                 );
             } else {
-              this.boardRuntime.pipelineRender.setNextEvent("onPointerSelect", [
-                null,
-                true,
-              ]);
+              this.boardRuntime.renderer.pipelineRender.setNextEvent(
+                "onPointerSelect",
+                [null, true]
+              );
             }
           }
         }
@@ -340,21 +356,18 @@ class EngineHelpers {
         if (!move) {
           if (!click) {
             if (selected && x !== undefined && y !== undefined) {
-              selected.x = x;
-              selected.y = y;
-              selected.square = square;
               const piece = this.boardRuntime.getInternalRefVal(selected.id);
               piece.x = x;
               piece.y = y;
               piece.square = structuredClone(square);
             }
-            this.boardRuntime.pipelineRender.setNextEvent("onPointerSelect", [
-              null,
-              true,
-            ]);
+            this.boardRuntime.renderer.pipelineRender.setNextEvent(
+              "onPointerSelect",
+              [null, true]
+            );
           }
 
-          this.boardRuntime.pipelineRender.setNextEvent("onRender", [
+          this.boardRuntime.renderer.pipelineRender.setNextEvent("onRender", [
             {
               board: false,
               staticPieces: true,

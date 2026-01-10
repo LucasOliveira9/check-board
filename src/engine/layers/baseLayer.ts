@@ -73,7 +73,7 @@ abstract class BaseLayer implements ICanvasLayer {
     this.resetClearQueue();
   }
 
-  draw(): void {
+  async draw(): Promise<void> {
     throw new Error("Method not implemented.");
   }
   addPiece?(pieceId: TPieceId, ref: TPieceInternalRef): void {
@@ -90,7 +90,14 @@ abstract class BaseLayer implements ICanvasLayer {
   ) {
     if (this.pieces.has(pieceId) || !this.boardRuntime.isActivePiece(pieceId))
       return;
-
+    if (
+      ref.square?.notation &&
+      this.boardRuntime.getBoard()[ref.square.notation]
+    ) {
+      const curr = this.boardRuntime.getBoard()[ref.square.notation];
+      curr.id !== pieceId;
+      this.removeAll?.(curr.id);
+    }
     this.addCoords(pieceId, coords);
     this.addPiece?.(pieceId, ref);
     this.addClearCoords(pieceId, clearCoords);
@@ -121,7 +128,7 @@ abstract class BaseLayer implements ICanvasLayer {
   removeCoords(pieceId: TPieceId) {
     const box = this.getCoords(pieceId);
     if (!box) return;
-    this.spatialIndex.remove(pieceId, box);
+    this.spatialIndex.remove(pieceId, box), pieceId;
     this.coordsMap.delete(pieceId);
   }
 
@@ -265,7 +272,7 @@ abstract class BaseLayer implements ICanvasLayer {
     return;
   }
 
-  postRender?(): void {
+  postRender(): void {
     return;
   }
 
@@ -343,12 +350,16 @@ abstract class BaseLayer implements ICanvasLayer {
       .applyDrawResult(this.ctx, this.name, event);
   }
 
-  render(delta: number) {
+  async render(delta: number) {
     this.updateClear();
     this.update?.(delta);
     this.clear();
     this.draw();
-    this.postRender?.();
+    this.postRender();
+  }
+
+  async renderAsync() {
+    await this.render(0);
   }
 }
 

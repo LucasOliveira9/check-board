@@ -24,7 +24,9 @@ class PointerEventsHelpers {
       isBlackView = this.boardRuntime.getIsBlackView();
     const piece = selected && this.boardRuntime.getInternalRefVal(selected.id);
 
-    this.boardRuntime.pipelineRender.setNextEvent("onPointerHover", [null]);
+    this.boardRuntime.renderer.pipelineRender.setNextEvent("onPointerHover", [
+      null,
+    ]);
 
     const square = Utils.coordsToSquare(
       offsetX,
@@ -74,20 +76,26 @@ class PointerEventsHelpers {
 
     if (selected && searchPiece?.id === selected?.id) {
       if (this.boardRuntime.getPieceHover() !== null)
-        this.boardRuntime.pipelineRender.setNextEvent("onPointerHover", [null]);
+        this.boardRuntime.renderer.pipelineRender.setNextEvent(
+          "onPointerHover",
+          [null]
+        );
       return;
     }
 
     if (!searchPiece) {
       this.boardRuntime.getPieceHover() &&
-        this.boardRuntime.pipelineRender.setNextEvent("onPointerHover", [null]);
+        this.boardRuntime.renderer.pipelineRender.setNextEvent(
+          "onPointerHover",
+          [null]
+        );
       this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
         cursor: "default",
       });
       return;
     }
 
-    this.boardRuntime.pipelineRender.setNextEvent("onPointerHover", [
+    this.boardRuntime.renderer.pipelineRender.setNextEvent("onPointerHover", [
       searchPiece.id,
     ]);
   }
@@ -125,14 +133,14 @@ class PointerEventsHelpers {
             .addDraw("onPointerDragStart");
 
           this.boardRuntime.getPieceHover() &&
-            this.boardRuntime.pipelineRender.setNextEvent("onPointerHover", [
-              null,
-            ]);
-          this.boardRuntime.pipelineRender.setNextEvent("onToggleCanvas", [
-            "staticPieces",
-            "dynamicPieces",
-            selected.id,
-          ]);
+            this.boardRuntime.renderer.pipelineRender.setNextEvent(
+              "onPointerHover",
+              [null]
+            );
+          this.boardRuntime.renderer.pipelineRender.setNextEvent(
+            "onToggleCanvas",
+            ["staticPieces", "dynamicPieces", selected.id]
+          );
 
           return;
         }
@@ -149,7 +157,7 @@ class PointerEventsHelpers {
           Math.min(clampY, this.boardRuntime.getSize() - squareSize)
         );
         this.boardRuntime.renderer.getLayerManager().addDraw("onPointerDrag");
-        this.boardRuntime.pipelineRender.setNextEvent("onRender", [
+        this.boardRuntime.renderer.pipelineRender.setNextEvent("onRender", [
           {
             board: false,
             staticPieces: true,
@@ -179,7 +187,7 @@ class PointerEventsHelpers {
       cursor: "default",
     });
 
-    this.boardRuntime.pipelineRender.setNextEvent("onPointerHover", [
+    this.boardRuntime.renderer.pipelineRender.setNextEvent("onPointerHover", [
       null,
       true,
     ]);
@@ -205,7 +213,7 @@ class PointerEventsHelpers {
       this.boardRuntime.helpers.toggleSelected(false);
     } else this.boardRuntime.helpers.toggleSelected(true);
 
-    this.boardRuntime.pipelineRender.setNextEvent("onRender", [
+    this.boardRuntime.renderer.pipelineRender.setNextEvent("onRender", [
       {
         board: false,
         staticPieces: true,
@@ -225,11 +233,11 @@ class PointerEventsHelpers {
     this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
       cursor: "default",
     });
-    this.boardRuntime.pipelineRender.setNextEvent("onPointerHover", [
+    this.boardRuntime.renderer.pipelineRender.setNextEvent("onPointerHover", [
       null,
       true,
     ]);
-    this.boardRuntime.pipelineRender.setNextEvent("onRender", [
+    this.boardRuntime.renderer.pipelineRender.setNextEvent("onRender", [
       {
         board: false,
         staticPieces: true,
@@ -273,19 +281,22 @@ class PointerEventsHelpers {
           selected.secondClick = true;
         }
       } else {
-        this.boardRuntime.pipelineRender.setNextEvent("onPointerSelect", [
-          {
-            id: piece_.id,
-            x: piece_.piece.x,
-            y: piece_.piece.y,
-            square: piece_.piece.square,
-            isDragging: false,
-            isPending: false,
-            startX: offsetX,
-            startY: offsetY,
-            secondClick: false,
-          },
-        ]);
+        this.boardRuntime.renderer.pipelineRender.setNextEvent(
+          "onPointerSelect",
+          [
+            {
+              id: piece_.id,
+              x: piece_.piece.x,
+              y: piece_.piece.y,
+              square: piece_.piece.square,
+              isDragging: false,
+              isPending: false,
+              startX: offsetX,
+              startY: offsetY,
+              secondClick: false,
+            },
+          ]
+        );
       }
     } else if (selected) {
       this.triggerUp = false;
@@ -322,7 +333,7 @@ class PointerEventsHelpers {
       piece.x = selected.x;
       piece.y = selected.y;
       piece.square = structuredClone(selected.square);
-      this.boardRuntime.pipelineRender.setNextEvent("onToggleCanvas", [
+      this.boardRuntime.renderer.pipelineRender.setNextEvent("onToggleCanvas", [
         from,
         to,
         selected.id,

@@ -1,5 +1,5 @@
 import { TCanvasCoords, TDrawRegion, TSafeCtx } from "../types/draw";
-import { IRenderer, IRenderer2D } from "../engine/render/interface";
+import { IRenderer } from "../engine/render/interface";
 import { TSquare, TFile, TRank, TNotation } from "../types/square";
 import { TDeepReadonly } from "../types/utils";
 import { TPiece, TPieceBoard, TPieceId } from "../types/piece";
@@ -112,10 +112,6 @@ class Utils {
       });
     }
     return Object.freeze(obj_) as TDeepReadonly<T>;
-  }
-
-  static isRenderer2D(r: IRenderer): r is IRenderer2D {
-    return "addToClear" in r;
   }
 
   static parseFen(fen: string) {
