@@ -1,6 +1,12 @@
 import { TSelected } from "./board";
 import { TCanvasLayer, TCanvasLayerClient, TSafeCtx } from "./draw";
-import { TPieceBoard, TPieceId, TPieceImage, TPieceInternalRef } from "./piece";
+import {
+  TPiece,
+  TPieceBoard,
+  TPieceId,
+  TPieceImage,
+  TPieceInternalRef,
+} from "./piece";
 import { TNotation, TSquare } from "./square";
 import { TDeepReadonly } from "./utils";
 
@@ -91,6 +97,16 @@ type TMoveResult = {
   promotion?: "q" | "r" | "n" | "b" | "p" | "k";
 }[];
 
+type TMoveUndo = TUndo[];
+
+type TUndo = {
+  from: TNotation;
+  to: TNotation;
+  captured: { square: TNotation; type: TPiece }[];
+  moved: TPiece;
+  promoted: boolean;
+};
+
 type TListener = (...args: any[]) => void;
 
 interface IEventListener {
@@ -166,6 +182,8 @@ export type {
   TMove,
   TMoveReturn,
   TMoveResult,
+  TMoveUndo,
+  TUndo,
   TAnimation,
   TGetterBoardEventContext,
   TEvents,

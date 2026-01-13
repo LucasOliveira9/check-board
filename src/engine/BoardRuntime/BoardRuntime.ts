@@ -10,6 +10,8 @@ import {
   TDrawFunction,
   TMoveResult,
   TMoveReturn,
+  TMoveUndo,
+  TUndo,
 } from "../../types/events";
 import {
   pieceKey,
@@ -32,7 +34,6 @@ import {
   THoverConfig,
 } from "../../types/draw";
 import { TSafeCtx } from "../../types/draw";
-import PipelineRender from "../render/pipelineRender";
 
 class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected internalRef: Record<TPieceId, TPieceInternalRef> = {} as Record<
@@ -94,6 +95,8 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   };
 
   piecesBoard: Map<TPieceId, TPieceBoard> = new Map();
+  private undoStack: { undo: TMoveUndo; redo: TMoveResult }[] = [];
+  private redoStack: TMoveResult[] = [];
 
   constructor(private args: TBoardRuntime<T>) {
     Object.assign(this, args);
@@ -456,6 +459,8 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     if (!Utils.validateFen(board).status) return;
     this.setIsMoving(true);
     this.setBoard(Utils.parseFen(board));
+    this.clearRedo();
+    this.clearUndo();
     await this.refreshCanvases({
       board: false,
       staticPieces: true,
@@ -822,10 +827,18 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   async updateBoardState(move: TMoveResult, delay: boolean) {
     const layerManager = this.renderer.getLayerManager();
     const moves = move;
+    const undo: TMoveUndo = [];
 
     for (const move of moves) {
       const { from, to, promotion, captured } = move;
       let piece = this.board[move.from];
+      const undoMove: TUndo = {
+        from: to,
+        to: from,
+        captured: [],
+        moved: piece.type,
+        promoted: promotion ? true : false,
+      };
       const newSquare = {
         file: move.to.charAt(0) as TFile,
         rank: parseInt(move.to.charAt(1)) as TRank,
@@ -887,7 +900,10 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         const enemie = this.board[cap];
 
         if (!enemie) continue;
-
+        undoMove.captured.push({
+          square: cap,
+          type: enemie.type,
+        });
         if (delay && this.getDefaultAnimation()) {
           layerManager.addDelayedPieceClear(piece.id, enemie.id);
         } else layerManager.getLayer("staticPieces").removeAll?.(enemie.id);
@@ -921,7 +937,10 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         id: piece.id,
         piece: piece_,
       });
+
+      undo.push(undoMove);
     }
+    this.undoStack.push({ undo, redo: moves });
 
     await this.refreshCanvases({
       board: false,
@@ -930,6 +949,130 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       underlay: true,
       dynamicPieces: true,
     });
+  }
+
+  async undo() {
+    const toUndo = this.undoStack.pop();
+    if (!toUndo) return;
+    const layerManager = this.renderer.getLayerManager();
+
+    for (const move of toUndo.undo) {
+      const { from, to, moved, promoted, captured } = move;
+      let piece = this.board[move.from];
+
+      const newSquare = {
+        file: move.to.charAt(0) as TFile,
+        rank: parseInt(move.to.charAt(1)) as TRank,
+        notation: move.to,
+      };
+
+      //promotion
+      if (promoted) {
+        const newType = moved as TPiece;
+        const newId = this.inactivePiecesPool[newType].shift();
+        if (newId) {
+          const newPiece = this.piecesBoard.get(newId);
+          if (newPiece) {
+            const ref: TPieceInternalRef = {
+              square: piece.square,
+              type: newType,
+              x: this.getInternalRefVal(piece.id).x,
+              y: this.getInternalRefVal(piece.id).y,
+            };
+
+            this.setInternalRefVal(newId, ref);
+
+            const layer = layerManager.getLayer("staticPieces");
+            const piece_coords = layer.getCoords(piece.id);
+            const coords = Utils.squareToCoords(
+              newSquare,
+              this.getSize() / 8,
+              this.getIsBlackView()
+            );
+
+            piece.square = null;
+            newPiece.square = newSquare;
+            this.piecesBoard.set(piece.id, piece);
+            this.inactivePiecesPool[piece.type].push(piece.id);
+            this.activePiecesPool[piece.type].delete(move.from);
+            this.activePiecesPool[newType].set(move.to, newPiece.id);
+            this.piecesBoard.set(newId, newPiece);
+            this.deleteIntervalRefVal(piece.id);
+
+            layer.removeAll?.(piece.id);
+            const newCoords = piece_coords
+              ? piece_coords
+              : coords
+              ? {
+                  x: coords.x,
+                  y: coords.y,
+                  w: this.getSize() / 8,
+                  h: this.getSize() / 8,
+                }
+              : null;
+            newCoords && layer.addAll?.(newId, ref, newCoords, newCoords);
+            piece = newPiece;
+          }
+        }
+      }
+
+      // move piece
+      if (!promoted) {
+        piece.square = newSquare;
+        this.activePiecesPool[piece.type].set(to, piece.id);
+        this.piecesBoard.set(piece.id, piece);
+      }
+      this.activePiecesPool[piece.type].delete(from);
+      this.board[to] = piece;
+      delete this.board[from];
+
+      const piece_ = this.getInternalRefVal(piece.id);
+      this.helpers.pieceHelper.updateCache(from, to, {
+        id: piece.id,
+        piece: piece_,
+      });
+
+      // undo capture
+      for (const cap of captured) {
+        const { square, type } = cap;
+
+        const enemieSquare = {
+          file: square.charAt(0) as TFile,
+          rank: parseInt(square.charAt(1)) as TRank,
+          notation: square,
+        };
+        const enemieId = this.inactivePiecesPool[type].shift();
+        if (!enemieId) continue;
+        const enemie = this.piecesBoard.get(enemieId);
+        if (!enemie) continue;
+        enemie.square = enemieSquare;
+        this.activePiecesPool[enemie.type].set(square, enemie.id);
+        this.piecesBoard.set(enemie.id, enemie);
+        this.board[square] = enemie;
+      }
+    }
+    this.redoStack.push([...toUndo.redo]);
+    await this.refreshCanvases({
+      board: false,
+      staticPieces: true,
+      overlay: true,
+      underlay: true,
+      dynamicPieces: true,
+    });
+  }
+
+  async redo() {
+    const redo = this.redoStack.pop();
+    if (!redo) return;
+    await this.updateBoardState(redo, true);
+  }
+
+  clearRedo() {
+    this.redoStack = [];
+  }
+
+  clearUndo() {
+    this.undoStack = [];
   }
 
   async initInternalRef() {

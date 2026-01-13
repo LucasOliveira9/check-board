@@ -49,6 +49,16 @@ function imperativeHandle(
       if (!clientRef.current) return;
       clientRef.current.setPieceType(type);
     },
+
+    undo: () => {
+      if (!clientRef.current) return;
+      clientRef.current.undo();
+    },
+
+    redo: () => {
+      if (!clientRef.current) return;
+      clientRef.current.redo();
+    },
   };
 }
 

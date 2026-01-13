@@ -312,6 +312,9 @@ class EngineHelpers {
         this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
           cursor: "default",
         });
+
+        if (move) this.boardRuntime.clearRedo();
+
         const newSelectedPiece = this.boardRuntime.getBoard()[to];
         const piece_ = newSelectedPiece
           ? this.boardRuntime.getInternalRefVal(newSelectedPiece.id)

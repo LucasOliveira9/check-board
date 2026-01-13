@@ -14,6 +14,8 @@ interface BoardHandled {
     notation: TNotation
   ): { id: string; piece: TPieceInternalRef } | null;
   setPieceType(type: "string" | "image"): void;
+  undo(): void;
+  redo(): void;
 }
 
 export type { BoardHandled };

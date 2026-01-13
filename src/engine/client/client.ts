@@ -18,6 +18,8 @@ class Client {
   private resizing: boolean = false;
   private debugCountFenStream = 0;
   private isSettingPieceType = false;
+  private undoing = false;
+  private redoing = false;
   constructor(boardRuntime: BoardRuntime) {
     runtimeMap.set(this, boardRuntime);
   }
@@ -166,6 +168,30 @@ class Client {
     if (!hasPiece) return null;
     const [id, piece] = hasPiece;
     return { id, piece };
+  }
+
+  public async undo() {
+    const boardRuntime = this.getRuntime();
+    if (!boardRuntime || this.undoing) return;
+    this.undoing = true;
+
+    try {
+      await boardRuntime.undo();
+    } finally {
+      this.undoing = false;
+    }
+  }
+
+  public async redo() {
+    const boardRuntime = this.getRuntime();
+    if (!boardRuntime || this.redoing) return;
+    this.redoing = true;
+
+    try {
+      await boardRuntime.redo();
+    } finally {
+      this.redoing = false;
+    }
   }
 
   public getSquareCoords(notation: TNotation) {
