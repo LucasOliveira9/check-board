@@ -109,7 +109,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       this.setBoard(Utils.parseFen(args.board));
     else
       this.setBoard(
-        Utils.parseFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR")
+        Utils.parseFen("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"),
       );
   }
 
@@ -266,7 +266,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
         ...this.renderer
           .getLayerManager()
           .getLayer(layer as TCanvasLayer)
-          .getAnimation()
+          .getAnimation(),
       );
     return Utils.deepFreeze(animation);
   }
@@ -320,7 +320,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
             optsArr: {
               onDraw: (ctx: TSafeCtx) => void;
               layer: TCanvasLayer;
-            }[]
+            }[],
           ) => {
             const layers: Record<
               TCanvasLayer,
@@ -352,8 +352,8 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
             layer: TCanvasLayer,
             fn: (
               ctx: TSafeCtx,
-              g: { draw: (onDraw: (ctx: TSafeCtx) => void) => void }
-            ) => void
+              g: { draw: (onDraw: (ctx: TSafeCtx) => void) => void },
+            ) => void,
           ) => {
             const ctx_ = this.getCanvasLayers().getClientContext(layer);
             if (!ctx_) return;
@@ -374,7 +374,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
           return drawFn as TDrawFunction;
         },
       },
-      { cache }
+      { cache },
     );
 
     return context;
@@ -393,7 +393,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     )
       this.hoverConfig.scaleAmount = Math.min(
         MAX_SCALE,
-        Math.max(MIN_SCALE, this.hoverConfig.scaleAmount)
+        Math.max(MIN_SCALE, this.hoverConfig.scaleAmount),
       );
 
     return this.hoverConfig;
@@ -433,6 +433,18 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
   addInactivePiece(key: TPiece, id: TPieceId) {
     this.inactivePiecesPool[key].unshift(id);
+  }
+
+  toggleHoverScale(scale: number) {
+    this.hoverConfig.scaleAmount = scale;
+  }
+
+  toggleHoverScaling() {
+    this.hoverConfig.scaling = !this.hoverConfig.scaling;
+  }
+
+  toggleHoverHighlight() {
+    this.hoverConfig.highlight = !this.hoverConfig.highlight;
   }
 
   async setSize(size: number) {
@@ -549,7 +561,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     needMove: { from: TNotation; to: TNotation }[],
     moveToInactive: Set<TNotation>,
     needCreate: TNotation[],
-    type: TPiece
+    type: TPiece,
   ) {
     for (const obj of needMove) {
       const id = this.activePiecesPool[type].get(obj.from);
@@ -602,7 +614,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       this.renderer.pipelineRender.setNextEvent(
         "onRender",
         [canvases],
-        resolve
+        resolve,
       );
     await Utils.asyncHandler(render);
     this.renderer.getLayerManager().setHoverEnabled(true);
@@ -646,7 +658,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
             dynamicPieces: true,
           },
         ],
-        resolve
+        resolve,
       );
 
     await Utils.asyncHandler(render_);
@@ -705,27 +717,27 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
           "dynamicPieces",
           "staticPieces",
           lastHover,
-          noRender
+          noRender,
         );
       } else if (lastHover === null && piece !== null) {
         await layerManager.togglePieceLayer(
           "staticPieces",
           "dynamicPieces",
           piece,
-          noRender
+          noRender,
         );
       } else if (lastHover !== null && piece !== null) {
         await layerManager.togglePieceLayer(
           "dynamicPieces",
           "staticPieces",
           lastHover,
-          noRender
+          noRender,
         );
         await layerManager.togglePieceLayer(
           "staticPieces",
           "dynamicPieces",
           piece,
-          noRender
+          noRender,
         );
       }
     } else if (!noRender)
@@ -784,7 +796,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
             dynamicPieces: true,
           },
         ],
-        resolve
+        resolve,
       );
     });
   }
@@ -866,7 +878,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
             const coords = Utils.squareToCoords(
               newSquare,
               this.getSize() / 8,
-              this.getIsBlackView()
+              this.getIsBlackView(),
             );
 
             piece.square = null;
@@ -882,13 +894,13 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
             const newCoords = piece_coords
               ? piece_coords
               : coords
-              ? {
-                  x: coords.x,
-                  y: coords.y,
-                  w: this.getSize() / 8,
-                  h: this.getSize() / 8,
-                }
-              : null;
+                ? {
+                    x: coords.x,
+                    y: coords.y,
+                    w: this.getSize() / 8,
+                    h: this.getSize() / 8,
+                  }
+                : null;
             newCoords && layer.addAll?.(newId, ref, newCoords, newCoords);
             piece = newPiece;
           }
@@ -910,7 +922,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
         if (enemie.square) {
           const inactive = this.activePiecesPool[enemie.type].get(
-            enemie.square.notation
+            enemie.square.notation,
           );
           this.helpers.pieceHelper.removeCache(cap);
           this.activePiecesPool[enemie.type].delete(enemie.square.notation);
@@ -987,7 +999,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
             const coords = Utils.squareToCoords(
               newSquare,
               this.getSize() / 8,
-              this.getIsBlackView()
+              this.getIsBlackView(),
             );
 
             piece.square = null;
@@ -1003,13 +1015,13 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
             const newCoords = piece_coords
               ? piece_coords
               : coords
-              ? {
-                  x: coords.x,
-                  y: coords.y,
-                  w: this.getSize() / 8,
-                  h: this.getSize() / 8,
-                }
-              : null;
+                ? {
+                    x: coords.x,
+                    y: coords.y,
+                    w: this.getSize() / 8,
+                    h: this.getSize() / 8,
+                  }
+                : null;
             newCoords && layer.addAll?.(newId, ref, newCoords, newCoords);
             piece = newPiece;
           }
@@ -1133,7 +1145,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
             "staticPieces",
             "dynamicPieces",
             piece.id,
-            true
+            true,
           );
         else {
           const layer = layerManager.getLayer("staticPieces");

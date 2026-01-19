@@ -1,4 +1,4 @@
-import { TPieceInternalRef } from "types";
+import { TMoveResult, TPieceInternalRef } from "types";
 import { TNotation } from "../../types/square";
 
 interface BoardHandled {
@@ -10,12 +10,17 @@ interface BoardHandled {
   loadFenStream(b: string[]): void;
   setfenStreamDelay(n: number): void;
   updateSize(size: number): void;
+  getSize(): { size: number; squareSize: number } | null;
   getPieceAt(
-    notation: TNotation
+    notation: TNotation,
   ): { id: string; piece: TPieceInternalRef } | null;
   setPieceType(type: "string" | "image"): void;
   undo(): void;
   redo(): void;
+  toggleHoverScaling(): void;
+  toggleHoverScale(scale: number): void;
+  toggleHoverHighlight(): void;
+  makeMove(move: TMoveResult): boolean | Promise<boolean>;
 }
 
 export type { BoardHandled };

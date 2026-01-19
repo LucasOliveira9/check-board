@@ -2,7 +2,7 @@ import Client from "./client";
 import { BoardHandled } from "./interface";
 
 function imperativeHandle(
-  clientRef: React.RefObject<Client | null>
+  clientRef: React.RefObject<Client | null>,
 ): BoardHandled {
   return {
     loadPosition: (b, f) => {
@@ -58,6 +58,31 @@ function imperativeHandle(
     redo: () => {
       if (!clientRef.current) return;
       clientRef.current.redo();
+    },
+
+    toggleHoverScaling: () => {
+      if (!clientRef.current) return;
+      clientRef.current.toggleHoverScaling();
+    },
+
+    toggleHoverScale: (scale) => {
+      if (!clientRef.current) return;
+      clientRef.current.toggleHoverScale(scale);
+    },
+
+    toggleHoverHighlight: () => {
+      if (!clientRef.current) return;
+      clientRef.current.toggleHoverHighlight();
+    },
+
+    getSize: () => {
+      if (!clientRef.current) return null;
+      return clientRef.current.getSize();
+    },
+
+    makeMove: (move) => {
+      if (!clientRef.current) return false;
+      return clientRef.current.makeMove(move);
     },
   };
 }

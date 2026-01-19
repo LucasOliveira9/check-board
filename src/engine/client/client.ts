@@ -2,6 +2,7 @@ import { TNotation } from "../../types/square";
 import { TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../boardRuntime/boardRuntime";
 import Utils from "../../utils/utils";
+import { TMoveResult, TMoveReturn } from "types";
 
 const runtimeMap = new WeakMap<Client, BoardRuntime>();
 
@@ -20,6 +21,8 @@ class Client {
   private isSettingPieceType = false;
   private undoing = false;
   private redoing = false;
+  private isMoving = false;
+  private cachedSize: { size: number; squareSize: number } | null = null;
   constructor(boardRuntime: BoardRuntime) {
     runtimeMap.set(this, boardRuntime);
   }
@@ -73,22 +76,22 @@ class Client {
       while (!this.pauseFenStream && !this.destroyed && this.fenStream.length) {
         const nextFen = this.fenStream.shift();
         if (!nextFen) continue;
-        console.log("rodei");
+        //console.log("rodei");
         await this.getRuntime()?.setBoardByFen(nextFen);
         if (this.toFlip) {
           await this.getRuntime()?.setBlackView(
-            !this.getRuntime().getIsBlackView()
+            !this.getRuntime().getIsBlackView(),
           );
           this.toFlip = false;
         }
-        console.log(nextFen);
-        console.log("resolvi");
+        //console.log(nextFen);
+        //console.log("resolvi");
         if (this.fenStreamDelay > 0) await this.delay(this.fenStreamDelay);
         if (this.toChangeStreamDelay !== null) {
           this.fenStreamDelay = this.toChangeStreamDelay;
           this.toChangeStreamDelay = null;
         }
-        console.log("--------- ", ++this.debugCountFenStream);
+        //console.log("--------- ", ++this.debugCountFenStream);
       }
     } finally {
       if (!this.destroyed) {
@@ -126,9 +129,10 @@ class Client {
   public async flip() {
     if (!this.fenStream.length || this.pauseFenStream)
       await this.getRuntime()?.setBlackView(
-        !this.getRuntime().getIsBlackView()
+        !this.getRuntime().getIsBlackView(),
       );
     else this.toFlip = true;
+    this.cachedSize = null;
   }
 
   public updateSize(size: number) {
@@ -153,6 +157,7 @@ class Client {
     } finally {
       if (this.destroyed) return;
       this.resizing = false;
+      this.cachedSize = null;
       if (this.resizeStream.length) queueMicrotask(() => this.sizeStream());
     }
   }
@@ -163,7 +168,7 @@ class Client {
 
     const internalRef = boardRuntime.getInternalRefObj();
     const hasPiece = Object.entries(internalRef).find(
-      ([id, piece]) => piece.square?.notation === notation
+      ([id, piece]) => piece.square?.notation === notation,
     );
     if (!hasPiece) return null;
     const [id, piece] = hasPiece;
@@ -202,10 +207,52 @@ class Client {
     const coords = Utils.squareToCoords(
       square,
       boardRuntime.getSize() / 8,
-      boardRuntime.getIsBlackView()
+      boardRuntime.getIsBlackView(),
     );
     if (!coords) return null;
     return coords;
+  }
+
+  public toggleHoverScaling() {
+    const boardRuntime = this.getRuntime();
+    if (!boardRuntime) return;
+    boardRuntime.toggleHoverScaling();
+  }
+
+  public toggleHoverScale(scale: number) {
+    const boardRuntime = this.getRuntime();
+    if (!boardRuntime) return;
+    boardRuntime.toggleHoverScale(scale);
+  }
+
+  public toggleHoverHighlight() {
+    const boardRuntime = this.getRuntime();
+    if (!boardRuntime) return;
+    boardRuntime.toggleHoverHighlight();
+  }
+
+  public getSize() {
+    const runtime = this.getRuntime();
+    if (!runtime) return null;
+    if (this.cachedSize !== null) return this.cachedSize;
+    const size = runtime.getSize();
+    const cached = { size, squareSize: size / 8 };
+    this.cachedSize = cached;
+    return cached;
+  }
+
+  public async makeMove(move: TMoveResult) {
+    const runtime = this.getRuntime();
+    if (!runtime || this.isMoving) return false;
+    this.isMoving = true;
+
+    try {
+      await runtime.resetEvents(false);
+      await runtime.updateBoardState(move, true);
+      return true;
+    } finally {
+      this.isMoving = false;
+    }
   }
 
   public async setPieceType(type: "string" | "image") {
