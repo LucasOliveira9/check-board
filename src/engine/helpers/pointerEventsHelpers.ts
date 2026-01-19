@@ -32,7 +32,7 @@ class PointerEventsHelpers {
       offsetX,
       offsetY,
       squareSize,
-      isBlackView
+      isBlackView,
     );
 
     if (selected && square?.notation === selected.square?.notation) {
@@ -67,7 +67,7 @@ class PointerEventsHelpers {
       offsetY,
       squareSize,
       this.boardRuntime.getIsBlackView(),
-      this.boardRuntime.getInternalRefObj()
+      this.boardRuntime.getInternalRefObj(),
     );
     if (searchPiece)
       this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
@@ -78,7 +78,7 @@ class PointerEventsHelpers {
       if (this.boardRuntime.getPieceHover() !== null)
         this.boardRuntime.renderer.pipelineRender.setNextEvent(
           "onPointerHover",
-          [null]
+          [null],
         );
       return;
     }
@@ -87,7 +87,7 @@ class PointerEventsHelpers {
       this.boardRuntime.getPieceHover() &&
         this.boardRuntime.renderer.pipelineRender.setNextEvent(
           "onPointerHover",
-          [null]
+          [null],
         );
       this.boardRuntime.getCanvasLayers().setCanvasStyle("staticPieces", {
         cursor: "default",
@@ -135,11 +135,11 @@ class PointerEventsHelpers {
           this.boardRuntime.getPieceHover() &&
             this.boardRuntime.renderer.pipelineRender.setNextEvent(
               "onPointerHover",
-              [null]
+              [null],
             );
           this.boardRuntime.renderer.pipelineRender.setNextEvent(
             "onToggleCanvas",
-            ["staticPieces", "dynamicPieces", selected.id]
+            ["staticPieces", "dynamicPieces", selected.id],
           );
 
           return;
@@ -150,11 +150,11 @@ class PointerEventsHelpers {
 
         piece.x = Math.max(
           0,
-          Math.min(clampX, this.boardRuntime.getSize() - squareSize)
+          Math.min(clampX, this.boardRuntime.getSize() - squareSize),
         );
         piece.y = Math.max(
           0,
-          Math.min(clampY, this.boardRuntime.getSize() - squareSize)
+          Math.min(clampY, this.boardRuntime.getSize() - squareSize),
         );
         this.boardRuntime.renderer.getLayerManager().addDraw("onPointerDrag");
         this.boardRuntime.renderer.pipelineRender.setNextEvent("onRender", [
@@ -205,6 +205,8 @@ class PointerEventsHelpers {
           click: false,
           offset: { x: offsetX, y: offsetY },
         });
+
+        return;
       }
     } else this.triggerUp = true;
 
@@ -259,7 +261,7 @@ class PointerEventsHelpers {
       offsetX,
       offsetY,
       squareSize,
-      this.boardRuntime.getIsBlackView()
+      this.boardRuntime.getIsBlackView(),
     );
     if (!square) return;
     if (selected?.isDragging) return;
@@ -268,7 +270,7 @@ class PointerEventsHelpers {
       offsetY,
       squareSize,
       this.boardRuntime.getIsBlackView(),
-      this.boardRuntime.getInternalRefObj()
+      this.boardRuntime.getInternalRefObj(),
     );
     if (piece_) {
       if (selected) {
@@ -295,7 +297,7 @@ class PointerEventsHelpers {
               startY: offsetY,
               secondClick: false,
             },
-          ]
+          ],
         );
       }
     } else if (selected) {
@@ -307,7 +309,7 @@ class PointerEventsHelpers {
   moveOnClick(
     e: React.PointerEvent<HTMLCanvasElement>,
     selected: TSelected | null,
-    offset: { x: number; y: number }
+    offset: { x: number; y: number },
   ) {
     if (selected) {
       const { from, to, piece } =
