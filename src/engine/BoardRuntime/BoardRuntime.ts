@@ -34,6 +34,7 @@ import {
   THoverConfig,
 } from "../../types/draw";
 import { TSafeCtx } from "../../types/draw";
+import EventEmitter from "../../engine/eventEmitter/eventEmitter";
 
 class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   protected internalRef: Record<TPieceId, TPieceInternalRef> = {} as Record<
@@ -97,6 +98,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   piecesBoard: Map<TPieceId, TPieceBoard> = new Map();
   private undoStack: { undo: TMoveUndo; redo: TMoveResult }[] = [];
   private redoStack: TMoveResult[] = [];
+  private eventEmitter = new EventEmitter();
 
   constructor(private args: TBoardRuntime<T>) {
     Object.assign(this, args);
@@ -397,6 +399,10 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       );
 
     return this.hoverConfig;
+  }
+
+  getEventEmitter() {
+    return this.eventEmitter;
   }
 
   isActivePiece(pieceId: TPieceId) {

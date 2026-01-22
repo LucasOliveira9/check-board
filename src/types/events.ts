@@ -56,7 +56,7 @@ type TDrawFunction = {
     opts: {
       onDraw: (ctx: TSafeCtx) => void;
       layer: TCanvasLayerClient;
-    }[]
+    }[],
   ) => void;
 
   group: (
@@ -65,8 +65,8 @@ type TDrawFunction = {
       ctx: TSafeCtx,
       g: {
         draw: (onDraw: (ctx: TSafeCtx) => void) => void;
-      }
-    ) => void
+      },
+    ) => void,
   ) => void;
 };
 
@@ -82,7 +82,6 @@ type TMove = {
   from: TNotation;
   to: TNotation;
   piece: TPieceBoard;
-  emitter: IEventListener;
 };
 
 type TMoveReturn = {
@@ -116,6 +115,9 @@ interface IEventListener {
 }
 const EVENT_LISTENER_EVENTS = {
   onMoveAbort: "onMoveAbort",
+  onPointerDown: "onPointerDown",
+  onPointerMove: "onPointerMove",
+  onPointerUp: "onPointerUp",
 } as const;
 
 type TEventListenerEvents =
@@ -158,7 +160,7 @@ type TBoardEventExtras = {
 
 type TBoardEvents<
   T extends TGetterBoardEventContext = TGetterBoardEventContext,
-  E extends Record<string, any> = TBoardEventExtras
+  E extends Record<string, any> = TBoardEventExtras,
 > = {
   [K in keyof E]?: TBoardEvent<T, E[K]>;
 };

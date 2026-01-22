@@ -1,4 +1,9 @@
-import { TMoveResult, TPieceInternalRef } from "types";
+import {
+  IEventListener,
+  TMoveResult,
+  TPieceImage,
+  TPieceInternalRef,
+} from "types";
 import { TNotation } from "../../types/square";
 
 interface BoardHandled {
@@ -21,6 +26,8 @@ interface BoardHandled {
   toggleHoverScale(scale: number): void;
   toggleHoverHighlight(): void;
   makeMove(move: TMoveResult): boolean | Promise<boolean>;
+  getEventEmitter(): IEventListener | null;
+  getPiecesImage(): TPieceImage | null;
 }
 
 export type { BoardHandled };

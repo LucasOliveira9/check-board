@@ -1,8 +1,13 @@
 import { TNotation } from "../../types/square";
-import { TPieceInternalRef } from "../../types/piece";
+import { TPieceDisplay, TPieceInternalRef } from "../../types/piece";
 import BoardRuntime from "../boardRuntime/boardRuntime";
 import Utils from "../../utils/utils";
-import { TMoveResult, TMoveReturn } from "types";
+import {
+  IEventListener,
+  TEventListenerEvents,
+  TMoveResult,
+  TMoveReturn,
+} from "types";
 
 const runtimeMap = new WeakMap<Client, BoardRuntime>();
 
@@ -17,8 +22,10 @@ class Client {
   private pauseFenStream = false;
   private resizeStream: number[] = [];
   private resizing: boolean = false;
+  private toResize: boolean = false;
   private debugCountFenStream = 0;
   private isSettingPieceType = false;
+  private toSetPieceType: "string" | "image" | null = null;
   private undoing = false;
   private redoing = false;
   private isMoving = false;
@@ -84,6 +91,15 @@ class Client {
           );
           this.toFlip = false;
         }
+        if (this.toResize) {
+          await this.sizeStream();
+          this.toResize = false;
+        }
+
+        if (this.toSetPieceType !== null) {
+          await this.setPieceType(this.toSetPieceType, true);
+          this.toSetPieceType = null;
+        }
         //console.log(nextFen);
         //console.log("resolvi");
         if (this.fenStreamDelay > 0) await this.delay(this.fenStreamDelay);
@@ -103,7 +119,7 @@ class Client {
     }
   }
 
-  public setfenStreamDelay(ms: number) {
+  public setFenStreamDelay(ms: number) {
     if (this.loading) this.toChangeStreamDelay = ms;
     else this.fenStreamDelay = ms;
   }
@@ -138,6 +154,10 @@ class Client {
   public updateSize(size: number) {
     this.resizeStream.push(size);
     if (this.resizing) return;
+    else if (this.loading) {
+      this.toResize = true;
+      return;
+    }
     this.sizeStream();
   }
 
@@ -255,8 +275,12 @@ class Client {
     }
   }
 
-  public async setPieceType(type: "string" | "image") {
+  public async setPieceType(type: "string" | "image", force?: boolean) {
     const runtime = this.getRuntime();
+    if (this.loading && !force) {
+      this.toSetPieceType = type;
+      return;
+    }
     if (!runtime || this.isSettingPieceType || runtime.getIsMoving()) return;
     this.isSettingPieceType = true;
 
@@ -265,6 +289,20 @@ class Client {
     } finally {
       this.isSettingPieceType = false;
     }
+  }
+
+  public getEventEmitter() {
+    const runtime = this.getRuntime();
+    if (!runtime) return null;
+    return runtime.getEventEmitter();
+  }
+
+  public getPiecesImage() {
+    const runtime = this.getRuntime();
+    if (!runtime) return null;
+    const piecesImage = runtime.getPieceStyle();
+    if (!piecesImage) return null;
+    return piecesImage;
   }
 }
 

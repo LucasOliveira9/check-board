@@ -37,7 +37,7 @@ class EngineHelpers {
   createLazyEventContext<TBase, TResolved>(
     base: TBase,
     resolvers: TResolvers<TResolved>,
-    opts?: { cache: boolean }
+    opts?: { cache: boolean },
   ): TLazyReturn<TBase, TResolved> {
     const cache = new Map<string, any>();
     const result: any = { ...base };
@@ -77,19 +77,19 @@ class EngineHelpers {
   triggerEvent<T extends TBoardEventContext = TBoardEventContext>(
     events: TBoardEvents<T> | undefined,
     event: TEventName<T>,
-    args: T
+    args: T,
   ): void;
   triggerEvent<T extends TBoardEventContext = TBoardEventContext, K = unknown>(
     events: TBoardEvents<T> | undefined,
     event: TEventName<T>,
     args: T,
-    extra: K
+    extra: K,
   ): void;
   triggerEvent<T extends TBoardEventContext = TBoardEventContext, K = unknown>(
     events: TBoardEvents<T> | undefined,
     event: TEventName<T>,
     args: T,
-    extra?: K
+    extra?: K,
   ) {
     let res = null;
     try {
@@ -100,7 +100,7 @@ class EngineHelpers {
       if (extra !== undefined) {
         res = (fn as (arg: T, extra: K) => TCanvasCoords[] | null | undefined)(
           args,
-          extra
+          extra,
         );
       } else {
         res = (fn as (arg: T) => TCanvasCoords[] | null | undefined)(args);
@@ -125,20 +125,19 @@ class EngineHelpers {
     to: TNotation,
     piece: TPieceBoard,
     click: boolean,
-    offset: { x: number; y: number }
+    offset: { x: number; y: number },
   ) {
     if (from === to) return false;
     const selected = this.boardRuntime.getSelected();
     const id = selected?.id;
     const moveCallback = this.boardRuntime.getMove();
-    const eventEmitter = new EventEmmiter();
 
     if (moveCallback) {
       const square = await this.pendingDrag(offset.x, offset.y);
       const move = await Promise.race([
-        moveCallback({ from, to, piece, emitter: eventEmitter }),
+        moveCallback({ from, to, piece }),
         this.movePromiseCancel().then(() => {
-          eventEmitter.emit("onMoveAbort", []);
+          this.boardRuntime.getEventEmitter().emit("onMoveAbort", []);
           return { status: false, result: [] };
         }),
       ]);
@@ -152,7 +151,7 @@ class EngineHelpers {
         if (selected.isPending) {
           this.boardRuntime.renderer.pipelineRender.setNextEvent(
             "onToggleCanvas",
-            ["dynamicPieces", "staticPieces", id, true]
+            ["dynamicPieces", "staticPieces", id, true],
           );
           selected.isPending = false;
 
@@ -169,8 +168,8 @@ class EngineHelpers {
                     dynamicPieces: true,
                   },
                 ],
-                resolve
-              )
+                resolve,
+              ),
           );
         }
       }
@@ -192,7 +191,7 @@ class EngineHelpers {
       ]);
       await this.boardRuntime.updateBoardState(
         [{ from, to, captured: [to] }],
-        click
+        click,
       );
       return true;
     }
@@ -213,12 +212,12 @@ class EngineHelpers {
             secondClick: false,
           },
           true,
-        ]
+        ],
       );
     else
       this.boardRuntime.renderer.pipelineRender.setNextEvent(
         "onPointerSelect",
-        [null, true]
+        [null, true],
       );
   }
 
@@ -250,7 +249,7 @@ class EngineHelpers {
             dynamicPieces: true,
           },
         ],
-        resolve
+        resolve,
       );
     if (!selected || !selected.isDragging) {
       await Utils.asyncHandler(render);
@@ -323,7 +322,7 @@ class EngineHelpers {
           ? Utils.squareToCoords(
               newSelectedPiece.square,
               this.boardRuntime.getSize() / 8,
-              this.boardRuntime.getIsBlackView()
+              this.boardRuntime.getIsBlackView(),
             )
           : null;
 
@@ -345,12 +344,12 @@ class EngineHelpers {
                       secondClick: false,
                     },
                     true,
-                  ]
+                  ],
                 );
             } else {
               this.boardRuntime.renderer.pipelineRender.setNextEvent(
                 "onPointerSelect",
-                [null, true]
+                [null, true],
               );
             }
           }
@@ -366,7 +365,7 @@ class EngineHelpers {
             }
             this.boardRuntime.renderer.pipelineRender.setNextEvent(
               "onPointerSelect",
-              [null, true]
+              [null, true],
             );
           }
 

@@ -50,7 +50,7 @@ class CanvasLayers {
     overlay: React.RefObject<HTMLCanvasElement | null>,
     underlayCanvas: React.RefObject<HTMLCanvasElement | null>,
     dynamicPiecesCanvas: React.RefObject<HTMLCanvasElement | null>,
-    size: number
+    size: number,
   ) {
     this.staticPiecesCanvas = pieces;
     this.boardCanvas = board;
@@ -114,6 +114,7 @@ class CanvasLayers {
     curr.style.height = size + "px";
 
     const ctx = this.getContext(canvas);
+    console.log("rodei");
     if (ctx) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
@@ -147,7 +148,7 @@ class CanvasLayers {
         this.dynamicPiecesOffscreen.getContext("2d");
     } catch {
       console.warn(
-        "OffscreenCanvas not supported, using normal canvas rendering."
+        "OffscreenCanvas not supported, using normal canvas rendering.",
       );
     }
   }

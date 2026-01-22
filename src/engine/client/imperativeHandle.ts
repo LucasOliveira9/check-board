@@ -32,7 +32,7 @@ function imperativeHandle(
 
     setfenStreamDelay: (n) => {
       if (!clientRef.current) return;
-      clientRef.current.setfenStreamDelay(n);
+      clientRef.current.setFenStreamDelay(n);
     },
 
     updateSize: (size) => {
@@ -83,6 +83,16 @@ function imperativeHandle(
     makeMove: (move) => {
       if (!clientRef.current) return false;
       return clientRef.current.makeMove(move);
+    },
+
+    getEventEmitter: () => {
+      if (!clientRef.current) return null;
+      return clientRef.current.getEventEmitter();
+    },
+
+    getPiecesImage: () => {
+      if (!clientRef.current) return null;
+      return clientRef.current.getPiecesImage();
     },
   };
 }

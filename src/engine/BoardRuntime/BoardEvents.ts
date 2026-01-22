@@ -13,17 +13,21 @@ class BoardEvents {
 
   OnPointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
     if (this.boardRuntime.getIsMoving()) return;
+    this.boardRuntime.getEventEmitter().emit("onPointerDown");
     this.boardRuntime.helpers.pointerEventsHelper.startPress(e);
   }
 
   onPointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
     if (this.boardRuntime.getIsMoving()) return;
+    this.boardRuntime.getEventEmitter().emit("onPointerMove");
     this.boardRuntime.helpers.pointerEventsHelper.handlePieceHover(e);
     this.boardRuntime.helpers.pointerEventsHelper.handleGrab(e);
   }
 
   onPointerUp(e: React.PointerEvent<HTMLCanvasElement>) {
     this.boardRuntime.helpers.pointerEventsHelper.handlePointerUp(e);
+    if (this.boardRuntime.getIsMoving()) return;
+    this.boardRuntime.getEventEmitter().emit("onPointerUp");
   }
 
   onPointerLeave(e: React.PointerEvent<HTMLCanvasElement>) {
