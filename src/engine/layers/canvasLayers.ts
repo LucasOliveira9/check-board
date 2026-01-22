@@ -114,7 +114,7 @@ class CanvasLayers {
     curr.style.height = size + "px";
 
     const ctx = this.getContext(canvas);
-    console.log("rodei");
+
     if (ctx) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       ctx.scale(dpr, dpr);
