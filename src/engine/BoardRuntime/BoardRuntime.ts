@@ -971,7 +971,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
   async undo() {
     const toUndo = this.undoStack.pop();
-    if (!toUndo) return;
+    if (!toUndo) return false;
     const layerManager = this.renderer.getLayerManager();
 
     for (const move of toUndo.undo) {
@@ -1077,12 +1077,15 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
       underlay: true,
       dynamicPieces: true,
     });
+
+    return true;
   }
 
   async redo() {
     const redo = this.redoStack.pop();
-    if (!redo) return;
+    if (!redo) return false;
     await this.updateBoardState(redo, true);
+    return true;
   }
 
   clearRedo() {

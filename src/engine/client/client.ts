@@ -29,7 +29,9 @@ class Client {
   private undoing = false;
   private redoing = false;
   private isMoving = false;
+  private togglingPause = false;
   private cachedSize: { size: number; squareSize: number } | null = null;
+  private mounted = false;
   constructor(boardRuntime: BoardRuntime) {
     runtimeMap.set(this, boardRuntime);
   }
@@ -41,6 +43,12 @@ class Client {
       (this as any)[key] = null;
     }
     this.destroyed = true;
+  }
+
+  public mount(fun: () => void) {
+    if (this.mounted) return;
+    this.mounted = true;
+    fun();
   }
 
   private getRuntime() {
@@ -77,7 +85,9 @@ class Client {
   }
 
   public async loadPosition() {
-    if (this.loading || this.destroyed) return;
+    const runtime = this.getRuntime();
+    if (this.loading || this.destroyed || !runtime) return;
+    const eventEmitter = runtime.getEventEmitter();
     this.loading = true;
     try {
       while (!this.pauseFenStream && !this.destroyed && this.fenStream.length) {
@@ -115,8 +125,14 @@ class Client {
         this.loading = false;
         if (this.fenStream.length && !this.pauseFenStream)
           queueMicrotask(() => this.loadPosition());
+        else if (!this.fenStream.length)
+          eventEmitter?.emit("onFenStreamLoaded");
       }
     }
+  }
+
+  public getIsLoadingFenStream() {
+    return this.fenStream.length > 0;
   }
 
   public setFenStreamDelay(ms: number) {
@@ -130,11 +146,17 @@ class Client {
 
   public async togglePause() {
     const boardRuntime = this.getRuntime();
-    if (!boardRuntime) return;
-    this.pauseFenStream = !this.pauseFenStream;
-    if (!this.pauseFenStream && !this.loading) {
-      await boardRuntime.resetEvents(true);
-      this.loadPosition();
+    if (!boardRuntime || this.togglingPause) return this.pauseFenStream;
+    try {
+      this.togglingPause = true;
+      this.pauseFenStream = !this.pauseFenStream;
+      if (!this.pauseFenStream && !this.loading) {
+        await boardRuntime.resetEvents(true);
+        this.loadPosition();
+      }
+      return !this.pauseFenStream;
+    } finally {
+      this.togglingPause = false;
     }
   }
 
@@ -197,11 +219,12 @@ class Client {
 
   public async undo() {
     const boardRuntime = this.getRuntime();
-    if (!boardRuntime || this.undoing) return;
+    if (!boardRuntime || this.undoing) return false;
     this.undoing = true;
 
     try {
-      await boardRuntime.undo();
+      const res = await boardRuntime.undo();
+      return res;
     } finally {
       this.undoing = false;
     }
@@ -209,11 +232,12 @@ class Client {
 
   public async redo() {
     const boardRuntime = this.getRuntime();
-    if (!boardRuntime || this.redoing) return;
+    if (!boardRuntime || this.redoing) return false;
     this.redoing = true;
 
     try {
-      await boardRuntime.redo();
+      const res = await boardRuntime.redo();
+      return res;
     } finally {
       this.redoing = false;
     }

@@ -118,6 +118,7 @@ const EVENT_LISTENER_EVENTS = {
   onPointerDown: "onPointerDown",
   onPointerMove: "onPointerMove",
   onPointerUp: "onPointerUp",
+  onFenStreamLoaded: "onFenStreamLoaded",
 } as const;
 
 type TEventListenerEvents =

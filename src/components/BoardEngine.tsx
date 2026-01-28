@@ -1,4 +1,10 @@
-import { useRef, useEffect, useImperativeHandle } from "react";
+import {
+  useRef,
+  useEffect,
+  useImperativeHandle,
+  useLayoutEffect,
+  useMemo,
+} from "react";
 import CanvasLayers from "../engine/layers/canvasLayers";
 import { TBoardProps, TBoardRuntime } from "../types/board";
 import Board from "./board";
@@ -21,6 +27,12 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
 
     const boardRuntime = useRef<BoardRuntime | null>(null);
     const clientRef = useRef<Client | null>(null);
+    const pendingMountRef = useRef<null | (() => void)>(null);
+
+    const imperative = useMemo(
+      () => imperativeHandle(clientRef, pendingMountRef),
+      [],
+    );
 
     const disposed = useRef(0);
     useEffect(() => {
@@ -45,7 +57,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
             underlayCanvasRef,
             overlayCanvasRef,
             dynamicPiecesCanvasRef,
-            Math.floor(size / 8) * 8
+            Math.floor(size / 8) * 8,
           ),
           pieceStyle: pieceConfig.piecesImage,
           mode: "2d",
@@ -62,6 +74,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
           boardRuntime.current = runtime;
           c = new Client(runtime);
           clientRef.current = c;
+          imperative.flushPendingMount?.();
         })();
       }
 
@@ -73,10 +86,11 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
         c = null;
         boardRuntime.current = null;
         clientRef.current = null;
+        pendingMountRef.current = null;
       };
     }, []);
 
-    useImperativeHandle(ref, () => imperativeHandle(clientRef));
+    useImperativeHandle(ref, () => imperative);
 
     return (
       <Board
@@ -89,6 +103,6 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
         size={Math.floor(size / 8) * 8}
       />
     );
-  }
+  },
 );
 export default BoardEngine;

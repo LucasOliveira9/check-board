@@ -3,7 +3,8 @@ import { BoardHandled } from "./interface";
 
 function imperativeHandle(
   clientRef: React.RefObject<Client | null>,
-): BoardHandled {
+  pendingMountRef: React.RefObject<null | (() => void)>,
+): BoardHandled & { flushPendingMount?: () => void } {
   return {
     loadPosition: (b, f) => {
       if (!clientRef.current) return;
@@ -21,9 +22,9 @@ function imperativeHandle(
       if (!clientRef.current) return null;
       return clientRef.current.getSquareCoords(notation);
     },
-    togglePause: () => {
-      if (!clientRef.current) return;
-      clientRef.current.togglePause();
+    togglePause: async () => {
+      if (!clientRef.current) return null;
+      return await clientRef.current.togglePause();
     },
     loadFenStream: (b) => {
       if (!clientRef.current) return;
@@ -50,14 +51,14 @@ function imperativeHandle(
       clientRef.current.setPieceType(type);
     },
 
-    undo: () => {
-      if (!clientRef.current) return;
-      clientRef.current.undo();
+    undo: async () => {
+      if (!clientRef.current) return false;
+      return await clientRef.current.undo();
     },
 
-    redo: () => {
-      if (!clientRef.current) return;
-      clientRef.current.redo();
+    redo: async () => {
+      if (!clientRef.current) return false;
+      return await clientRef.current.redo();
     },
 
     toggleHoverScaling: () => {
@@ -93,6 +94,25 @@ function imperativeHandle(
     getPiecesImage: () => {
       if (!clientRef.current) return null;
       return clientRef.current.getPiecesImage();
+    },
+
+    mount: (fun) => {
+      if (!clientRef.current) {
+        pendingMountRef.current = fun ?? null;
+        return;
+      }
+      clientRef.current.mount(fun);
+      pendingMountRef.current = null;
+    },
+
+    getIsLoadingFenStream: () => {
+      if (!clientRef.current) return null;
+      return clientRef.current.getIsLoadingFenStream();
+    },
+
+    flushPendingMount: () => {
+      if (!clientRef.current || pendingMountRef.current === null) return;
+      clientRef.current.mount(pendingMountRef.current);
     },
   };
 }

@@ -11,7 +11,7 @@ interface BoardHandled {
   flip(): void;
   getBoard(): string | null;
   getSquareCoords(notation: TNotation): { x: number; y: number } | null;
-  togglePause(): void;
+  togglePause(): Promise<boolean | null>;
   loadFenStream(b: string[]): void;
   setfenStreamDelay(n: number): void;
   updateSize(size: number): void;
@@ -20,14 +20,16 @@ interface BoardHandled {
     notation: TNotation,
   ): { id: string; piece: TPieceInternalRef } | null;
   setPieceType(type: "string" | "image"): void;
-  undo(): void;
-  redo(): void;
+  undo(): Promise<boolean>;
+  redo(): Promise<boolean>;
   toggleHoverScaling(): void;
   toggleHoverScale(scale: number): void;
   toggleHoverHighlight(): void;
   makeMove(move: TMoveResult): boolean | Promise<boolean>;
   getEventEmitter(): IEventListener | null;
   getPiecesImage(): TPieceImage | null;
+  mount(fun: () => void): void;
+  getIsLoadingFenStream(): boolean | null;
 }
 
 export type { BoardHandled };
