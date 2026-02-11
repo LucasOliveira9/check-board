@@ -10,12 +10,13 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/check-board.es.js",
       "require": "./dist/check-board.cjs.js"
     }
   },
   "files": [
-    "dist/**/*"
+    "dist"
   ],
   "scripts": {
     "dev:demo": "vite --config demo/vite.config.ts",
