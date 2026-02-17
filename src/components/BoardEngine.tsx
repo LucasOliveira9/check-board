@@ -24,6 +24,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
     const overlayCanvasRef = useRef<HTMLCanvasElement>(null);
     const underlayCanvasRef = useRef<HTMLCanvasElement>(null);
     const dynamicPiecesCanvasRef = useRef<HTMLCanvasElement>(null);
+    const onMount = useRef<(runtime: BoardRuntime) => any>(null);
 
     const boardRuntime = useRef<BoardRuntime | null>(null);
     const clientRef = useRef<Client | null>(null);
@@ -69,6 +70,10 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
             create.destroy();
             return;
           }
+
+          const fun =
+            onMount.current !== null ? () => onMount.current?.(create) : null;
+          fun !== null && create.addOnMount(fun);
           create.mount();
           runtime = create;
           boardRuntime.current = runtime;
@@ -101,6 +106,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
         underlayRef={underlayCanvasRef}
         dynamicPiecesRef={dynamicPiecesCanvasRef}
         size={Math.floor(size / 8) * 8}
+        onMount={onMount}
       />
     );
   },

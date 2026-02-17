@@ -1,5 +1,6 @@
-import { useEffect, useCallback } from "react";
+import { useEffect, useCallback, useRef } from "react";
 import { TBoard } from "../types/board";
+import BoardRuntime from "engine/boardRuntime/boardRuntime";
 
 const Board: React.FC<TBoard> = ({
   boardRuntime,
@@ -9,37 +10,53 @@ const Board: React.FC<TBoard> = ({
   underlayRef,
   dynamicPiecesRef,
   size,
+  onMount,
 }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       boardRuntime.current?.boardEvents.OnPointerDown(e);
     },
-    [boardRuntime]
+    [boardRuntime],
   );
 
   const handlePointerMove = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       boardRuntime.current?.boardEvents.onPointerMove(e);
     },
-    [boardRuntime]
+    [boardRuntime],
   );
 
   const handlePointerUp = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       boardRuntime.current?.boardEvents.onPointerUp(e);
     },
-    [boardRuntime]
+    [boardRuntime],
   );
 
   const handlePointerLeave = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       boardRuntime.current?.boardEvents.onPointerLeave(e);
     },
-    [boardRuntime]
+    [boardRuntime],
   );
+
+  useEffect(() => {
+    onMount.current = (runtime) => {
+      console.log(runtime);
+      runtime.setOnResize((size) => {
+        const container = containerRef.current;
+        console.log(container, size);
+        if (!container) return;
+        container.style.width = `${size}px`;
+        container.style.height = `${size}px`;
+      });
+    };
+  }, []);
 
   return (
     <div
+      ref={containerRef}
       style={{
         position: "relative",
         width: size,

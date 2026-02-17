@@ -99,6 +99,8 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   private undoStack: { undo: TMoveUndo; redo: TMoveResult }[] = [];
   private redoStack: TMoveResult[] = [];
   private eventEmitter = new EventEmitter();
+  private onResize: (size: number) => void = () => {};
+  private onMount: (() => any)[] = [];
 
   constructor(private args: TBoardRuntime<T>) {
     Object.assign(this, args);
@@ -162,6 +164,14 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
   mount() {
     this.mounted = true;
+    console.log(this.onMount);
+    for (const fun of this.onMount) fun();
+    this.onMount = [];
+  }
+
+  addOnMount(fun: () => any) {
+    if (this.mounted) return;
+    this.onMount.push(fun);
   }
 
   getIsBlackView() {
@@ -414,6 +424,10 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
     this.hoverConfig = config;
   }
 
+  setOnResize(fun: (size: number) => void) {
+    this.onResize = fun;
+  }
+
   setIsMoving(b: boolean) {
     this.isMoving = b;
   }
@@ -454,9 +468,11 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   async setSize(size: number) {
-    this.args.size = Math.floor(size / 8) * 8;
+    const size_ = Math.floor(size / 8) * 8;
+    this.args.size = size_;
     this.getCanvasLayers().clearAllRect();
-    this.getCanvasLayers().resize(Math.floor(size / 8) * 8);
+    this.getCanvasLayers().resize(size_);
+    this.onResize(size_);
     this.setInternalRefObj({} as Record<TPieceId, TPieceInternalRef>);
     this.renderer.getLayerManager().resetAllLayers();
     await this.refreshCanvases({

@@ -12,7 +12,7 @@ import { TSquare } from "./square";
 import { THoverConfig } from "types";
 
 type TBoardInjection<T extends TBoardEventContext> = (
-  ctx: TBoardEventContext
+  ctx: TBoardEventContext,
 ) => T;
 
 type TBoard = {
@@ -22,6 +22,7 @@ type TBoard = {
   overlayRef: React.RefObject<HTMLCanvasElement | null>;
   underlayRef: React.RefObject<HTMLCanvasElement | null>;
   dynamicPiecesRef: React.RefObject<HTMLCanvasElement | null>;
+  onMount: React.RefObject<((runtime: BoardRuntime) => any) | null>;
   size: number;
 };
 
