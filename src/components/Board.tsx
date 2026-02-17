@@ -43,10 +43,8 @@ const Board: React.FC<TBoard> = ({
 
   useEffect(() => {
     onMount.current = (runtime) => {
-      console.log(runtime);
       runtime.setOnResize((size) => {
         const container = containerRef.current;
-        console.log(container, size);
         if (!container) return;
         container.style.width = `${size}px`;
         container.style.height = `${size}px`;

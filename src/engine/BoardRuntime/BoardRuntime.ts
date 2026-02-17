@@ -164,7 +164,6 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
 
   mount() {
     this.mounted = true;
-    console.log(this.onMount);
     for (const fun of this.onMount) fun();
     this.onMount = [];
   }
