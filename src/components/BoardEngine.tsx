@@ -49,7 +49,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
       ) {
         const args: TBoardRuntime = {
           ...config,
-          size: Math.floor(size / 8) * 8,
+          size: Math.floor(size),
           onMove,
           onUpdate,
           canvasLayers: new CanvasLayers(
@@ -58,7 +58,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
             underlayCanvasRef,
             overlayCanvasRef,
             dynamicPiecesCanvasRef,
-            Math.floor(size / 8) * 8,
+            Math.floor(size),
           ),
           pieceStyle: pieceConfig.piecesImage,
           mode: "2d",
@@ -105,7 +105,7 @@ const BoardEngine = React.forwardRef<BoardHandled, TBoardProps>(
         overlayRef={overlayCanvasRef}
         underlayRef={underlayCanvasRef}
         dynamicPiecesRef={dynamicPiecesCanvasRef}
-        size={Math.floor(size / 8) * 8}
+        size={Math.floor(size)}
         onMount={onMount}
       />
     );

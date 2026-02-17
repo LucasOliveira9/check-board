@@ -467,7 +467,7 @@ class BoardRuntime<T extends TBoardEventContext = TBoardEventContext> {
   }
 
   async setSize(size: number) {
-    const size_ = Math.floor(size / 8) * 8;
+    const size_ = Math.floor(size);
     this.args.size = size_;
     this.getCanvasLayers().clearAllRect();
     this.getCanvasLayers().resize(size_);
